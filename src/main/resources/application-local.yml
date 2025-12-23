@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/yeoback
+    username: ${LOCAL_DB_ID:nova}
+    password: ${LOCAL_DB_PW:secret}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        highlight_sql: true
+
+  docker:
+    compose:
+      enabled: false
+
+logging:
+  level:
+    com.nova.yeoback: debug
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace

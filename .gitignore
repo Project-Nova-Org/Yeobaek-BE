@@ -35,3 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### application.yml profiles ###
+application-secret.yml
+application-dev.yml
+application-prod.yml
