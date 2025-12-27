@@ -1,13 +1,13 @@
-package com.nova.yeoback;
+package com.nova.yeobaek;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class YeobackApplication {
+public class YeobaekApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(YeobackApplication.class, args);
+		SpringApplication.run(YeobaekApplication.class, args);
 	}
 
 }

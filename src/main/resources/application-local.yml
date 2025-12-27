@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/yeoback
+    url: jdbc:postgresql://localhost:5432/yeobaek
     username: ${LOCAL_DB_ID:nova}
     password: ${LOCAL_DB_PW:secret}
     driver-class-name: org.postgresql.Driver

@@ -1,6 +1,6 @@
 spring:
   application:
-    name: yeoback
+    name: yeobaek
   profiles:
     active: local
     include: secret
@@ -14,4 +14,4 @@ spring:
 logging:
   level:
     root: info
-    com.nova.yeoback: info
+    com.nova.yeobaek: info

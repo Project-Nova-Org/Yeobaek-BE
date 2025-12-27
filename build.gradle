@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.nova'
 version = '0.0.1-SNAPSHOT'
-description = 'Project Yeoback'
+description = 'Project Yeobaek'
 
 java {
 	toolchain {

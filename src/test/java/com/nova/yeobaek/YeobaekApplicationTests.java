@@ -1,10 +1,10 @@
-package com.nova.yeoback;
+package com.nova.yeobaek;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class YeobackApplicationTests {
+class YeobaekApplicationTests {
 
 	@Test
 	void contextLoads() {
