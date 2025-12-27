@@ -1,5 +1,7 @@
 package com.nova.yeobaek.domain.user.domain.mapping;
 
+import java.time.LocalDate;
+
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -29,4 +31,8 @@ public class ItemUsage extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
+
+	private int useCount;
+
+	private LocalDate lastUsedDate;
 }

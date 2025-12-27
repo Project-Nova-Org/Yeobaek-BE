@@ -5,6 +5,7 @@ import org.hibernate.annotations.DynamicUpdate;
 
 import com.nova.yeobaek.domain.shared.BaseEntity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -29,4 +30,19 @@ public class OOTDItem extends BaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long id;
+
+	@Column(nullable = false)
+	private float posX;
+
+	@Column(nullable = false)
+	private float posY;
+
+	@Column(nullable = false)
+	private float scale;
+
+	@Column(nullable = false)
+	private float rotation;
+
+	@Column(nullable = false)
+	private int zIndex;
 }
