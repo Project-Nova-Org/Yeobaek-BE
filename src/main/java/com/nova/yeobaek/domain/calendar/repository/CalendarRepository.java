@@ -1,4 +1,8 @@
 package com.nova.yeobaek.domain.calendar.repository;
 
-public interface CalendarRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.nova.yeobaek.domain.calendar.domain.Calendar;
+
+public interface CalendarRepository extends JpaRepository<Calendar, Long>, CalendarRepositoryCustom {
 }
