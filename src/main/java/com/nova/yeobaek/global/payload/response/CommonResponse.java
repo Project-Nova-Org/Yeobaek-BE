@@ -1,12 +1,12 @@
-package com.nova.yeobaek.global.error.response;
+package com.nova.yeobaek.global.payload.response;
 
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.nova.yeobaek.global.error.status.ErrorReason;
-import com.nova.yeobaek.global.error.status.SuccessStatus;
+import com.nova.yeobaek.global.payload.ErrorReason;
+import com.nova.yeobaek.global.payload.common.SuccessStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

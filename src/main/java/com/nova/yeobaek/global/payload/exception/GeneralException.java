@@ -1,6 +1,6 @@
-package com.nova.yeobaek.global.error.exception;
+package com.nova.yeobaek.global.payload.exception;
 
-import com.nova.yeobaek.global.error.status.ErrorReason;
+import com.nova.yeobaek.global.payload.ErrorReason;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
