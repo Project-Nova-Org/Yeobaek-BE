@@ -6,15 +6,20 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
 import com.nova.yeobaek.domain.calendar.domain.enums.Thumbnail;
+import com.nova.yeobaek.domain.ootd.domain.OOTD;
 import com.nova.yeobaek.domain.shared.BaseEntity;
+import com.nova.yeobaek.domain.user.domain.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -34,7 +39,7 @@ public class Calendar extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
+	private Long id;
 
 	@Column(nullable = false)
 	private LocalDate date;
@@ -45,6 +50,14 @@ public class Calendar extends BaseEntity {
 	private String customCoverImageUrl;
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, columnDefinition = "DEFAULT 'OOTD'")
+	@Column(nullable = false, columnDefinition = "VARCHAR DEFAULT 'OOTD'")
 	private Thumbnail thumbnail;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "user_id")
+	private User user;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "ootd_id")
+	private OOTD ootd;
 }

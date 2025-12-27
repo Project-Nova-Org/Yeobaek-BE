@@ -3,13 +3,18 @@ package com.nova.yeobaek.domain.ootd.domain.mapping;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import com.nova.yeobaek.domain.item.domain.Item;
+import com.nova.yeobaek.domain.ootd.domain.OOTD;
 import com.nova.yeobaek.domain.shared.BaseEntity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,7 +34,7 @@ public class OOTDItem extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private long id;
+	private Long id;
 
 	@Column(nullable = false)
 	private float posX;
@@ -45,4 +50,12 @@ public class OOTDItem extends BaseEntity {
 
 	@Column(nullable = false)
 	private int zIndex;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "ootd_id")
+	private OOTD ootd;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "item_id")
+	private Item item;
 }
