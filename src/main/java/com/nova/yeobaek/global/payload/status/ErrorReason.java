@@ -1,4 +1,4 @@
-package com.nova.yeobaek.global.payload;
+package com.nova.yeobaek.global.payload.status;
 
 import org.springframework.http.HttpStatus;
 

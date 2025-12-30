@@ -22,8 +22,8 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.nova.yeobaek.global.payload.exception.GeneralException;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
-import com.nova.yeobaek.global.payload.common.CommonErrorStatus;
-import com.nova.yeobaek.global.payload.ErrorReason;
+import com.nova.yeobaek.global.payload.status.CommonErrorStatus;
+import com.nova.yeobaek.global.payload.status.ErrorReason;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;

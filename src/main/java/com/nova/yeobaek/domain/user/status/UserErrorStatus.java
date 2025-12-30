@@ -1,15 +1,15 @@
-package com.nova.yeobaek.global.payload.code;
+package com.nova.yeobaek.domain.user.status;
 
 import org.springframework.http.HttpStatus;
 
-import com.nova.yeobaek.global.payload.ErrorReason;
+import com.nova.yeobaek.global.payload.status.ErrorReason;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum CalendarErrorStatus implements ErrorReason {
+public enum UserErrorStatus implements ErrorReason {
 
 	;
 

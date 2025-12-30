@@ -1,8 +1,6 @@
-package com.nova.yeobaek.global.payload.common;
+package com.nova.yeobaek.global.payload.status;
 
 import org.springframework.http.HttpStatus;
-
-import com.nova.yeobaek.global.payload.ErrorReason;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
