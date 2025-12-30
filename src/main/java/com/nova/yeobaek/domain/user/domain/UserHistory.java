@@ -3,6 +3,8 @@ package com.nova.yeobaek.domain.user.domain;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
+import com.nova.yeobaek.domain.shared.BaseEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -32,7 +34,7 @@ import lombok.NoArgsConstructor;
 				name = "uk_user_year_month",
 				columnNames = {"user_id", "year_month"})
 })
-public class UserHistory {
+public class UserHistory extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
