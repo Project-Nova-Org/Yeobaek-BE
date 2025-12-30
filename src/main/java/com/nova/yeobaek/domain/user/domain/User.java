@@ -108,4 +108,8 @@ public class User extends BaseEntity {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	@Builder.Default
 	private List<DeviceToken> deviceTokenList = new ArrayList<>();
+
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	@Builder.Default
+	private List<UserHistory> userHistoryList = new ArrayList<>();
 }
