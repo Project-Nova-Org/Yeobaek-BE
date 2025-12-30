@@ -36,20 +36,16 @@ public class OOTDItem extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
 	private float posX;
 
-	@Column(nullable = false)
 	private float posY;
 
-	@Column(nullable = false)
 	private float scale;
 
-	@Column(nullable = false)
 	private float rotation;
 
 	@Column(nullable = false)
-	private int zIndex;
+	private Long index;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ootd_id")

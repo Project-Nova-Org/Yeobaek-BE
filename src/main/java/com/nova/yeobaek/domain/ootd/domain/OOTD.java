@@ -10,7 +10,7 @@ import com.nova.yeobaek.domain.calendar.domain.Calendar;
 import com.nova.yeobaek.domain.ootd.domain.enums.OOTDStatus;
 import com.nova.yeobaek.domain.ootd.domain.mapping.OOTDItem;
 import com.nova.yeobaek.domain.shared.BaseEntity;
-import com.nova.yeobaek.domain.shared.ImageBackground;
+import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 
 import jakarta.persistence.CascadeType;
@@ -51,22 +51,21 @@ public class OOTD extends BaseEntity {
 
 	private String memo;
 
-	@Column(nullable = false)
 	private boolean favorite;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private ImageBackground imageBackground;
+	private ImageBackgroundColor imageBackgroundColor;
 
 	@Column(nullable = false)
-	private String coverImageUrl;
+	private String imageUrl;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, columnDefinition = "VARCHAR DEFAULT 'NORMAL'")
-	private OOTDStatus ootdStatus;
+	private OOTDStatus status;
 
 	@Column(nullable = false)
-	private int itemCount;
+	private Long changeItemCount;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")

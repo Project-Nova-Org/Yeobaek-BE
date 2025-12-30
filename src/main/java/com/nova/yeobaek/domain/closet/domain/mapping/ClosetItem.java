@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +29,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
-@Table(name = "closet_items")
+@Table(name = "closet_items",
+		uniqueConstraints = {
+			@UniqueConstraint(
+				name = "uk_closet_item",
+				columnNames = {"closet_id", "item_id"})
+})
 public class ClosetItem extends BaseEntity {
 
 	@Id

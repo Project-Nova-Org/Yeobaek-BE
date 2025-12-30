@@ -1,19 +1,10 @@
-package com.nova.yeobaek.domain.calendar.domain;
-
-import java.time.LocalDate;
+package com.nova.yeobaek.domain.user.domain;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import com.nova.yeobaek.domain.calendar.domain.enums.Thumbnail;
-import com.nova.yeobaek.domain.ootd.domain.OOTD;
-import com.nova.yeobaek.domain.shared.BaseEntity;
-import com.nova.yeobaek.domain.user.domain.User;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -35,35 +26,24 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
-@Table(name = "calendars",
-	uniqueConstraints = {
-		@UniqueConstraint(
-			name = "uk_user_date",
-			columnNames = {"user_id", "date"})
+@Table(name = "user_histories",
+		uniqueConstraints = {
+			@UniqueConstraint(
+				name = "uk_user_year_month",
+				columnNames = {"user_id", "year_month"})
 })
-public class Calendar extends BaseEntity {
+public class UserHistory {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@Column(nullable = false)
-	private LocalDate date;
+	private String yearMonth;
 
-	@Column(nullable = false)
-	private String ootdImageUrl;
-
-	private String customImageUrl;
-
-	@Enumerated(EnumType.STRING)
-	@Column(nullable = false, columnDefinition = "VARCHAR DEFAULT 'OOTD'")
-	private Thumbnail thumbnail;
+	private String monthlyOotdImageUrl;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
 	private User user;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "ootd_id")
-	private OOTD ootd;
 }

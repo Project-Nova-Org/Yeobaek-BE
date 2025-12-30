@@ -13,7 +13,7 @@ import com.nova.yeobaek.domain.item.domain.Item;
 import com.nova.yeobaek.domain.ootd.domain.OOTD;
 import com.nova.yeobaek.domain.shared.BaseEntity;
 import com.nova.yeobaek.domain.user.domain.enums.Gender;
-import com.nova.yeobaek.domain.user.domain.enums.OAuthProvider;
+import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
 import com.nova.yeobaek.domain.user.domain.enums.Rank;
 import com.nova.yeobaek.domain.user.domain.enums.UserStatus;
 import com.nova.yeobaek.domain.user.domain.mapping.ItemUsage;
@@ -50,10 +50,10 @@ public class User extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private OAuthProvider oAuthProvider;
+	private OauthProvider oauthProvider;
 
 	@Column(nullable = false)
-	private String oAuthId;
+	private String oauthId;
 
 	private String email;
 
@@ -73,12 +73,15 @@ public class User extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, columnDefinition = "VARCHAR DEFAULT 'ACTIVE'")
-	private UserStatus userStatus;
+	private UserStatus status;
 
 	private LocalDateTime inactiveDate;
 
 	@Enumerated(EnumType.STRING)
 	private Gender gender;
+
+	@Column(nullable = false)
+	private long fittingCount;
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	@Builder.Default

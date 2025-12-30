@@ -12,7 +12,7 @@ import com.nova.yeobaek.domain.closet.domain.mapping.ClosetItem;
 import com.nova.yeobaek.domain.item.domain.enums.Season;
 import com.nova.yeobaek.domain.ootd.domain.mapping.OOTDItem;
 import com.nova.yeobaek.domain.shared.BaseEntity;
-import com.nova.yeobaek.domain.shared.ImageBackground;
+import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.mapping.ItemUsage;
 
@@ -56,13 +56,13 @@ public class Item extends BaseEntity {
 
 	private String size;
 
-	private int price;
+	private Long price;
 
 	private String memo;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private ImageBackground imageBackground;
+	private ImageBackgroundColor imageBackgroundColor;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
