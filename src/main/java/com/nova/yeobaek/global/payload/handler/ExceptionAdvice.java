@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -45,6 +46,30 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 	private ResponseEntity<Object> handleExceptionInternalArgs(ErrorReason errorReason, Map<?, ?> map) {
 		CommonResponse<Object> body = CommonResponse.onFailure(errorReason.getCode(), errorReason.getMessage(), map);
 		return ResponseEntity.status(errorReason.getHttpStatus()).body(body);
+	}
+
+	// DataIntegrityViolationException 핸들링
+	// Unique Constraints 등 제약 조건 위반 시 발생하는 예외 처리
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+		String errorMessage = e.getMessage();
+		log.error("DataIntegrityViolationException occurred: {}", errorMessage);
+
+		if (errorMessage.contains("uk_brand_name")) {
+			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_BRAND_NAME, errorMessage);
+		} else if (errorMessage.contains("uk_user_year_month")) {
+			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_HISTORY_MONTH, errorMessage);
+		} else if (errorMessage.contains("uk_closet_item")) {
+			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_CLOSET_ITEM, errorMessage);
+		} else if (errorMessage.contains("uk_user_item")) {
+			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_ITEM_USAGE, errorMessage);
+		} else if (errorMessage.contains("uk_device_token")) {
+			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_DEVICE_TOKEN, errorMessage);
+		} else if (errorMessage.contains("uk_user_date")) {
+			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_CALENDAR_CREATE, errorMessage);
+		} else {
+			return handleExceptionInternal(CommonErrorStatus._INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
+		}
 	}
 
 	// ConstrainViolationException 핸들링
