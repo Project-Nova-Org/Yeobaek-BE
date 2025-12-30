@@ -50,9 +50,10 @@ public class Calendar extends BaseEntity {
 	@Column(nullable = false)
 	private LocalDate date;
 
-	@Column(nullable = false)
+	@Column(nullable = false, columnDefinition = "TEXT")
 	private String ootdImageUrl;
 
+	@Column(columnDefinition = "TEXT")
 	private String customImageUrl;
 
 	@Enumerated(EnumType.STRING)

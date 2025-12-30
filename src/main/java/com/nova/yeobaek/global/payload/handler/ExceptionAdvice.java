@@ -35,6 +35,15 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice(annotations = RestController.class)
 public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
+	private static final Map<String, CommonErrorStatus> CONSTRAINT_ERROR_MAP = Map.of(
+		"uk_brand_name", CommonErrorStatus.DUPLICATED_BRAND_NAME,
+		"uk_user_year_month", CommonErrorStatus.DUPLICATED_HISTORY_MONTH,
+		"uk_closet_item", CommonErrorStatus.DUPLICATED_CLOSET_ITEM,
+		"uk_user_item", CommonErrorStatus.DUPLICATED_ITEM_USAGE,
+		"uk_device_token", CommonErrorStatus.DUPLICATED_DEVICE_TOKEN,
+		"uk_user_date", CommonErrorStatus.DUPLICATED_CALENDAR_CREATE
+	);
+
 	// 응답 통일 - String
 	private ResponseEntity<Object> handleExceptionInternal(ErrorReason errorReason, String message) {
 		String finalMessage = (message != null) ? message : errorReason.toString();
@@ -55,21 +64,20 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 		String errorMessage = e.getMessage();
 		log.error("DataIntegrityViolationException occurred: {}", errorMessage);
 
-		if (errorMessage.contains("uk_brand_name")) {
-			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_BRAND_NAME, errorMessage);
-		} else if (errorMessage.contains("uk_user_year_month")) {
-			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_HISTORY_MONTH, errorMessage);
-		} else if (errorMessage.contains("uk_closet_item")) {
-			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_CLOSET_ITEM, errorMessage);
-		} else if (errorMessage.contains("uk_user_item")) {
-			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_ITEM_USAGE, errorMessage);
-		} else if (errorMessage.contains("uk_device_token")) {
-			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_DEVICE_TOKEN, errorMessage);
-		} else if (errorMessage.contains("uk_user_date")) {
-			return handleExceptionInternal(CommonErrorStatus.DUPLICATED_CALENDAR_CREATE, errorMessage);
+		String constraintName;
+		if (e.getCause() instanceof org.hibernate.exception.ConstraintViolationException hibernateException) {
+			constraintName = hibernateException.getConstraintName();
 		} else {
-			return handleExceptionInternal(CommonErrorStatus._INTERNAL_SERVER_ERROR, "서버 내부 오류가 발생했습니다.");
+			constraintName = null;
 		}
+
+		CommonErrorStatus status = CONSTRAINT_ERROR_MAP.entrySet().stream()
+			.filter(entry -> constraintName != null && constraintName.contains(entry.getKey()))
+			.map(Map.Entry::getValue)
+			.findFirst()
+			.orElse(CommonErrorStatus._INTERNAL_SERVER_ERROR);
+
+		return handleExceptionInternal(status, errorMessage);
 	}
 
 	// ConstrainViolationException 핸들링

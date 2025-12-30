@@ -59,8 +59,10 @@ public class User extends BaseEntity {
 
 	private String nickname;
 
+	@Column(columnDefinition = "TEXT")
 	private String profileImageUrl;
 
+	@Column(columnDefinition = "TEXT")
 	private String bodyImageUrl;
 
 	private float weight;
@@ -80,8 +82,8 @@ public class User extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	private Gender gender;
 
-	@Column(nullable = false)
-	private long fittingCount;
+	@Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+	private Long fittingCount;
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	@Builder.Default

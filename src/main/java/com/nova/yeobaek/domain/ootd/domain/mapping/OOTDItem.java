@@ -49,7 +49,7 @@ public class OOTDItem extends BaseEntity {
 	private float rotation;
 
 	@Column(nullable = false)
-	private Long index;
+	private Long zIndex;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ootd_id")

@@ -40,9 +40,11 @@ public class UserHistory extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	// 2024-01
 	@Column(nullable = false)
 	private String yearMonth;
 
+	@Column(columnDefinition = "TEXT")
 	private String monthlyOotdImageUrl;
 
 	@ManyToOne(fetch = FetchType.LAZY)

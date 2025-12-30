@@ -51,13 +51,14 @@ public class OOTD extends BaseEntity {
 
 	private String memo;
 
-	private boolean favorite;
+	@Builder.Default
+	private boolean favorite = false;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private ImageBackgroundColor imageBackgroundColor;
 
-	@Column(nullable = false)
+	@Column(nullable = false, columnDefinition = "TEXT")
 	private String imageUrl;
 
 	@Enumerated(EnumType.STRING)
