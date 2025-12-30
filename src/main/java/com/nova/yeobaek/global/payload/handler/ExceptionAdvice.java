@@ -77,7 +77,7 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 			.findFirst()
 			.orElse(CommonErrorStatus._INTERNAL_SERVER_ERROR);
 
-		return handleExceptionInternal(status, errorMessage);
+		return handleExceptionInternal(status, status.getMessage());
 	}
 
 	// ConstrainViolationException 핸들링

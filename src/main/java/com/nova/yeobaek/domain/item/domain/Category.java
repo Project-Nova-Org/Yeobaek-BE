@@ -43,7 +43,7 @@ public class Category extends BaseEntity {
 	private String name;
 
 	@Column(nullable = false)
-	private Integer level;
+	private int level;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "parent_id")
