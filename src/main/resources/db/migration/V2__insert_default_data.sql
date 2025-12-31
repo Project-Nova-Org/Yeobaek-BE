@@ -30,9 +30,9 @@ VALUES
     ('치마', 2, (SELECT id FROM categories WHERE name = '하의'), NOW(), NOW()),
     ('기타', 2, (SELECT id FROM categories WHERE name = '하의'), NOW(), NOW()),
 
-    ('원피스', 2, (SELECT id FROM categories WHERE name = '한벌옷'), NOW(), NOW()),
-    ('점프슈트', 2, (SELECT id FROM categories WHERE name = '한벌옷'), NOW(), NOW()),
-    ('기타', 2, (SELECT id FROM categories WHERE name = '한벌옷'), NOW(), NOW()),
+    ('원피스', 2, (SELECT id FROM categories WHERE name = '한벌 옷'), NOW(), NOW()),
+    ('점프슈트', 2, (SELECT id FROM categories WHERE name = '한벌 옷'), NOW(), NOW()),
+    ('기타', 2, (SELECT id FROM categories WHERE name = '한벌 옷'), NOW(), NOW()),
 
     ('자켓', 2, (SELECT id FROM categories WHERE name = '아우터'), NOW(), NOW()),
     ('코트', 2, (SELECT id FROM categories WHERE name = '아우터'), NOW(), NOW()),
@@ -66,10 +66,24 @@ VALUES
     ('기타', 2, (SELECT id FROM categories WHERE name = '악세서리'), NOW(), NOW());
 
 -- Material
-
+INSERT INTO materials (name, created_at, updated_at)
+VALUES
+    ('데님', NOW(), NOW()),
+    ('면', NOW(), NOW()),
+    ('가죽', NOW(), NOW()),
+    ('울', NOW(), NOW()),
+    ('실크', NOW(), NOW()),
+    ('기타', NOW(), NOW());
 
 -- Pattern
-
+INSERT INTO patterns (name, created_at, updated_at)
+VALUES
+    ('무지', NOW(), NOW()),
+    ('스트라이프', NOW(), NOW()),
+    ('체크', NOW(), NOW()),
+    ('도트', NOW(), NOW()),
+    ('프린트', NOW(), NOW()),
+    ('기타', NOW(), NOW());
 
 -- Style
 INSERT INTO styles (name, created_at, updated_at)
