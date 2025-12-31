@@ -7,7 +7,7 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: none
+      ddl-auto: none # Flyway가 DDL 담당 -> validate나 none으로 둬야 함
     properties:
       hibernate:
         default_batch_fetch_size: 100

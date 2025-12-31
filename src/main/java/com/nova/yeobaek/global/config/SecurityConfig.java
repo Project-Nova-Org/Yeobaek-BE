@@ -37,7 +37,7 @@ public class SecurityConfig {
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
 		configuration.setAllowCredentials(false); // 아래 Origin 추가하면 true로 설정해야 함
-		configuration.setAllowedOrigins(List.of("*")); // backend, frontend (로컬, 배포)
+		configuration.setAllowedOrigins(List.of("*")); // backend, frontend (로컬, 배포) Origins 추가
 		configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
 		configuration.setExposedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));

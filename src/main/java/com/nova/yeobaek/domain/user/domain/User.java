@@ -28,6 +28,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,7 +42,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
-@Table(name = "users")
+@Table(name = "users",
+		uniqueConstraints = {
+			@UniqueConstraint(
+				name = "uk_oauth_provider_id",
+				columnNames = {"oauth_provider", "oauth_id"})
+})
 public class User extends BaseEntity {
 
 	@Id
@@ -83,7 +89,7 @@ public class User extends BaseEntity {
 	private Gender gender;
 
 	@Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
-	private Long fittingCount;
+	private long fittingCount;
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	@Builder.Default

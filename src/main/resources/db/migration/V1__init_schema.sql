@@ -184,7 +184,8 @@ create table users (
                        profile_image_url TEXT,
                        rank VARCHAR DEFAULT 'LV1' not null check (rank in ('LV1','LV2','LV3','LV4','LV5')),
                        status VARCHAR DEFAULT 'ACTIVE' not null check (status in ('ACTIVE','DELETED')),
-                       primary key (id)
+                       primary key (id),
+                       constraint uk_oauth_provider_id unique (oauth_provider, oauth_id)
 );
 
 -- 제약조건 및 외래키
