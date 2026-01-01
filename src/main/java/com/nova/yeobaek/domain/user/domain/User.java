@@ -13,7 +13,7 @@ import com.nova.yeobaek.domain.item.domain.Item;
 import com.nova.yeobaek.domain.ootd.domain.OOTD;
 import com.nova.yeobaek.domain.shared.BaseEntity;
 import com.nova.yeobaek.domain.user.domain.enums.Gender;
-import com.nova.yeobaek.domain.user.domain.enums.OAuthProvider;
+import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
 import com.nova.yeobaek.domain.user.domain.enums.Rank;
 import com.nova.yeobaek.domain.user.domain.enums.UserStatus;
 import com.nova.yeobaek.domain.user.domain.mapping.ItemUsage;
@@ -28,6 +28,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -41,7 +42,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
-@Table(name = "users")
+@Table(name = "users",
+		uniqueConstraints = {
+			@UniqueConstraint(
+				name = "uk_oauth_provider_id",
+				columnNames = {"oauth_provider", "oauth_id"})
+})
 public class User extends BaseEntity {
 
 	@Id
@@ -50,17 +56,19 @@ public class User extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private OAuthProvider oAuthProvider;
+	private OauthProvider oauthProvider;
 
 	@Column(nullable = false)
-	private String oAuthId;
+	private String oauthId;
 
 	private String email;
 
 	private String nickname;
 
+	@Column(columnDefinition = "TEXT")
 	private String profileImageUrl;
 
+	@Column(columnDefinition = "TEXT")
 	private String bodyImageUrl;
 
 	private float weight;
@@ -73,12 +81,15 @@ public class User extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, columnDefinition = "VARCHAR DEFAULT 'ACTIVE'")
-	private UserStatus userStatus;
+	private UserStatus status;
 
 	private LocalDateTime inactiveDate;
 
 	@Enumerated(EnumType.STRING)
 	private Gender gender;
+
+	@Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+	private long fittingCount;
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	@Builder.Default
@@ -103,4 +114,8 @@ public class User extends BaseEntity {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	@Builder.Default
 	private List<DeviceToken> deviceTokenList = new ArrayList<>();
+
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	@Builder.Default
+	private List<UserHistory> userHistoryList = new ArrayList<>();
 }

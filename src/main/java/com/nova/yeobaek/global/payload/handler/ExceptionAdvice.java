@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +23,8 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.nova.yeobaek.global.payload.exception.GeneralException;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
-import com.nova.yeobaek.global.payload.common.CommonErrorStatus;
-import com.nova.yeobaek.global.payload.ErrorReason;
+import com.nova.yeobaek.global.payload.status.CommonErrorStatus;
+import com.nova.yeobaek.global.payload.status.ErrorReason;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
@@ -33,6 +34,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestControllerAdvice(annotations = RestController.class)
 public class ExceptionAdvice extends ResponseEntityExceptionHandler {
+
+	private static final Map<String, CommonErrorStatus> CONSTRAINT_ERROR_MAP = Map.of(
+		"uk_brand_name", CommonErrorStatus.DUPLICATED_BRAND_NAME,
+		"uk_user_year_month", CommonErrorStatus.DUPLICATED_HISTORY_MONTH,
+		"uk_closet_item", CommonErrorStatus.DUPLICATED_CLOSET_ITEM,
+		"uk_user_item", CommonErrorStatus.DUPLICATED_ITEM_USAGE,
+		"uk_device_token", CommonErrorStatus.DUPLICATED_DEVICE_TOKEN,
+		"uk_user_date", CommonErrorStatus.DUPLICATED_CALENDAR_CREATE,
+		"uk_oauth_provider_id", CommonErrorStatus.DUPLICATED_OAUTH_PROVIDER_ID
+	);
 
 	// 응답 통일 - String
 	private ResponseEntity<Object> handleExceptionInternal(ErrorReason errorReason, String message) {
@@ -45,6 +56,29 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 	private ResponseEntity<Object> handleExceptionInternalArgs(ErrorReason errorReason, Map<?, ?> map) {
 		CommonResponse<Object> body = CommonResponse.onFailure(errorReason.getCode(), errorReason.getMessage(), map);
 		return ResponseEntity.status(errorReason.getHttpStatus()).body(body);
+	}
+
+	// DataIntegrityViolationException 핸들링
+	// Unique Constraints 등 제약 조건 위반 시 발생하는 예외 처리
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<Object> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
+		String errorMessage = e.getMessage();
+		log.error("DataIntegrityViolationException occurred: {}", errorMessage);
+
+		String constraintName;
+		if (e.getCause() instanceof org.hibernate.exception.ConstraintViolationException hibernateException) {
+			constraintName = hibernateException.getConstraintName();
+		} else {
+			constraintName = null;
+		}
+
+		CommonErrorStatus status = CONSTRAINT_ERROR_MAP.entrySet().stream()
+			.filter(entry -> constraintName != null && constraintName.contains(entry.getKey()))
+			.map(Map.Entry::getValue)
+			.findFirst()
+			.orElse(CommonErrorStatus._INTERNAL_SERVER_ERROR);
+
+		return handleExceptionInternal(status, status.getMessage());
 	}
 
 	// ConstrainViolationException 핸들링

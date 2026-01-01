@@ -44,10 +44,11 @@ public class Closet extends BaseEntity {
 	@Column(nullable = false)
 	private String name;
 
-	@Column(nullable = false)
-	private boolean favorite;
+	@Builder.Default
+	private boolean favorite = false;
 
-	private String coverImageUrl;
+	@Column(columnDefinition = "TEXT")
+	private String imageUrl;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")

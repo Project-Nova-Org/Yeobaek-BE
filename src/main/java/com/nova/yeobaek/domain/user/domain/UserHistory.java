@@ -1,14 +1,11 @@
-package com.nova.yeobaek.domain.user.domain.mapping;
-
-import java.time.LocalDate;
+package com.nova.yeobaek.domain.user.domain;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
-import com.nova.yeobaek.domain.item.domain.Item;
 import com.nova.yeobaek.domain.shared.BaseEntity;
-import com.nova.yeobaek.domain.user.domain.User;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -31,27 +28,26 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
-@Table(name = "item_usages",
-	uniqueConstraints = {
-		@UniqueConstraint(
-			name = "uk_user_item",
-			columnNames = {"user_id", "item_id"})
+@Table(name = "user_histories",
+		uniqueConstraints = {
+			@UniqueConstraint(
+				name = "uk_user_year_month",
+				columnNames = {"user_id", "year_month"})
 })
-public class ItemUsage extends BaseEntity {
+public class UserHistory extends BaseEntity {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	private int useCount;
+	// 2024-01
+	@Column(nullable = false)
+	private String yearMonth;
 
-	private LocalDate lastUsedDate;
+	@Column(columnDefinition = "TEXT")
+	private String monthlyOotdImageUrl;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id")
+	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "item_id")
-	private Item item;
 }

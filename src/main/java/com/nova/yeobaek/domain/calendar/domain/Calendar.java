@@ -21,6 +21,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -34,7 +35,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
-@Table(name = "calendars")
+@Table(name = "calendars",
+	uniqueConstraints = {
+		@UniqueConstraint(
+			name = "uk_user_date",
+			columnNames = {"user_id", "date"})
+})
 public class Calendar extends BaseEntity {
 
 	@Id
@@ -44,10 +50,11 @@ public class Calendar extends BaseEntity {
 	@Column(nullable = false)
 	private LocalDate date;
 
-	@Column(nullable = false)
-	private String ootdCoverImageUrl;
+	@Column(nullable = false, columnDefinition = "TEXT")
+	private String ootdImageUrl;
 
-	private String customCoverImageUrl;
+	@Column(columnDefinition = "TEXT")
+	private String customImageUrl;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, columnDefinition = "VARCHAR DEFAULT 'OOTD'")

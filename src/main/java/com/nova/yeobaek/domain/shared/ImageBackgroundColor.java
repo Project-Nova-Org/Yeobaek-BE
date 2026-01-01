@@ -1,5 +1,5 @@
 package com.nova.yeobaek.domain.shared;
 
-public enum ImageBackground {
+public enum ImageBackgroundColor {
 	WHITE, GRAY;
 }

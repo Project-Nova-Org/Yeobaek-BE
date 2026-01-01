@@ -5,8 +5,8 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.nova.yeobaek.global.payload.ErrorReason;
-import com.nova.yeobaek.global.payload.common.SuccessStatus;
+import com.nova.yeobaek.global.payload.status.ErrorReason;
+import com.nova.yeobaek.global.payload.status.SuccessStatus;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
