@@ -118,4 +118,18 @@ public class User extends BaseEntity {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	@Builder.Default
 	private List<UserHistory> userHistoryList = new ArrayList<>();
+
+	public static User createSocialUser(
+			OauthProvider oauthProvider,
+			String oauthId
+	) {
+		User user = new User();
+		user.oauthProvider = oauthProvider;
+		user.oauthId = oauthId;
+		return user;
+	}
+
+	public void updateNickname(String nickname) {
+		this.nickname = nickname;
+	}
 }
