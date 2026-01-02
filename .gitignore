@@ -40,3 +40,6 @@ out/
 application-secret.yml
 application-dev.yml
 application-prod.yml
+
+### env files ###
+.env
