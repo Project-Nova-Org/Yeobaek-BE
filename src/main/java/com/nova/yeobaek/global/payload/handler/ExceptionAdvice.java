@@ -47,7 +47,8 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 
 	// 응답 통일 - String
 	private ResponseEntity<Object> handleExceptionInternal(ErrorReason errorReason, String message) {
-		String finalMessage = (message != null) ? message : errorReason.toString();
+		// 예외에서 별도 메시지를 주지 않으면(ErrorReason 기반 예외) 기본 정의된 message 사용
+		String finalMessage = (message != null && !message.isBlank()) ? message : errorReason.getMessage();
 		CommonResponse<Object> body = CommonResponse.onFailure(errorReason.getCode(), finalMessage, null);
 		return ResponseEntity.status(errorReason.getHttpStatus()).body(body);
 	}
