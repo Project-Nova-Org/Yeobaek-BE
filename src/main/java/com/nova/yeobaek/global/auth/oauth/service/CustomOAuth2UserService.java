@@ -68,11 +68,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                         ? (Map<String, Object>) kakaoAccount.get("profile")
                         : null;
 
-        String imageUrl =
-                profile != null
-                        ? (String) profile.get("profile_image_url")
-                        : null;
-
         User user = getOrCreateSocialUser(
                 OauthProvider.KAKAO,
                 socialId
