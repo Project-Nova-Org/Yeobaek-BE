@@ -63,7 +63,7 @@ logging:
 
 app:
   cookie:
-    http-only: false   # local에서만 false
+    http-only: true   # local에서만 false
     secure: false      # localhost에서는 https 아니므로
     same-site: lax
 
