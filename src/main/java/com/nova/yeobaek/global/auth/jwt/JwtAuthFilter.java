@@ -63,7 +63,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 토큰 파싱 (유효하지 않으면 예외 발생 → EntryPoint로 이동)
+        // 토큰 검증
+        if (!jwtTokenProvider.validateToken(accessToken)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 토큰 파싱
         Long userId = jwtTokenProvider.getUserId(accessToken);
 
         // 사용자 조회 (없으면 인증 실패 → 그냥 통과)
