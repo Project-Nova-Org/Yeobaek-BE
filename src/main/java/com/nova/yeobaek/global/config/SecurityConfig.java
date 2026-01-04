@@ -81,8 +81,8 @@ public class SecurityConfig {
 				// "{배포url}"
 		)); // backend, frontend (로컬, 배포) Origins 추가
 
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("*"));
+		configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
+		configuration.setExposedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
