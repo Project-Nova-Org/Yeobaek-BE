@@ -3,6 +3,8 @@ package com.nova.yeobaek.global.auth.oauth.service;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
+import com.nova.yeobaek.global.auth.oauth.exception.OAuthException;
+import com.nova.yeobaek.global.auth.oauth.exception.code.OAuthErrorStatus;
 import com.nova.yeobaek.global.auth.oauth.user.CustomOAuth2User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -27,7 +29,11 @@ public class CustomOidcUserService extends OidcUserService {
         Map<String, Object> attributes = oidcUser.getAttributes();
 
         // Google 고유 ID
-        String socialId = attributes.get("sub").toString();
+        Object subObj = attributes.get("sub");
+        if (subObj == null) {
+            throw new OAuthException(OAuthErrorStatus.OAUTH_RESPONSE_MISSING_ID);
+        }
+        String socialId = subObj.toString();
 
         User user = userRepository
                 .findByOauthProviderAndOauthId(OauthProvider.GOOGLE, socialId)
