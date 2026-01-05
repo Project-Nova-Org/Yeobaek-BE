@@ -2,6 +2,7 @@ package com.nova.yeobaek.global.auth.oauth.service;
 
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
+import com.nova.yeobaek.domain.user.domain.enums.Role;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
 import com.nova.yeobaek.global.auth.oauth.exception.OAuthException;
 import com.nova.yeobaek.global.auth.oauth.exception.code.OAuthErrorStatus;
@@ -79,17 +80,21 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     //  소셜 타입 + 소셜 ID 기준으로 사용자 조회, 없으면 신규 생성
     private User getOrCreateSocialUser(
             OauthProvider oauthProvider,
-            String socialId
-    ) {
+            String socialId) {
         return userRepository
                 .findByOauthProviderAndOauthId(oauthProvider, socialId)
                 .orElseGet(() ->
                         userRepository.save(
                                 User.createSocialUser(
                                         oauthProvider,
-                                        socialId
+                                        socialId,
+                                        getRole()
                                 )
                         )
                 );
+    }
+
+    private Role getRole() {
+        return Role.USER;
     }
 }

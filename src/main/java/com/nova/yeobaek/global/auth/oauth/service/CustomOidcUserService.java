@@ -2,6 +2,7 @@ package com.nova.yeobaek.global.auth.oauth.service;
 
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
+import com.nova.yeobaek.domain.user.domain.enums.Role;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
 import com.nova.yeobaek.global.auth.oauth.exception.OAuthException;
 import com.nova.yeobaek.global.auth.oauth.exception.code.OAuthErrorStatus;
@@ -41,11 +42,16 @@ public class CustomOidcUserService extends OidcUserService {
                         userRepository.save(
                                 User.createSocialUser(
                                         OauthProvider.GOOGLE,
-                                        socialId
+                                        socialId,
+                                        getRole()
                                 )
                         )
                 );
 
         return new CustomOAuth2User(user, attributes);
+    }
+
+    private Role getRole() {
+        return Role.USER;
     }
 }

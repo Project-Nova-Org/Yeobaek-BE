@@ -123,11 +123,13 @@ public class User extends BaseEntity {
 
 	public static User createSocialUser(
 			OauthProvider oauthProvider,
-			String oauthId
+			String oauthId,
+			Role role
 	) {
 		User user = new User();
 		user.oauthProvider = oauthProvider;
 		user.oauthId = oauthId;
+		user.role = role;
 		return user;
 	}
 
