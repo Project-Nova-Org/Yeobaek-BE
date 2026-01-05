@@ -4,6 +4,7 @@ import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.auth.token.AccessTokenBlacklistStore;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -29,7 +30,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final UserRepository userRepository;
     private final AccessTokenBlacklistStore accessTokenBlacklistStore;
 
-    // 인증이 필요 없는 경로는 JWT 필터를 타지 않도록 설정
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
@@ -41,9 +41,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 || uri.equals("/api/auth/logout")
                 || uri.equals("/api/auth/reissue");
     }
-
-    // JWT AccessToken을 검증하고
-    // SecurityContext에 Authentication을 세팅하는 필터
 
     @Override
     protected void doFilterInternal(
@@ -65,37 +62,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 토큰 검증
-        if (!jwtTokenProvider.validateToken(accessToken)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
+        jwtTokenProvider.validateToken(accessToken); // 만료/위조 시 예외 발생
 
-        // 블랙리스트 체크
         if (accessTokenBlacklistStore.isBlacklisted(accessToken)) {
-            filterChain.doFilter(request, response);
-            return;
+            throw new JwtException("BLACKLISTED_TOKEN");
         }
 
-        // 토큰 파싱
-        Long userId;
-        try {
-            userId = jwtTokenProvider.getUserId(accessToken);
-        } catch (Exception e) {
-            request.setAttribute("exception", e);
-            filterChain.doFilter(request, response);
-            return;
-        }
+        Long userId = jwtTokenProvider.getUserId(accessToken);
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new JwtException("USER_NOT_FOUND"));
 
-        // 사용자 조회 (없으면 인증 실패 → 그냥 통과)
-        User user = userRepository.findById(userId).orElse(null);
-        if (user == null) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        // Security 인증 객체 생성
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
         UsernamePasswordAuthenticationToken authentication =
@@ -109,13 +86,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 new WebAuthenticationDetailsSource().buildDetails(request)
         );
 
-        // SecurityContext에 인증 정보 저장
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         filterChain.doFilter(request, response);
     }
-
-    // request 쿠키에서 accessToken 값 추출
 
     private String extractAccessToken(HttpServletRequest request) {
         if (request.getCookies() == null) return null;

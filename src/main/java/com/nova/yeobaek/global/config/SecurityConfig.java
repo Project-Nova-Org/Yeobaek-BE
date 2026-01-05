@@ -3,6 +3,7 @@ package com.nova.yeobaek.global.config;
 import java.util.List;
 
 import com.nova.yeobaek.global.auth.jwt.JwtAuthFilter;
+import com.nova.yeobaek.global.auth.jwt.JwtExceptionHandlerFilter;
 import com.nova.yeobaek.global.auth.oauth.handler.OAuth2LoginSuccessHandler;
 import com.nova.yeobaek.global.auth.oauth.service.CustomOAuth2UserService;
 import com.nova.yeobaek.global.auth.oauth.service.CustomOidcUserService;
@@ -26,22 +27,23 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-	private final JwtAuthFilter jwtAuthFilter;
-	private final OAuth2LoginSuccessHandler successHandler;
-	private final CustomOidcUserService customOidcUserService;
-	private final CustomOAuth2UserService customOAuth2UserService;
-	private final AuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private final JwtAuthFilter jwtAuthFilter;
+    private final JwtExceptionHandlerFilter jwtExceptionHandlerFilter;
+    private final OAuth2LoginSuccessHandler successHandler;
+    private final CustomOidcUserService customOidcUserService;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final AuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-	private static final String[] PERMIT_URLS = {
-			"/",
-			"/health",
-			"/swagger-ui/**",
-			"/v3/api-docs/**",
-			"/oauth2/authorization/**",
-			"/login/oauth2/code/**",
-			"/api/auth/reissue",
-			"/api/auth/logout"
-	};
+    private static final String[] PERMIT_URLS = {
+            "/",
+            "/health",
+            "/swagger-ui/**",
+            "/v3/api-docs/**",
+            "/oauth2/authorization/**",
+            "/login/oauth2/code/**",
+            "/api/auth/reissue",
+            "/api/auth/logout"
+    };
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -51,21 +53,28 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-				.exceptionHandling(ex -> ex
-						.authenticationEntryPoint(jwtAuthenticationEntryPoint)
-				)
-				.oauth2Login(oauth -> oauth
-						.userInfoEndpoint(userInfo -> userInfo
-								.userService(customOAuth2UserService)
-								.oidcUserService(customOidcUserService)
-						)
-						.successHandler(successHandler)
-				)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+                )
+                .oauth2Login(oauth -> oauth
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                                .oidcUserService(customOidcUserService)
+                        )
+                        .successHandler(successHandler)
+                )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PERMIT_URLS).permitAll()
                         .anyRequest().authenticated()
                 )
-				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(
+						jwtExceptionHandlerFilter,
+						UsernamePasswordAuthenticationFilter.class
+				)
+                .addFilterBefore(
+                        jwtAuthFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                );
         return http.build();
     }
 
@@ -73,16 +82,16 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
-		configuration.setAllowedOrigins(List.of(
-				// 로컬 back, front
-				"http://localhost:8080",
-				"http://localhost:8081"
-				// 배포 back, front
-				// "{배포url}"
-		)); // backend, frontend (로컬, 배포) Origins 추가
+        configuration.setAllowedOrigins(List.of(
+                // 로컬 back, front
+                "http://localhost:8080",
+                "http://localhost:8081"
+                // 배포 back, front
+                // "{배포url}"
+        )); // backend, frontend (로컬, 배포) Origins 추가
 
-		configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
-		configuration.setExposedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

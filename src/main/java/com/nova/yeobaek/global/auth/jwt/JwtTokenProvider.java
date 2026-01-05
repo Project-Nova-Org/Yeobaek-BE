@@ -81,17 +81,9 @@ public class JwtTokenProvider {
     }
 
 
-    public boolean validateToken(String token) {
-        try {
-            parseClaims(token);
-            return true;
-        } catch (ExpiredJwtException e) {
-            // 만료된 토큰
-            return false;
-        } catch (JwtException | IllegalArgumentException e) {
-            // 위조, 형식 오류, 지원되지 않는 토큰 등
-            return false;
-        }
+    // 토큰 검증
+    public void validateToken(String token) {
+        parseClaims(token);
     }
 
     public long getRemainingExpirationMillis(String token) {

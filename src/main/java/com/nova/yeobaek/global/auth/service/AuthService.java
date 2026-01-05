@@ -9,6 +9,8 @@ import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.auth.token.AccessTokenBlacklistStore;
 import com.nova.yeobaek.global.auth.token.RefreshTokenStore;
 import com.nova.yeobaek.global.auth.util.CookieUtil;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
@@ -42,12 +44,23 @@ public class AuthService {
         // Access Token 추출
         String accessToken = cookieUtil.resolveAccessToken(request);
 
-        if (accessToken != null && jwtTokenProvider.validateToken(accessToken)) {
-            long ttl =
-                    jwtTokenProvider.getRemainingExpirationMillis(accessToken);
+        if (accessToken != null) {
+            try {
+                // 토큰 유효성 검증
+                jwtTokenProvider.validateToken(accessToken);
 
-            // 블랙리스트 등록
-            accessTokenBlacklistStore.blacklist(accessToken, ttl);
+                // 남은 TTL 계산
+                long ttl = jwtTokenProvider.getRemainingExpirationMillis(accessToken);
+
+                // 블랙리스트 등록
+                accessTokenBlacklistStore.blacklist(accessToken, ttl);
+
+            } catch (ExpiredJwtException e) {
+                log.debug("이미 만료된 토큰");
+
+            } catch (JwtException | IllegalArgumentException e) {
+                log.debug("로그아웃 중 유효하지 않은 토큰 무시");
+            }
         }
 
         // 쿠키 삭제
@@ -84,7 +97,9 @@ public class AuthService {
         }
 
         // Refresh Token 검증
-        if (!jwtTokenProvider.validateToken(refreshToken)) {
+        try {
+            jwtTokenProvider.validateToken(refreshToken);
+        } catch (JwtException | IllegalArgumentException e) {
             throw new AuthException(AuthErrorStatus.INVALID_REFRESH_TOKEN);
         }
 
