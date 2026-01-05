@@ -1,4 +1,8 @@
 spring:
+  config:
+    activate:
+      on-profile: local
+
   datasource:
     url: jdbc:postgresql://localhost:5432/yeobaek
     username: ${LOCAL_DB_ID:nova}
@@ -20,11 +24,52 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            redirect-uri: ${KAKAO_REDIRECT_URI:http://localhost:8080/login/oauth2/code/kakao}
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            client-name: Kakao
+
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI:http://localhost:8080/login/oauth2/code/google}
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            client-name: Google
+
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
 logging:
   level:
     com.nova.yeobaek: debug
     org.hibernate.SQL: debug
     org.hibernate.orm.jdbc.bind: trace
+    org.springframework.security.oauth2.client: DEBUG
+
+app:
+  cookie:
+    http-only: true   # local에서만 false
+    secure: false      # localhost에서는 https 아니므로
+    same-site: lax
+
+jwt:
+  token:
+    secretKey: ${JWT_SECRET_KEY}
+    expiration:
+      access: ${JWT_ACCESS_EXPIRATION:1800000}   # 30분
+      refresh: ${JWT_REFRESH_EXPIRATION:604800000} # 7일

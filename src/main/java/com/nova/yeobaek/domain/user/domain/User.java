@@ -3,7 +3,9 @@ package com.nova.yeobaek.domain.user.domain;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import com.nova.yeobaek.domain.user.domain.enums.*;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -12,10 +14,6 @@ import com.nova.yeobaek.domain.closet.domain.Closet;
 import com.nova.yeobaek.domain.item.domain.Item;
 import com.nova.yeobaek.domain.ootd.domain.OOTD;
 import com.nova.yeobaek.domain.shared.BaseEntity;
-import com.nova.yeobaek.domain.user.domain.enums.Gender;
-import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
-import com.nova.yeobaek.domain.user.domain.enums.Rank;
-import com.nova.yeobaek.domain.user.domain.enums.UserStatus;
 import com.nova.yeobaek.domain.user.domain.mapping.ItemUsage;
 
 import jakarta.persistence.CascadeType;
@@ -63,6 +61,7 @@ public class User extends BaseEntity {
 
 	private String email;
 
+	@Column(unique = true)
 	private String nickname;
 
 	@Column(columnDefinition = "TEXT")
@@ -74,6 +73,10 @@ public class User extends BaseEntity {
 	private float weight;
 
 	private float height;
+
+	@Column(nullable = false)
+	@Enumerated(EnumType.STRING)
+	private Role role;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, columnDefinition = "VARCHAR DEFAULT 'LV1'")
@@ -118,4 +121,24 @@ public class User extends BaseEntity {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
 	@Builder.Default
 	private List<UserHistory> userHistoryList = new ArrayList<>();
+
+	public static User createSocialUser(
+			OauthProvider oauthProvider,
+			String oauthId,
+			Role role
+	) {
+		Objects.requireNonNull(oauthProvider, "oauthProvider는 필수");
+		Objects.requireNonNull(oauthId, "oauthId는 필수");
+		Objects.requireNonNull(role, "role은 필수");
+
+		User user = new User();
+		user.oauthProvider = oauthProvider;
+		user.oauthId = oauthId;
+		user.role = role;
+		return user;
+	}
+
+	public void updateNickname(String nickname) {
+		this.nickname = nickname;
+	}
 }

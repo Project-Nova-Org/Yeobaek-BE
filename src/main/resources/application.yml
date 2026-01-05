@@ -19,3 +19,8 @@ logging:
   level:
     root: info
     com.nova.yeobaek: info
+app:
+  cookie:
+    http-only: true
+    secure: true
+    same-site: none
