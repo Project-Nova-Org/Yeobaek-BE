@@ -80,12 +80,10 @@ public class JwtTokenProvider {
         return parseClaims(token).get(ROLE_CLAIM, String.class);
     }
 
+
     public boolean validateToken(String token) {
         try {
-            Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token);
+            parseClaims(token);
             return true;
         } catch (ExpiredJwtException e) {
             // 만료된 토큰
@@ -95,4 +93,12 @@ public class JwtTokenProvider {
             return false;
         }
     }
+
+    public long getRemainingExpirationMillis(String token) {
+        Claims claims = parseClaims(token);
+        long expirationTime = claims.getExpiration().getTime();
+        long now = System.currentTimeMillis();
+        return Math.max(expirationTime - now, 0);
+    }
+
 }
