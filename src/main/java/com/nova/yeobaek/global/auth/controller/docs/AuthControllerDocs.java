@@ -76,7 +76,7 @@ public interface AuthControllerDocs {
     - 서버는 로그인 상태를 유지하지 않습니다(JWT 기반).
     """
     )
-    CommonResponse<Void> logout(HttpServletResponse response);
+    CommonResponse<Void> logout(HttpServletRequest request, HttpServletResponse response);
 
     @Operation(
             summary = "Access Token 재발급 API",

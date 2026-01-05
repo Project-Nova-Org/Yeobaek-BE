@@ -50,8 +50,8 @@ public class AuthController implements AuthControllerDocs {
 	// 로그아웃
 	@Override
 	@PostMapping("/logout")
-	public CommonResponse<Void> logout(HttpServletResponse response) {
-		authService.logout(response);
+	public CommonResponse<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+		authService.logout(request,response);
 		return CommonResponse.onSuccess(null);
 	}
 

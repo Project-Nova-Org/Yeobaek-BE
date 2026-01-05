@@ -3,6 +3,7 @@ package com.nova.yeobaek.global.auth.jwt;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
+import com.nova.yeobaek.global.auth.token.AccessTokenBlacklistStore;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -26,6 +27,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private final AccessTokenBlacklistStore accessTokenBlacklistStore;
 
     // 인증이 필요 없는 경로는 JWT 필터를 타지 않도록 설정
     @Override
@@ -69,8 +71,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
+        // 블랙리스트 체크
+        if (accessTokenBlacklistStore.isBlacklisted(accessToken)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // 토큰 파싱
-        Long userId = jwtTokenProvider.getUserId(accessToken);
+        Long userId;
+        try {
+            userId = jwtTokenProvider.getUserId(accessToken);
+        } catch (Exception e) {
+            request.setAttribute("exception", e);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
 
         // 사용자 조회 (없으면 인증 실패 → 그냥 통과)
         User user = userRepository.findById(userId).orElse(null);
