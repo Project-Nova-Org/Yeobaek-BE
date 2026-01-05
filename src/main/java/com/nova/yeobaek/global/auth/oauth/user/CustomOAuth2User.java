@@ -3,6 +3,7 @@ package com.nova.yeobaek.global.auth.oauth.user;
 import com.nova.yeobaek.domain.user.domain.User;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -38,7 +39,7 @@ public class CustomOAuth2User implements OidcUser {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // 필요 시 Role 기반으로 변경 가능
-        return List.of(() -> "ROLE_USER");
+        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
     }
 
     @Override
