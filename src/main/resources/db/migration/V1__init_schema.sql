@@ -178,7 +178,8 @@ create table users (
                        body_image_url TEXT,
                        email varchar(255),
                        gender varchar(255) check (gender in ('MAN','WOMAN')),
-                       nickname varchar(255),
+                       nickname varchar(255) unique,
+                       role VARCHAR(255) NOT NULL CHECK (role in ('ADMIN','USER'))
                        oauth_id varchar(255) not null,
                        oauth_provider varchar(255) not null check (oauth_provider in ('KAKAO','GOOGLE')),
                        profile_image_url TEXT,
