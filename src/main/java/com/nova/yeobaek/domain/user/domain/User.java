@@ -3,6 +3,7 @@ package com.nova.yeobaek.domain.user.domain;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import com.nova.yeobaek.domain.user.domain.enums.*;
 import org.hibernate.annotations.DynamicInsert;
@@ -126,6 +127,10 @@ public class User extends BaseEntity {
 			String oauthId,
 			Role role
 	) {
+		Objects.requireNonNull(oauthProvider, "oauthProvider는 필수");
+		Objects.requireNonNull(oauthId, "oauthId는 필수");
+		Objects.requireNonNull(role, "role은 필수");
+
 		User user = new User();
 		user.oauthProvider = oauthProvider;
 		user.oauthId = oauthId;
