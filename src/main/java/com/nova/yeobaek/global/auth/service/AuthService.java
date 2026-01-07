@@ -71,7 +71,9 @@ public class AuthService {
                                 User.createSocialUser(provider, oauthId, Role.USER)
                         )
                 );
-        return issueTokens(user, true);
+
+        boolean isNewUser = user.getNickname() == null;
+        return issueTokens(user, isNewUser);
     }
 
 
