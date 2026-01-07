@@ -38,11 +38,16 @@ public class SecurityConfig {
             "/api/auth/reissue"
     };
 
-    @Profile({"local","dev"})
+    @Profile({"local", "dev"})
     @Bean
     public SecurityFilterChain devSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .securityMatcher("/api/auth/dev-login")
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/dev-login").permitAll()
                 );
@@ -66,9 +71,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
-						jwtExceptionHandlerFilter,
-						UsernamePasswordAuthenticationFilter.class
-				)
+                        jwtExceptionHandlerFilter,
+                        UsernamePasswordAuthenticationFilter.class
+                )
                 .addFilterBefore(
                         jwtAuthFilter,
                         UsernamePasswordAuthenticationFilter.class
