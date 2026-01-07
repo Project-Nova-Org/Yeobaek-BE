@@ -1,96 +1,91 @@
 package com.nova.yeobaek.global.auth.controller.docs;
 
 import com.nova.yeobaek.domain.user.domain.User;
+import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
 import com.nova.yeobaek.global.auth.dto.request.RequestDTO;
+import com.nova.yeobaek.global.auth.dto.response.ResponseDTO;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Auth", description = "인증/인가 API")
+@Tag(name = "Auth", description = "인증/인가 API (앱 전용)")
 public interface AuthControllerDocs {
 
-    @GetMapping("/login/google")
+    @PostMapping("/social/login")
     @Operation(
-            summary = "구글 로그인 (브라우저 리다이렉트)",
+            summary = "소셜 로그인 API",
             description = """
-    이 엔드포인트는 API 호출용이 아닙니다.
+            앱에서 구글 또는 카카오 SDK 로그인을 수행한 뒤,
+            발급받은 토큰을 서버로 전달하여 로그인/회원가입을 처리합니다.
 
-    프론트엔드에서 로그인 버튼 클릭 시
-    아래 URL로 페이지 이동(redirect)시키면
-    구글 로그인이 시작됩니다.
-
-    [개발 환경]
-    http://localhost:8080/oauth2/authorization/google
-    [운영 환경]
-    
-    """
+            - 서버는 토큰을 직접 검증합니다.
+            - 로그인 성공 시 AccessToken, RefreshToken을 반환합니다.
+            """
     )
-    default void googleLoginInfo(){}
+    CommonResponse<?> socialLogin(
+            @RequestBody @Valid RequestDTO.SocialLoginRequest request
+    );
 
-    @GetMapping("/login/kakao")
+    @PostMapping("/dev-login")
+    @Profile({"local","dev"})
     @Operation(
-            summary = "카카오 로그인 (브라우저 리다이렉트)",
+            summary = "개발용 로그인 API",
             description = """
-    이 엔드포인트는 API 호출용이 아닙니다.
-
-    프론트엔드에서 로그인 버튼 클릭 시
-    아래 URL로 페이지 이동(redirect)시키면
-    카카오 로그인이 시작됩니다.
-
-    [개발 환경]
-    http://localhost:8080/oauth2/authorization/kakao
-    [운영 환경]
-    
-    """
+            provider : google / kakao (대소문자 상관없음)
+   
+            """
     )
-    default void kakaoLoginInfo(){}
-
+    CommonResponse<ResponseDTO.LoginResponse> devLogin(
+            @RequestParam OauthProvider provider,
+            @RequestParam String oauthId
+    );
 
     @PatchMapping("/signup")
     @Operation(
-            summary = "닉네임설정(회원가입) API",
+            summary = "닉네임 설정 API",
             description = """
-     구글 또는 카카오 소셜로그인을 한 후 닉네임 설정을 합니다.
-    """
-    )
-    CommonResponse<?> signup(@AuthenticationPrincipal(expression = "user") User user,
-                             @RequestBody @Valid RequestDTO.SignupRequest nickname);
+            소셜 로그인 이후 최초 1회 닉네임을 설정합니다.
 
+            - Authorization 헤더(JWT)가 필요합니다.
+            - 로그인한 사용자 본인만 변경할 수 있습니다.
+            """
+    )
+    CommonResponse<?> signup(
+            @AuthenticationPrincipal(expression = "user") User user,
+            @RequestBody @Valid RequestDTO.SignupRequest nickname
+    );
 
     @PostMapping("/logout")
     @Operation(
             summary = "로그아웃 API",
             description = """
-    클라이언트에 저장된 인증 정보를 제거하여 로그아웃 처리합니다.
+            현재 로그인한 사용자를 로그아웃 처리합니다.
 
-    - 로그인 여부와 관계없이 호출할 수 있습니다.
-    - Access Token 및 Refresh Token 쿠키를 만료시킵니다.
-    - 서버는 로그인 상태를 유지하지 않습니다(JWT 기반).
-    """
+            - Authorization 헤더의 AccessToken을 블랙리스트 처리합니다.
+            - 서버에 저장된 RefreshToken을 삭제합니다.
+            - 클라이언트는 토큰을 직접 제거해야 합니다.
+            """
     )
-    CommonResponse<Void> logout(HttpServletRequest request, HttpServletResponse response);
+    CommonResponse<Void> logout(
+            @RequestHeader("Authorization") String authorization,
+            @AuthenticationPrincipal(expression = "user") User user
+    );
 
+    @PostMapping("/reissue")
     @Operation(
             summary = "Access Token 재발급 API",
             description = """
-            만료된 Access Token을 Refresh Token을 이용해 재발급합니다.
-            
-            - Refresh Token은 HttpOnly Cookie로 전달됩니다.
-            - 요청 본문이나 Authorization 헤더는 필요하지 않습니다.
-            - Refresh Token이 유효하지 않으면 재발급에 실패합니다.
+            Refresh Token을 이용해 AccessToken과 RefreshToken을 재발급합니다.
+
+            - Refresh Token은 요청 Body로 전달합니다.
+            - 기존 Refresh Token은 폐기됩니다.
             """
     )
-    @PostMapping("/reissue")
     CommonResponse<?> reissue(
-            HttpServletRequest request,
-            HttpServletResponse response
+            @RequestBody @Valid RequestDTO.ReissueRequest request
     );
 }

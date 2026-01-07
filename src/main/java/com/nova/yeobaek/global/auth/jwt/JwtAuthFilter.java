@@ -2,12 +2,14 @@ package com.nova.yeobaek.global.auth.jwt;
 
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
+import com.nova.yeobaek.global.auth.exception.AuthException;
+import com.nova.yeobaek.global.auth.exception.code.AuthErrorStatus;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.auth.token.AccessTokenBlacklistStore;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +20,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
-
-    private static final String ACCESS_TOKEN_COOKIE = "accessToken";
 
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
@@ -34,11 +33,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
 
-        return uri.startsWith("/oauth2/")
-                || uri.startsWith("/login/oauth2/")
-                || uri.startsWith("/swagger")
+        return uri.startsWith("/swagger")
                 || uri.startsWith("/v3/api-docs")
-                || uri.equals("/api/auth/logout")
+                || uri.equals("/api/auth/social/login")
                 || uri.equals("/api/auth/reissue");
     }
 
@@ -49,29 +46,38 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        // 이미 인증된 요청이면 그대로 통과
+        // 이미 인증된 경우 그대로 통과
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 쿠키에서 accessToken 추출
-        String accessToken = extractAccessToken(request);
+        // Authorization 헤더에서 accessToken 추출
+        String accessToken = resolveAccessToken(request);
         if (accessToken == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        jwtTokenProvider.validateToken(accessToken); // 만료/위조 시 예외 발생
-
+        // 블랙리스트 체크
         if (accessTokenBlacklistStore.isBlacklisted(accessToken)) {
-            throw new JwtException("BLACKLISTED_TOKEN");
+            throw new AuthException(AuthErrorStatus.BLACKLISTED_TOKEN);
         }
 
-        Long userId = jwtTokenProvider.getUserId(accessToken);
+        Long userId;
 
+        try {
+            jwtTokenProvider.validateToken(accessToken);
+            userId = jwtTokenProvider.getUserId(accessToken);
+        } catch (ExpiredJwtException e) {
+            throw new AuthException(AuthErrorStatus.EXPIRED_TOKEN);
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new AuthException(AuthErrorStatus.INVALID_ACCESS_TOKEN);
+        }
+
+        // 사용자 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new JwtException("USER_NOT_FOUND"));
+                .orElseThrow(() -> new AuthException(AuthErrorStatus.USER_NOT_FOUND));
 
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
@@ -91,13 +97,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private String extractAccessToken(HttpServletRequest request) {
-        if (request.getCookies() == null) return null;
-
-        return Arrays.stream(request.getCookies())
-                .filter(cookie -> ACCESS_TOKEN_COOKIE.equals(cookie.getName()))
-                .map(Cookie::getValue)
-                .findFirst()
-                .orElse(null);
+    private String resolveAccessToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            return null;
+        }
+        return header.substring(7);
     }
 }

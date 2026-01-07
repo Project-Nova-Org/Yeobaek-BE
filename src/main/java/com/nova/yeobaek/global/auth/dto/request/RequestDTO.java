@@ -15,4 +15,13 @@ public class RequestDTO {
         )
         String nickname
     ){}
+
+    public record SocialLoginRequest(
+            @NotBlank String provider, // google, kakao
+            @NotBlank String token
+    ){}
+
+    public record ReissueRequest(
+            @NotBlank String refreshToken
+    ) {}
 }

@@ -1,20 +1,19 @@
 package com.nova.yeobaek.global.auth.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nova.yeobaek.global.auth.exception.AuthException;
+import com.nova.yeobaek.global.auth.exception.code.AuthErrorStatus;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
-import io.jsonwebtoken.ExpiredJwtException;
+import com.nova.yeobaek.global.payload.status.ErrorReason;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import io.jsonwebtoken.JwtException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
-import static com.nova.yeobaek.global.payload.status.CommonErrorStatus._UNAUTHORIZED;
 
 @Component
 @RequiredArgsConstructor
@@ -31,31 +30,69 @@ public class JwtExceptionHandlerFilter extends OncePerRequestFilter {
 
         try {
             filterChain.doFilter(request, response);
-
-        } catch (ExpiredJwtException e) {
-            writeUnauthorized(response, "Access Token이 만료되었습니다.");
-            return;
-
-        } catch (JwtException | IllegalArgumentException e) {
-            writeUnauthorized(response, "유효하지 않은 토큰입니다.");
-            return;
+        } catch (AuthException e) {
+            handleAuthException(response, e);
         }
     }
 
-    private void writeUnauthorized(HttpServletResponse response, String message)
-            throws IOException {
+    private void handleAuthException(
+            HttpServletResponse response,
+            AuthException e
+    ) throws IOException {
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        ErrorReason reason = e.getErrorReason();
+
+        if (reason instanceof AuthErrorStatus status) {
+            writeAuthError(response, status);
+            return;
+        }
+
+        writeFallbackError(response, reason);
+    }
+
+    // 공통 응답
+    private void writeResponse(
+            HttpServletResponse response,
+            int httpStatus,
+            ErrorReason reason,
+            String message
+    ) throws IOException {
+
+        response.setStatus(httpStatus);
         response.setContentType("application/json;charset=UTF-8");
 
         response.getWriter().write(
                 objectMapper.writeValueAsString(
-                        CommonResponse.onFailure(
-                                _UNAUTHORIZED,
-                                message
-                        )
+                        CommonResponse.onFailure(reason, message)
                 )
         );
     }
-}
 
+    // 400 에러
+    private void writeAuthError(
+            HttpServletResponse response,
+            AuthErrorStatus status
+    ) throws IOException {
+
+        writeResponse(
+                response,
+                status.getHttpStatus().value(),
+                status,
+                status.getMessage()
+        );
+    }
+
+    // 500 에러
+    private void writeFallbackError(
+            HttpServletResponse response,
+            ErrorReason reason
+    ) throws IOException {
+
+        writeResponse(
+                response,
+                HttpServletResponse.SC_UNAUTHORIZED,
+                reason,
+                reason.getMessage()
+        );
+    }
+}
