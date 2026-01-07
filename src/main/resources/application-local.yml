@@ -61,12 +61,6 @@ logging:
     org.hibernate.orm.jdbc.bind: trace
     org.springframework.security.oauth2.client: DEBUG
 
-app:
-  cookie:
-    http-only: true   # local에서만 false
-    secure: false      # localhost에서는 https 아니므로
-    same-site: lax
-
 jwt:
   token:
     secretKey: ${JWT_SECRET_KEY}
