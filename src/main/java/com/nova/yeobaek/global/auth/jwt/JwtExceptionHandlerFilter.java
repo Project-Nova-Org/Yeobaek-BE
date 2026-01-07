@@ -43,46 +43,56 @@ public class JwtExceptionHandlerFilter extends OncePerRequestFilter {
         ErrorReason reason = e.getErrorReason();
 
         if (reason instanceof AuthErrorStatus status) {
-            writeError(response, status);
+            writeAuthError(response, status);
             return;
         }
 
         writeFallbackError(response, reason);
     }
 
-    private void writeError(
+    // 공통 응답
+    private void writeResponse(
             HttpServletResponse response,
-            AuthErrorStatus status
+            int httpStatus,
+            ErrorReason reason,
+            String message
     ) throws IOException {
 
-        response.setStatus(status.getHttpStatus().value());
+        response.setStatus(httpStatus);
         response.setContentType("application/json;charset=UTF-8");
 
         response.getWriter().write(
                 objectMapper.writeValueAsString(
-                        CommonResponse.onFailure(
-                                status,
-                                status.getMessage()
-                        )
+                        CommonResponse.onFailure(reason, message)
                 )
         );
     }
 
+    // 400 에러
+    private void writeAuthError(
+            HttpServletResponse response,
+            AuthErrorStatus status
+    ) throws IOException {
+
+        writeResponse(
+                response,
+                status.getHttpStatus().value(),
+                status,
+                status.getMessage()
+        );
+    }
+
+    // 500 에러
     private void writeFallbackError(
             HttpServletResponse response,
             ErrorReason reason
     ) throws IOException {
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json;charset=UTF-8");
-
-        response.getWriter().write(
-                objectMapper.writeValueAsString(
-                        CommonResponse.onFailure(
-                                reason,
-                                reason.getMessage()
-                        )
-                )
+        writeResponse(
+                response,
+                HttpServletResponse.SC_UNAUTHORIZED,
+                reason,
+                reason.getMessage()
         );
     }
 }
