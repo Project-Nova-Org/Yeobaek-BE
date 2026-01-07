@@ -7,6 +7,7 @@ import com.nova.yeobaek.global.auth.dto.request.RequestDTO;
 import com.nova.yeobaek.global.auth.dto.response.ResponseDTO;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 import jakarta.validation.Valid;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +37,7 @@ public class AuthController implements AuthControllerDocs {
 
     // 개발용 로그인 삭제 예정
     @Override
+    @Profile({"local","dev"})
     @PostMapping("/dev-login")
     public CommonResponse<ResponseDTO.LoginResponse> devLogin(
             @RequestParam OauthProvider provider,

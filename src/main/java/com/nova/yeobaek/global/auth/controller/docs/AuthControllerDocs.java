@@ -8,6 +8,7 @@ import com.nova.yeobaek.global.payload.response.CommonResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,6 +31,7 @@ public interface AuthControllerDocs {
     );
 
     @PostMapping("/dev-login")
+    @Profile({"local","dev"})
     @Operation(
             summary = "개발용 로그인 API",
             description = """
