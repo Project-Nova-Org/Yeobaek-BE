@@ -70,14 +70,8 @@ public class SecurityConfig {
                         .requestMatchers(PERMIT_URLS).permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(
-                        jwtExceptionHandlerFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                )
-                .addFilterBefore(
-                        jwtAuthFilter,
-                        UsernamePasswordAuthenticationFilter.class
-                );
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtExceptionHandlerFilter, JwtAuthFilter.class);
         return http.build();
     }
 
