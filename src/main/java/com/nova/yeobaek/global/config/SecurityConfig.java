@@ -6,6 +6,7 @@ import com.nova.yeobaek.global.auth.jwt.JwtAuthFilter;
 import com.nova.yeobaek.global.auth.jwt.JwtExceptionHandlerFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -34,9 +35,20 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/api/auth/social/login",
-            "/api/auth/dev-login",
             "/api/auth/reissue"
     };
+
+    @Profile({"local","dev"})
+    @Bean
+    public SecurityFilterChain devSecurityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .securityMatcher("/api/auth/dev-login")
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/dev-login").permitAll()
+                );
+        return http.build();
+    }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
