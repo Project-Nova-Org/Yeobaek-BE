@@ -12,7 +12,7 @@ public enum AuthErrorStatus implements ErrorReason {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND,"AUTH_4042","사용자를 찾을 수 없습니다."),
     REFRESH_TOKEN_NOT_FOUND(HttpStatus.NOT_FOUND,"AUTH_4043","리프레시토큰을 찾을 수 없습니다."),
     REFRESH_TOKEN_MISMATCH(HttpStatus.CONFLICT,"AUTH_4091","저장된 리프레시토큰과 다릅니다."),
-    INVALID_ACCESS_TOKEN(HttpStatus.BAD_REQUEST,"AUTH_4003", "유효하지 않은 리프레시토큰입니다."),
+    INVALID_ACCESS_TOKEN(HttpStatus.BAD_REQUEST,"AUTH_4003", "유효하지 않은 액세스토큰입니다."),
     INVALID_REFRESH_TOKEN(HttpStatus.BAD_REQUEST,"AUTH_4003", "유효하지 않은 리프레시토큰입니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_4012", "토큰이 만료되었습니다."),
     BLACKLISTED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_4013", "이미 로그아웃된 토큰입니다."),

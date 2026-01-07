@@ -29,7 +29,7 @@ public interface AuthControllerDocs {
             @RequestBody @Valid RequestDTO.SocialLoginRequest request
     );
 
-    @PostMapping("/api/auth/dev-login")
+    @PostMapping("/dev-login")
     @Operation(
             summary = "개발용 로그인 API",
             description = """

@@ -36,7 +36,7 @@ public class AuthController implements AuthControllerDocs {
 
     // 개발용 로그인 삭제 예정
     @Override
-    @PostMapping("/api/auth/dev-login")
+    @PostMapping("/dev-login")
     public CommonResponse<ResponseDTO.LoginResponse> devLogin(
             @RequestParam OauthProvider provider,
             @RequestParam String oauthId
