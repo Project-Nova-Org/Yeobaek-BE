@@ -1,25 +1,29 @@
 package com.nova.yeobaek.global.auth.service;
 
 import com.nova.yeobaek.domain.user.domain.User;
+import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
+import com.nova.yeobaek.domain.user.domain.enums.Role;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
+import com.nova.yeobaek.global.auth.dto.google.GoogleUserResponse;
+import com.nova.yeobaek.global.auth.dto.kakao.KakaoUserResponse;
+import com.nova.yeobaek.global.auth.dto.request.RequestDTO;
+import com.nova.yeobaek.global.auth.dto.response.ResponseDTO;
 import com.nova.yeobaek.global.auth.exception.AuthException;
 import com.nova.yeobaek.global.auth.exception.code.AuthErrorStatus;
 import com.nova.yeobaek.global.auth.jwt.JwtTokenProvider;
-import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.auth.token.AccessTokenBlacklistStore;
 import com.nova.yeobaek.global.auth.token.RefreshTokenStore;
-import com.nova.yeobaek.global.auth.util.CookieUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+import static com.nova.yeobaek.domain.user.domain.User.createSocialUser;
 
 @Slf4j
 @Service
@@ -27,32 +31,58 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional
 public class AuthService {
 
-    private final CookieUtil cookieUtil;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenStore refreshTokenStore;
     private final UserRepository userRepository;
     private final AccessTokenBlacklistStore accessTokenBlacklistStore;
 
-    // 로그인
-    public void login(User user, HttpServletResponse response) {
-        issueTokens(user, response);
+    // 소셜 로그인
+    public ResponseDTO.LoginResponse socialLogin(RequestDTO.SocialLoginRequest request) {
+
+        OauthProvider provider = OauthProvider.from(request.provider());
+
+        String oauthId = switch (provider) {
+            case KAKAO -> verifyKakaoTokenAndGetId(request.token());
+            case GOOGLE -> verifyGoogleTokenAndGetId(request.token());
+        };
+
+
+        User user = userRepository
+                .findByOauthProviderAndOauthId(provider, oauthId)
+                .orElseGet(() -> userRepository.save(
+                        createSocialUser(provider, oauthId, Role.USER)
+                ));
+
+        boolean isNewUser = user.getNickname() == null;
+
+        // JWT 발급
+        return issueTokens(user, isNewUser);
     }
 
-    // 로그아웃
-    public void logout(HttpServletRequest request, HttpServletResponse response) {
+    // 개발용 로그인 (local/dev 전용)
+    public ResponseDTO.LoginResponse devLogin(
+            OauthProvider provider,
+            String oauthId
+    ) {
+        User user = userRepository
+                .findByOauthProviderAndOauthId(provider, oauthId)
+                .orElseGet(() ->
+                        userRepository.save(
+                                User.createSocialUser(provider, oauthId, Role.USER)
+                        )
+                );
+        return issueTokens(user, true);
+    }
 
-        // Access Token 추출
-        String accessToken = cookieUtil.resolveAccessToken(request);
+
+    // 로그아웃
+    public void logout(String accessToken, Long userId) {
 
         if (accessToken != null) {
             try {
-                // 토큰 유효성 검증
                 jwtTokenProvider.validateToken(accessToken);
 
-                // 남은 TTL 계산
                 long ttl = jwtTokenProvider.getRemainingExpirationMillis(accessToken);
-
-                // 블랙리스트 등록
                 accessTokenBlacklistStore.blacklist(accessToken, ttl);
 
             } catch (ExpiredJwtException e) {
@@ -62,91 +92,114 @@ public class AuthService {
                 log.debug("로그아웃 중 유효하지 않은 토큰 무시");
             }
         }
-
-        // 쿠키 삭제
-        response.addHeader(
-                "Set-Cookie",
-                cookieUtil.delete("accessToken").toString()
-        );
-        response.addHeader(
-                "Set-Cookie",
-                cookieUtil.delete("refreshToken").toString()
-        );
-
         // Refresh Token 삭제
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication != null &&
-                authentication.getPrincipal() instanceof CustomUserDetails userDetails) {
-
-            refreshTokenStore.delete(userDetails.getUser().getId());
-        }
-
-        SecurityContextHolder.clearContext();
+        refreshTokenStore.delete(userId);
     }
 
-
     // accessToken 재발급 후 refreshToken도 재발급
-    public void reissue(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseDTO.LoginResponse reissue(String refreshToken) {
 
-        // Refresh Token 추출
-        String refreshToken = cookieUtil.resolveRefreshToken(request);
         if (refreshToken == null) {
             throw new AuthException(AuthErrorStatus.REFRESH_TOKEN_NOT_FOUND);
         }
 
-        // Refresh Token 검증
         try {
             jwtTokenProvider.validateToken(refreshToken);
         } catch (JwtException | IllegalArgumentException e) {
             throw new AuthException(AuthErrorStatus.INVALID_REFRESH_TOKEN);
         }
 
-        // userId 추출
         Long userId = jwtTokenProvider.getUserId(refreshToken);
 
-        // Redis Refresh Token 비교
         String savedRefreshToken = refreshTokenStore.get(userId);
         if (savedRefreshToken == null || !savedRefreshToken.equals(refreshToken)) {
             throw new AuthException(AuthErrorStatus.REFRESH_TOKEN_MISMATCH);
         }
 
-        // 사용자 조회
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new AuthException(AuthErrorStatus.NOT_FOUND));
+                .orElseThrow(() -> new AuthException(AuthErrorStatus.USER_NOT_FOUND));
 
-        // 기존 Refresh Token 폐기
         refreshTokenStore.delete(userId);
 
-        // 새 토큰 발급
-        issueTokens(user, response);
+        return issueTokens(user, false);
     }
 
     // 토큰 발급
-    private void issueTokens(User user, HttpServletResponse response) {
+    private ResponseDTO.LoginResponse issueTokens(User user, boolean isNewUser) {
 
         Long userId = user.getId();
 
-        // Access / Refresh Token 생성
         String accessToken =
                 jwtTokenProvider.createAccessToken(userId, user.getRole().name());
         String refreshToken =
                 jwtTokenProvider.createRefreshToken(userId);
 
-        // Refresh Token 저장 (Redis)
         refreshTokenStore.save(userId, refreshToken);
 
-        // Access Token 쿠키
-        response.addHeader(
-                "Set-Cookie",
-                cookieUtil.accessToken(accessToken).toString()
-        );
-
-        // Refresh Token 쿠키
-        response.addHeader(
-                "Set-Cookie",
-                cookieUtil.refreshToken(refreshToken).toString()
-        );
+        return new ResponseDTO.LoginResponse(accessToken, refreshToken, isNewUser);
     }
+
+    private String verifyKakaoTokenAndGetId(String token) {
+
+        try {
+            KakaoUserResponse response = WebClient.create("https://kapi.kakao.com")
+                    .get()
+                    .uri("/v2/user/me")
+                    .header("Authorization", "Bearer " + token)
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            clientResponse -> Mono.error(
+                                    new AuthException(AuthErrorStatus.INVALID_OAUTH_TOKEN)
+                            )
+                    )
+                    .bodyToMono(KakaoUserResponse.class)
+                    .block();
+
+            if (response == null || response.id() == null) {
+                throw new AuthException(AuthErrorStatus.INVALID_OAUTH_TOKEN);
+            }
+
+            // oauthId는 String으로 통일
+            return response.id().toString();
+
+        } catch (Exception e) {
+            throw new AuthException(AuthErrorStatus.INVALID_OAUTH_TOKEN);
+        }
+    }
+
+    private String verifyGoogleTokenAndGetId(String idToken) {
+
+        try {
+            GoogleUserResponse response = WebClient.create(
+                            "https://oauth2.googleapis.com"
+                    )
+                    .get()
+                    .uri(uriBuilder ->
+                            uriBuilder
+                                    .path("/tokeninfo")
+                                    .queryParam("id_token", idToken)
+                                    .build()
+                    )
+                    .retrieve()
+                    .onStatus(
+                            status -> status.is4xxClientError() || status.is5xxServerError(),
+                            clientResponse -> Mono.error(
+                                    new AuthException(AuthErrorStatus.INVALID_OAUTH_TOKEN)
+                            )
+                    )
+                    .bodyToMono(GoogleUserResponse.class)
+                    .block();
+
+            if (response == null || response.sub() == null) {
+                throw new AuthException(AuthErrorStatus.INVALID_OAUTH_TOKEN);
+            }
+
+            return response.sub();
+
+        } catch (Exception e) {
+            throw new AuthException(AuthErrorStatus.INVALID_OAUTH_TOKEN);
+        }
+    }
+
 }
