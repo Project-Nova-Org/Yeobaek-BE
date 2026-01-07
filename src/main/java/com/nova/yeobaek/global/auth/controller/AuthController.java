@@ -2,8 +2,6 @@ package com.nova.yeobaek.global.auth.controller;
 
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
-import com.nova.yeobaek.domain.user.domain.enums.Role;
-import com.nova.yeobaek.domain.user.repository.UserRepository;
 import com.nova.yeobaek.domain.user.service.UserService;
 import com.nova.yeobaek.global.auth.dto.request.RequestDTO;
 import com.nova.yeobaek.global.auth.dto.response.ResponseDTO;
