@@ -64,9 +64,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throw new AuthException(AuthErrorStatus.BLACKLISTED_TOKEN);
         }
 
-        // 토큰 검증
+        Long userId;
+
         try {
             jwtTokenProvider.validateToken(accessToken);
+            userId = jwtTokenProvider.getUserId(accessToken);
         } catch (ExpiredJwtException e) {
             throw new AuthException(AuthErrorStatus.EXPIRED_TOKEN);
         } catch (JwtException | IllegalArgumentException e) {
@@ -74,7 +76,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         // 사용자 조회
-        Long userId = jwtTokenProvider.getUserId(accessToken);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorStatus.USER_NOT_FOUND));
 
