@@ -4,9 +4,6 @@ import java.util.List;
 
 import com.nova.yeobaek.global.auth.jwt.JwtAuthFilter;
 import com.nova.yeobaek.global.auth.jwt.JwtExceptionHandlerFilter;
-import com.nova.yeobaek.global.auth.oauth.handler.OAuth2LoginSuccessHandler;
-import com.nova.yeobaek.global.auth.oauth.service.CustomOAuth2UserService;
-import com.nova.yeobaek.global.auth.oauth.service.CustomOidcUserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -29,9 +26,6 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final JwtExceptionHandlerFilter jwtExceptionHandlerFilter;
-    private final OAuth2LoginSuccessHandler successHandler;
-    private final CustomOidcUserService customOidcUserService;
-    private final CustomOAuth2UserService customOAuth2UserService;
     private final AuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     private static final String[] PERMIT_URLS = {
@@ -39,10 +33,9 @@ public class SecurityConfig {
             "/health",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/oauth2/authorization/**",
-            "/login/oauth2/code/**",
-            "/api/auth/reissue",
-            "/api/auth/logout"
+            "/api/auth/social/login",
+            "/api/auth/dev-login",
+            "/api/auth/reissue"
     };
 
     @Bean
@@ -55,13 +48,6 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                )
-                .oauth2Login(oauth -> oauth
-                        .userInfoEndpoint(userInfo -> userInfo
-                                .userService(customOAuth2UserService)
-                                .oidcUserService(customOidcUserService)
-                        )
-                        .successHandler(successHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PERMIT_URLS).permitAll()
@@ -81,7 +67,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false);
         configuration.setAllowedOrigins(List.of(
                 // 로컬 back, front
                 "http://localhost:8080",
@@ -90,8 +76,8 @@ public class SecurityConfig {
                 // "{배포url}"
         )); // backend, frontend (로컬, 배포) Origins 추가
 
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
-        configuration.setExposedHeaders(List.of("Authorization", "Content-Type", "Refresh-Token"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
