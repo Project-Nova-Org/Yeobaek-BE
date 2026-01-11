@@ -21,7 +21,8 @@ CREATE TABLE items_color (
                              color_id BIGINT NOT NULL,
                              created_at TIMESTAMP(6) NOT NULL DEFAULT NOW(),
                              updated_at TIMESTAMP(6) NOT NULL DEFAULT NOW(),
-                             PRIMARY KEY (id)
+                             PRIMARY KEY (id),
+                             UNIQUE (item_id, color_id)
 );
 
 /* 3. 외래키(Foreign Key) 설정 */

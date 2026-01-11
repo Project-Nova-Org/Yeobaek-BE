@@ -2,6 +2,7 @@ package com.nova.yeobaek.domain.item.domain.mapping;
 
 import com.nova.yeobaek.domain.item.domain.Color;
 import com.nova.yeobaek.domain.item.domain.Item;
+import com.nova.yeobaek.domain.shared.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.DynamicInsert;
@@ -15,7 +16,7 @@ import org.hibernate.annotations.DynamicUpdate;
 @DynamicInsert
 @DynamicUpdate
 @Table(name = "items_color")
-public class ItemsColor {
+public class ItemsColor extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // 추가하신 독립적인 PK
