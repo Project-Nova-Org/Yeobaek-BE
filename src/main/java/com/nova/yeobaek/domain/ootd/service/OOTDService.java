@@ -12,6 +12,7 @@ import com.nova.yeobaek.domain.ootd.repository.OOTDRepository;
 import com.nova.yeobaek.domain.ootd.repository.ootdItem.OOTDItemRepository;
 import com.nova.yeobaek.domain.ootd.repository.style.StyleRepository;
 import com.nova.yeobaek.domain.ootd.repository.tpo.TPORepository;
+import com.nova.yeobaek.domain.ootd.status.OOTDErrorStatus;
 import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.service.UserService;
@@ -62,17 +63,17 @@ public class OOTDService {
                 .map(OOTDRequestDTO.OOTDItemRequestDTO::getFashionItemId)
                 .toList();
 
-        // 중복 ID 검증 (요청 검증 실패)
+        // 중복 ID 검증
         if (itemIds.size() != itemIds.stream().distinct().count()) {
-            throw new GeneralException(CommonErrorStatus._BAD_REQUEST);
+            throw new GeneralException(OOTDErrorStatus.DUPLICATED_ITEM_ID);
         }
 
         // Item 엔티티 조회
         List<Item> items = itemRepository.findAllById(itemIds);
 
-        // 존재 여부 검증 (리소스 없음)
+        // Item 존재 여부 검증
         if (items.size() != itemIds.size()) {
-            throw new GeneralException(CommonErrorStatus._NOT_FOUND);
+            throw new GeneralException(OOTDErrorStatus.ITEM_NOT_FOUND);
         }
 
         Map<Long, Item> itemMap = items.stream()
