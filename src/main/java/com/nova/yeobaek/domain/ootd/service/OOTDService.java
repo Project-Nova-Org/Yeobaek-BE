@@ -43,11 +43,7 @@ public class OOTDService {
 
     /** OOTD 등록 */
     @Transactional
-    public Long createOOTD(OOTDRequestDTO requestDTO) {
-
-        // NOTE: 본 PR에서는 인증 연동을 제외하므로 user는 null로 처리
-        // 추후 auth 연동 시 현재 로그인 사용자로 대체 예정
-        User user = null; // TODO: 인증 연동 시 수정
+    public Long createOOTD(User user, OOTDRequestDTO requestDTO) {
 
         Style style = styleRepository.findById(requestDTO.getStyleId())
                 .orElseThrow(() -> new GeneralException(CommonErrorStatus._NOT_FOUND));
@@ -55,7 +51,6 @@ public class OOTDService {
         TPO tpo = tpoRepository.findById(requestDTO.getTpoId())
                 .orElseThrow(() -> new GeneralException(CommonErrorStatus._NOT_FOUND));
 
-        // ImageBackgroundColor 검증
         ImageBackgroundColor backgroundColor;
         try {
             backgroundColor = ImageBackgroundColor.from(requestDTO.getImageBackground());
@@ -63,24 +58,18 @@ public class OOTDService {
             throw new GeneralException(CommonErrorStatus._BAD_REQUEST);
         }
 
-        // 요청된 Item ID 목록 추출
         List<Long> itemIds = requestDTO.getItems().stream()
                 .map(OOTDRequestDTO.OOTDItemRequestDTO::getFashionItemId)
                 .toList();
 
-        // Item 엔티티 조회 (영속 상태)
         List<Item> items = itemRepository.findAllById(itemIds);
-
-        // 존재 여부 검증
         if (items.size() != itemIds.size()) {
             throw new GeneralException(CommonErrorStatus._NOT_FOUND);
         }
 
-        // Map 변환 (itemId -> Item)
         Map<Long, Item> itemMap = items.stream()
                 .collect(Collectors.toMap(Item::getId, item -> item));
 
-        // OOTD 생성
         OOTD ootd = OOTDConverter.toOOTD(
                 requestDTO,
                 user,
@@ -90,7 +79,6 @@ public class OOTDService {
         );
         ootdRepository.save(ootd);
 
-        // OOTDItem 생성 (영속 상태 Item 사용)
         List<OOTDItem> ootdItems =
                 OOTDConverter.toOOTDItems(
                         requestDTO.getItems(),

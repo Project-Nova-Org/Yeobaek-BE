@@ -2,19 +2,18 @@ package com.nova.yeobaek.domain.ootd.controller;
 
 import com.nova.yeobaek.domain.ootd.controller.docs.OOTDControllerDocs;
 import com.nova.yeobaek.domain.ootd.dto.request.OOTDRequestDTO;
-import com.nova.yeobaek.domain.ootd.service.OOTDService;
-import com.nova.yeobaek.global.payload.response.CommonResponse;
 import com.nova.yeobaek.domain.ootd.dto.response.CreateOOTDResponse;
+import com.nova.yeobaek.domain.ootd.service.OOTDService;
+import com.nova.yeobaek.global.auth.security.CustomUserDetails;
+import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -28,11 +27,13 @@ public class OOTDController implements OOTDControllerDocs {
     @Override
     @PostMapping
     public CommonResponse<CreateOOTDResponse> createOOTD(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody OOTDRequestDTO requestDTO
     ) {
-        Long ootdId = ootdService.createOOTD(requestDTO);
+        Long ootdId = ootdService.createOOTD(
+                userDetails.getUser(),
+                requestDTO
+        );
         return CommonResponse.onCreated(new CreateOOTDResponse(ootdId));
     }
-
-
 }
