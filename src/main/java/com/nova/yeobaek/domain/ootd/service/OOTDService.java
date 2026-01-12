@@ -45,13 +45,15 @@ public class OOTDService {
     @Transactional
     public Long createOOTD(OOTDRequestDTO requestDTO) {
 
+        // NOTE: 본 PR에서는 인증 연동을 제외하므로 user는 null로 처리
+        // 추후 auth 연동 시 현재 로그인 사용자로 대체 예정
         User user = null; // TODO: 인증 연동 시 수정
 
         Style style = styleRepository.findById(requestDTO.getStyleId())
-                .orElseThrow(() -> new GeneralException(CommonErrorStatus._BAD_REQUEST));
+                .orElseThrow(() -> new GeneralException(CommonErrorStatus._NOT_FOUND));
 
         TPO tpo = tpoRepository.findById(requestDTO.getTpoId())
-                .orElseThrow(() -> new GeneralException(CommonErrorStatus._BAD_REQUEST));
+                .orElseThrow(() -> new GeneralException(CommonErrorStatus._NOT_FOUND));
 
         // ImageBackgroundColor 검증
         ImageBackgroundColor backgroundColor;
@@ -71,7 +73,7 @@ public class OOTDService {
 
         // 존재 여부 검증
         if (items.size() != itemIds.size()) {
-            throw new GeneralException(CommonErrorStatus._BAD_REQUEST);
+            throw new GeneralException(CommonErrorStatus._NOT_FOUND);
         }
 
         // Map 변환 (itemId -> Item)
