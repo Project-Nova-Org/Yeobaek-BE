@@ -23,6 +23,13 @@ public class CalendarController implements CalendarControllerDocs {
 
 	private final CalendarService calendarService;
 
+	/**
+	 * 지정된 날짜의 캘린더 항목 상세 정보를 조회한다.
+	 *
+	 * @param user 인증된 사용자(보안 컨텍스트에서 추출된 사용자)
+	 * @param date 경로 변수로 전달된 조회 날짜 문자열
+	 * @return 요청한 날짜의 캘린더 항목 상세 정보가 담긴 CommonResponse 객체
+	 */
 	@Override
 	@GetMapping("/entries/{date}")
 	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> getEntryDetail(

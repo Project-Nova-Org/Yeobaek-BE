@@ -14,6 +14,13 @@ public class CalendarRepositoryImpl implements CalendarRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
+    /**
+     * 주어진 사용자 ID와 날짜에 해당하는 Calendar 엔티티를 조회합니다.
+     *
+     * @param userId 조회할 Calendar의 소유자 사용자 ID
+     * @param date 조회할 Calendar의 날짜
+     * @return 주어진 사용자와 날짜에 맞는 Calendar를 포함한 Optional, 없으면 Optional.empty()
+     */
     @Override
     public Optional<Calendar> findByUserIdAndDate(Long userId, LocalDate date) {
         QCalendar calendar = QCalendar.calendar;

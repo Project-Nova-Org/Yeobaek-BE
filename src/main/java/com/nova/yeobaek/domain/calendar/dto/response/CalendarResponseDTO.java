@@ -31,6 +31,12 @@ public class CalendarResponseDTO {
             private String ootdImageUrl;
         }
 
+        /**
+         * 지정한 날짜로 날짜만 채운 빈 EntryDetailResponse 인스턴스를 생성한다.
+         *
+         * @param date 날짜 문자열(형식: YYYY-MM-DD)
+         * @return 지정된 날짜를 갖고 thumbnail, thumbnailImageUrl, ootd, customImageUrl 필드가 모두 `null`인 EntryDetailResponse 객체
+         */
         public static EntryDetailResponse empty(String date) {
             return EntryDetailResponse.builder()
                     .date(date)
