@@ -24,7 +24,8 @@ public class OOTDConverter {
             OOTDRequestDTO request,
             User user,
             Style style,
-            TPO tpo
+            TPO tpo,
+            ImageBackgroundColor backgroundColor
     ) {
         return OOTD.builder()
                 .user(user)
@@ -32,9 +33,7 @@ public class OOTDConverter {
                 .tpo(tpo)
                 .name(request.getName())
                 .memo(request.getMemo())
-                .imageBackgroundColor(
-                        ImageBackgroundColor.valueOf(request.getImageBackground())
-                )
+                .imageBackgroundColor(backgroundColor)
                 // 현재 imageUrl 필수 컬럼 → 임시 빈 값
                 .imageUrl("")
                 .build();

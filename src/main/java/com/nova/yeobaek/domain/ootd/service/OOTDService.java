@@ -14,6 +14,7 @@ import com.nova.yeobaek.global.payload.status.CommonErrorStatus;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.service.UserService;
 import com.nova.yeobaek.global.payload.exception.GeneralException;
+import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,9 +36,7 @@ public class OOTDService {
     private final TPORepository tpoRepository;
     private final UserService userService;
 
-    /**
-     * OOTD 등록
-     */
+    /** OOTD 등록 */
     @Transactional
     public Long createOOTD(OOTDRequestDTO requestDTO) {
 
@@ -49,7 +48,20 @@ public class OOTDService {
         TPO tpo = tpoRepository.findById(requestDTO.getTpoId())
                 .orElseThrow(() -> new GeneralException(CommonErrorStatus._BAD_REQUEST));
 
-        OOTD ootd = OOTDConverter.toOOTD(requestDTO, user, style, tpo);
+        ImageBackgroundColor backgroundColor;
+        try {
+            backgroundColor = ImageBackgroundColor.from(requestDTO.getImageBackground());
+        } catch (IllegalArgumentException e) {
+            throw new GeneralException(CommonErrorStatus._BAD_REQUEST);
+        }
+
+        OOTD ootd = OOTDConverter.toOOTD(
+                requestDTO,
+                user,
+                style,
+                tpo,
+                backgroundColor
+        );
         ootdRepository.save(ootd);
 
         List<OOTDItem> ootdItems =
