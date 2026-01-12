@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.nova.yeobaek.domain.item.domain.mapping.ItemsColor;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 
@@ -84,15 +85,17 @@ public class Item extends BaseEntity {
 	@JoinColumn(name = "brand_id")
 	private Brand brand;
 
+    @Builder.Default
 	@ElementCollection(targetClass = Season.class)
 	@CollectionTable(name = "seasons", joinColumns = @JoinColumn(name = "item_id"))
 	@Enumerated(EnumType.STRING)
 	@Column(name = "season_name")
 	private Set<Season> seasonSet = new HashSet<>();
 
-	@OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
-	@Builder.Default
-	private List<Color> colorList = new ArrayList<>();
+    @Builder.Default
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ItemsColor> itemsColors = new ArrayList<>();
+
 
 	@OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
 	@Builder.Default

@@ -34,19 +34,6 @@ public class Color extends BaseEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
-	private String colorHex;
-
-	@Column(nullable = false)
-	private float hue;
-
-	@Column(nullable = false)
-	private float saturation;
-
-	@Column(nullable = false)
-	private float brightness;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "item_id")
-	private Item item;
+    @Column(nullable = false)
+    private String name;
 }
