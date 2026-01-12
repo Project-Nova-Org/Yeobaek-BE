@@ -4,6 +4,7 @@ import com.nova.yeobaek.domain.ootd.controller.docs.OOTDControllerDocs;
 import com.nova.yeobaek.domain.ootd.dto.request.OOTDRequestDTO;
 import com.nova.yeobaek.domain.ootd.service.OOTDService;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.CreateOOTDResponse;
 
 import jakarta.validation.Valid;
 
@@ -33,6 +34,5 @@ public class OOTDController implements OOTDControllerDocs {
         return CommonResponse.onCreated(new CreateOOTDResponse(ootdId));
     }
 
-    /** OOTD 등록 응답 DTO */
-    public record CreateOOTDResponse(Long ootdId) {}
+
 }
