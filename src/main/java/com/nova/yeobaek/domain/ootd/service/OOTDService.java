@@ -62,7 +62,15 @@ public class OOTDService {
                 .map(OOTDRequestDTO.OOTDItemRequestDTO::getFashionItemId)
                 .toList();
 
+        // 중복 ID 검증 (요청 검증 실패)
+        if (itemIds.size() != itemIds.stream().distinct().count()) {
+            throw new GeneralException(CommonErrorStatus._BAD_REQUEST);
+        }
+
+        // Item 엔티티 조회
         List<Item> items = itemRepository.findAllById(itemIds);
+
+        // 존재 여부 검증 (리소스 없음)
         if (items.size() != itemIds.size()) {
             throw new GeneralException(CommonErrorStatus._NOT_FOUND);
         }
