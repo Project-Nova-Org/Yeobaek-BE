@@ -39,23 +39,23 @@ public class OOTDService {
     private final ItemRepository itemRepository;
 
     @Transactional
-    public Long createOOTD(User user, OOTDRequestDTO requestDTO) {
+    public Long createOOTD(User user, OOTDRequestDTO.Create requestDTO) {
 
-        Style style = styleRepository.findById(requestDTO.getStyleId())
+        Style style = styleRepository.findById(requestDTO.styleId())
                 .orElseThrow(() -> new OOTDException(OOTDErrorStatus.STYLE_NOT_FOUND));
 
-        TPO tpo = tpoRepository.findById(requestDTO.getTpoId())
+        TPO tpo = tpoRepository.findById(requestDTO.tpoId())
                 .orElseThrow(() -> new OOTDException(OOTDErrorStatus.TPO_NOT_FOUND));
 
         ImageBackgroundColor backgroundColor;
         try {
-            backgroundColor = ImageBackgroundColor.from(requestDTO.getImageBackground());
+            backgroundColor = ImageBackgroundColor.from(requestDTO.imageBackground());
         } catch (IllegalArgumentException e) {
             throw new OOTDException(OOTDErrorStatus.INVALID_IMAGE_BACKGROUND);
         }
 
-        List<Long> itemIds = requestDTO.getItems().stream()
-                .map(OOTDRequestDTO.OOTDItemRequestDTO::getFashionItemId)
+        List<Long> itemIds = requestDTO.items().stream()
+                .map(OOTDRequestDTO.Item::fashionItemId)
                 .toList();
 
         // 중복 ID 검증
@@ -85,7 +85,7 @@ public class OOTDService {
 
         List<OOTDItem> ootdItems =
                 OOTDConverter.toOOTDItems(
-                        requestDTO.getItems(),
+                        requestDTO.items(),
                         ootd,
                         itemMap
                 );

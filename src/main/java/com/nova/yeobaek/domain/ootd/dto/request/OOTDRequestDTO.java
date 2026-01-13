@@ -5,54 +5,51 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
-@Getter
-@NoArgsConstructor
 public class OOTDRequestDTO {
 
-    @NotBlank(message = "OOTD 이름은 필수입니다.")
-    private String name;
+    /** OOTD 생성 요청 */
+    public record Create(
+            @NotBlank(message = "OOTD 이름은 필수입니다.")
+            String name,
 
-    @NotNull(message = "TPO ID는 필수입니다.")
-    private Long tpoId;
+            @NotNull(message = "TPO ID는 필수입니다.")
+            Long tpoId,
 
-    @NotNull(message = "Style ID는 필수입니다.")
-    private Long styleId;
+            @NotNull(message = "Style ID는 필수입니다.")
+            Long styleId,
 
-    private String memo;
+            String memo,
 
-    @NotBlank(message = "배경색은 필수입니다.")
-    private String imageBackground;
+            @NotBlank(message = "배경색은 필수입니다.")
+            String imageBackground,
 
-    @NotEmpty(message = "아이템은 하나 이상 필요합니다.")
-    @Valid
-    private List<OOTDItemRequestDTO> items;
+            @NotEmpty(message = "아이템은 하나 이상 필요합니다.")
+            @Valid
+            List<Item> items
+    ) {}
 
-    @Getter
-    @NoArgsConstructor
-    public static class OOTDItemRequestDTO {
+    /** OOTD 아이템 요청 */
+    public record Item(
+            @NotNull(message = "아이템 ID는 필수입니다.")
+            Long fashionItemId,
 
-        @NotNull(message = "아이템 ID는 필수입니다.")
-        private Long fashionItemId;
+            @NotNull(message = "posX는 필수입니다.")
+            Float posX,
 
-        @NotNull(message = "posX는 필수입니다.")
-        private Float posX;
+            @NotNull(message = "posY는 필수입니다.")
+            Float posY,
 
-        @NotNull(message = "posY는 필수입니다.")
-        private Float posY;
+            @NotNull(message = "scale은 필수입니다.")
+            Float scale,
 
-        @NotNull(message = "scale은 필수입니다.")
-        private Float scale;
+            @NotNull(message = "rotation은 필수입니다.")
+            Float rotation,
 
-        @NotNull(message = "rotation은 필수입니다.")
-        private Float rotation;
-
-        @NotNull(message = "zIndex는 필수입니다.")
-        @JsonProperty("zIndex")
-        private Long zIndex;
-    }
+            @NotNull(message = "zIndex는 필수입니다.")
+            @JsonProperty("zIndex")
+            Long zIndex
+    ) {}
 }

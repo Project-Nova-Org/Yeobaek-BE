@@ -8,7 +8,6 @@ import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +27,7 @@ public class OOTDController implements OOTDControllerDocs {
     @PostMapping
     public CommonResponse<CreateOOTDResponse> createOOTD(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody OOTDRequestDTO requestDTO
+            @Valid @RequestBody OOTDRequestDTO.Create requestDTO
     ) {
         Long ootdId = ootdService.createOOTD(
                 userDetails.getUser(),
