@@ -91,6 +91,24 @@ public interface OOTDControllerDocs {
     )
     @ApiResponse(
             responseCode = "404",
+            description = "존재하지 않는 TPO",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "TPO_NOT_FOUND",
+                            value = """
+                        {
+                          "success": false,
+                          "code": "OOTD4042",
+                          "message": "존재하지 않는 TPO입니다.",
+                          "timestamp": "2026-01-13T15:11:10.123456"
+                        }
+                        """
+                    )
+            )
+    )
+    @ApiResponse(
+            responseCode = "404",
             description = "존재하지 않는 아이템",
             content = @Content(
                     mediaType = "application/json",
