@@ -4,6 +4,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -24,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/calendar") // ✅ /api/calendar/entries/{date}
+@RequestMapping("/api/calendar")
 @Validated
 public class CalendarController implements CalendarControllerDocs {
 
@@ -41,20 +42,49 @@ public class CalendarController implements CalendarControllerDocs {
 
 	@Override
 	@PostMapping("/entries/{date}")
-	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> connectOotd(
+	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> createEntry(
 			@AuthenticationPrincipal(expression = "user") User user,
 			@PathVariable String date,
-			@RequestBody @Valid CalendarRequestDTO.ConnectOotdRequest request
+			@RequestBody @Valid CalendarRequestDTO.CreateEntryRequest request
 	) {
-		return CommonResponse.onSuccess(calendarService.connectOotd(user.getId(), date, request.getOotdId()));
+		return CommonResponse.onSuccess(calendarService.createEntry(user.getId(), date, request.getOotdId()));
 	}
 
 	@Override
 	@DeleteMapping("/entries/{date}")
-	public CommonResponse<CalendarResponseDTO.EntryDeleteResponse> disconnectOotd(
+	public CommonResponse<CalendarResponseDTO.EntryDeleteResponse> deleteEntry(
 			@AuthenticationPrincipal(expression = "user") User user,
 			@PathVariable String date
 	) {
-		return CommonResponse.onSuccess(calendarService.disconnectOotd(user.getId(), date));
+		return CommonResponse.onSuccess(calendarService.deleteEntry(user.getId(), date));
+	}
+
+	@Override
+	@PostMapping("/entries/{date}/custom-image")
+	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> addCustomImage(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@PathVariable String date,
+			@RequestBody @Valid CalendarRequestDTO.CustomImageRequest request
+	) {
+		return CommonResponse.onSuccess(calendarService.addCustomImage(user.getId(), date, request.getImageUrl()));
+	}
+
+	@Override
+	@DeleteMapping("/entries/{date}/custom-image")
+	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> deleteCustomImage(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@PathVariable String date
+	) {
+		return CommonResponse.onSuccess(calendarService.deleteCustomImage(user.getId(), date));
+	}
+
+	@Override
+	@PatchMapping("/entries/{date}/thumbnail")
+	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> updateThumbnail(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@PathVariable String date,
+			@RequestBody @Valid CalendarRequestDTO.UpdateThumbnailRequest request
+	) {
+		return CommonResponse.onSuccess(calendarService.updateThumbnail(user.getId(), date, request.getThumbnail()));
 	}
 }

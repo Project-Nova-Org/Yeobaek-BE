@@ -20,10 +20,8 @@ public interface CalendarControllerDocs {
     @Operation(
             summary = "날짜 상세 조회",
             description = """
-                    선택한 날짜의 OOTD 기록 상세를 조회합니다.
-                    - CUSTOM 이미지가 존재하면 썸네일 타입은 CUSTOM
-                    - CUSTOM이 없고 OOTD가 존재하면 썸네일 타입은 OOTD
-                    - 기록이 없으면 200 + 빈 result 구조 반환
+                    선택한 날짜의 기록 상세를 조회합니다.
+                    - 기록이 없으면 200 + empty response
                     - date 형식이 틀리면 COMMON400
                     """
     )
@@ -31,47 +29,96 @@ public interface CalendarControllerDocs {
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "user") User user,
 
-            @Parameter(description = "조회 날짜 (YYYY-MM-DD)", example = "2025-06-28")
+            @Parameter(description = "조회 날짜 (YYYY-MM-DD)", example = "2026-01-13")
             @PathVariable("date") String date
     );
 
     @Operation(
-            summary = "날짜 캘린더 이미지 생성(OOTD 연결)",
+            summary = "날짜 기록 생성",
             description = """
-                    특정 날짜에 OOTD를 연결하거나 기존 기록을 수정합니다.
-                    - 하루 1개의 캘린더 기록만 유지 (user + date 기준)
-                    - 대표 이미지를 OOTD로 설정합니다.
-                    - date 형식이 틀리면 COMMON400 (date 형식이 올바르지 않습니다.)
-                    - OOTD가 없으면 CALENDAR4041
-                    - 해당 날짜 엔트리가 없으면 CALENDAR4042
-                    - 해당 날짜에 속하지 않은 OOTD면 COMMON400
+                    빈 날짜(기록 없음)에 캘린더 기록을 생성합니다.
+                    - POST에서만 calendars row 생성
+                    - OOTD 필수 (ootdId 필요)
+                    - 이미 해당 날짜 row가 있으면 CONFLICT4006
+                    - ootd가 없으면 CALENDAR4041
+                    - ootd가 해당 날짜가 아니면 COMMON400
                     """
     )
-    CommonResponse<CalendarResponseDTO.EntryDetailResponse> connectOotd(
+    CommonResponse<CalendarResponseDTO.EntryDetailResponse> createEntry(
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "user") User user,
 
-            @Parameter(description = "대상 날짜 (YYYY-MM-DD)", example = "2025-06-28")
+            @Parameter(description = "대상 날짜 (YYYY-MM-DD)", example = "2026-01-13")
             @PathVariable("date") String date,
 
-            // ✅ 구현체(CalendarController)와 동일하게 제약(@Valid) 맞춤
-            @RequestBody @Valid CalendarRequestDTO.ConnectOotdRequest request
+            @RequestBody @Valid CalendarRequestDTO.CreateEntryRequest request
     );
 
     @Operation(
-            summary = "날짜 캘린더 이미지 삭제(OOTD 연결 내역 삭제)",
+            summary = "날짜 기록 삭제",
             description = """
-                    선택한 날짜의 OOTD 연결 내역을 삭제합니다.
-                    - 캘린더 엔트리 row를 삭제하는 것이 아니라 ootd 연결만 해제합니다.
-                    - date 형식이 틀리면 COMMON400 (date 형식이 올바르지 않습니다.)
-                    - 해당 날짜 캘린더 기록이 없으면 CALENDAR4040
+                    해당 날짜 calendars row 자체를 삭제합니다.
+                    - OOTD 연결 해제 ❌
+                    - row delete ✅
+                    - 기록이 없으면 CALENDAR4040
                     """
     )
-    CommonResponse<CalendarResponseDTO.EntryDeleteResponse> disconnectOotd(
+    CommonResponse<CalendarResponseDTO.EntryDeleteResponse> deleteEntry(
             @Parameter(hidden = true)
             @AuthenticationPrincipal(expression = "user") User user,
 
-            @Parameter(description = "대상 날짜 (YYYY-MM-DD)", example = "2025-06-28")
+            @Parameter(description = "대상 날짜 (YYYY-MM-DD)", example = "2026-01-13")
             @PathVariable("date") String date
+    );
+
+    @Operation(
+            summary = "커스텀 이미지 추가",
+            description = """
+                    해당 날짜 calendars row에 커스텀 이미지를 저장합니다.
+                    - calendars row가 반드시 존재해야 함 (없으면 CALENDAR4040)
+                    """
+    )
+    CommonResponse<CalendarResponseDTO.EntryDetailResponse> addCustomImage(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "user") User user,
+
+            @Parameter(description = "대상 날짜 (YYYY-MM-DD)", example = "2026-01-13")
+            @PathVariable("date") String date,
+
+            @RequestBody @Valid CalendarRequestDTO.CustomImageRequest request
+    );
+
+    @Operation(
+            summary = "커스텀 이미지 삭제",
+            description = """
+                    해당 날짜 calendars row에서 커스텀 이미지만 삭제합니다.
+                    - 대표가 CUSTOM이었다면 thumbnail=OOTD로 자동 복귀
+                    - 커스텀이 없으면 CALENDAR4043
+                    """
+    )
+    CommonResponse<CalendarResponseDTO.EntryDetailResponse> deleteCustomImage(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "user") User user,
+
+            @Parameter(description = "대상 날짜 (YYYY-MM-DD)", example = "2026-01-13")
+            @PathVariable("date") String date
+    );
+
+    @Operation(
+            summary = "대표 이미지 선택",
+            description = """
+                    대표 이미지를 OOTD | CUSTOM 으로 선택합니다.
+                    - CUSTOM 선택 시 custom_image_url 필수 (없으면 COMMON400)
+                    - calendars row가 없으면 CALENDAR4040
+                    """
+    )
+    CommonResponse<CalendarResponseDTO.EntryDetailResponse> updateThumbnail(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "user") User user,
+
+            @Parameter(description = "대상 날짜 (YYYY-MM-DD)", example = "2026-01-13")
+            @PathVariable("date") String date,
+
+            @RequestBody @Valid CalendarRequestDTO.UpdateThumbnailRequest request
     );
 }

@@ -3,33 +3,35 @@ package com.nova.yeobaek.domain.calendar.converter;
 import org.springframework.stereotype.Component;
 
 import com.nova.yeobaek.domain.calendar.domain.Calendar;
-import com.nova.yeobaek.domain.calendar.dto.response.CalendarResponseDTO;
-import com.nova.yeobaek.domain.calendar.dto.response.CalendarResponseDTO.EntryDetailResponse;
-import com.nova.yeobaek.domain.calendar.dto.response.CalendarResponseDTO.EntryDetailResponse.OotdInfo;
 import com.nova.yeobaek.domain.calendar.domain.enums.Thumbnail;
+import com.nova.yeobaek.domain.calendar.dto.response.CalendarResponseDTO;
 
 @Component
 public class CalendarConverter {
 
-    public EntryDetailResponse toEntryDetailResponse(Calendar calendar) {
+    public CalendarResponseDTO.EntryDetailResponse toEntryDetailResponse(Calendar calendar) {
+        boolean hasCustom = calendar.getCustomImageUrl() != null && !calendar.getCustomImageUrl().isBlank();
+        boolean hasOotd = calendar.getOotdImageUrl() != null && !calendar.getOotdImageUrl().isBlank(); // row 존재 시 사실상 true
+
         Thumbnail thumbnail = null;
         String thumbnailImageUrl = null;
 
-        // 1) CUSTOM 이미지가 있으면 CUSTOM 우선
-        if (calendar.getCustomImageUrl() != null && !calendar.getCustomImageUrl().isBlank()) {
+        // ✅ 대표 이미지 규칙
+        if (hasOotd && hasCustom) {
+            // 둘 다 있으면 DB 컬럼 thumbnail 기준
+            thumbnail = calendar.getThumbnail();
+            thumbnailImageUrl = (thumbnail == Thumbnail.CUSTOM) ? calendar.getCustomImageUrl() : calendar.getOotdImageUrl();
+        } else if (hasCustom) {
             thumbnail = Thumbnail.CUSTOM;
             thumbnailImageUrl = calendar.getCustomImageUrl();
-        }
-        // 2) CUSTOM 없고 OOTD 있으면 OOTD
-        else if (calendar.getOotd() != null) {
+        } else if (hasOotd) {
             thumbnail = Thumbnail.OOTD;
-            // Calendar 테이블에 ootdImageUrl이 필수로 있으니 그 값을 썸네일로 사용
             thumbnailImageUrl = calendar.getOotdImageUrl();
         }
 
-        OotdInfo ootdInfo = null;
+        CalendarResponseDTO.EntryDetailResponse.OotdInfo ootdInfo = null;
         if (calendar.getOotd() != null) {
-            ootdInfo = OotdInfo.builder()
+            ootdInfo = CalendarResponseDTO.EntryDetailResponse.OotdInfo.builder()
                     .ootdId(calendar.getOotd().getId())
                     .ootdImageUrl(calendar.getOotdImageUrl())
                     .build();
