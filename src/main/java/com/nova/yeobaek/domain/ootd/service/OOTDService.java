@@ -13,11 +13,9 @@ import com.nova.yeobaek.domain.ootd.repository.ootdItem.OOTDItemRepository;
 import com.nova.yeobaek.domain.ootd.repository.style.StyleRepository;
 import com.nova.yeobaek.domain.ootd.repository.tpo.TPORepository;
 import com.nova.yeobaek.domain.ootd.status.OOTDErrorStatus;
+import com.nova.yeobaek.domain.ootd.status.OOTDException;
 import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
-import com.nova.yeobaek.domain.user.service.UserService;
-import com.nova.yeobaek.global.payload.exception.GeneralException;
-import com.nova.yeobaek.global.payload.status.CommonErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,24 +36,22 @@ public class OOTDService {
     private final OOTDItemRepository ootdItemRepository;
     private final StyleRepository styleRepository;
     private final TPORepository tpoRepository;
-    private final UserService userService;
     private final ItemRepository itemRepository;
 
-    /** OOTD 등록 */
     @Transactional
     public Long createOOTD(User user, OOTDRequestDTO requestDTO) {
 
         Style style = styleRepository.findById(requestDTO.getStyleId())
-                .orElseThrow(() -> new GeneralException(CommonErrorStatus._NOT_FOUND));
+                .orElseThrow(() -> new OOTDException(OOTDErrorStatus.STYLE_NOT_FOUND));
 
         TPO tpo = tpoRepository.findById(requestDTO.getTpoId())
-                .orElseThrow(() -> new GeneralException(CommonErrorStatus._NOT_FOUND));
+                .orElseThrow(() -> new OOTDException(OOTDErrorStatus.TPO_NOT_FOUND));
 
         ImageBackgroundColor backgroundColor;
         try {
             backgroundColor = ImageBackgroundColor.from(requestDTO.getImageBackground());
         } catch (IllegalArgumentException e) {
-            throw new GeneralException(CommonErrorStatus._BAD_REQUEST);
+            throw new OOTDException(OOTDErrorStatus.INVALID_IMAGE_BACKGROUND);
         }
 
         List<Long> itemIds = requestDTO.getItems().stream()
@@ -64,15 +60,15 @@ public class OOTDService {
 
         // 중복 ID 검증
         if (itemIds.size() != itemIds.stream().distinct().count()) {
-            throw new GeneralException(OOTDErrorStatus.DUPLICATED_ITEM_ID);
+            throw new OOTDException(OOTDErrorStatus.DUPLICATED_ITEM_ID);
         }
 
-        // Item 엔티티 조회
+        // Item 조회
         List<Item> items = itemRepository.findAllById(itemIds);
 
-        // Item 존재 여부 검증
+        // 존재 여부 검증
         if (items.size() != itemIds.size()) {
-            throw new GeneralException(OOTDErrorStatus.ITEM_NOT_FOUND);
+            throw new OOTDException(OOTDErrorStatus.ITEM_NOT_FOUND);
         }
 
         Map<Long, Item> itemMap = items.stream()
