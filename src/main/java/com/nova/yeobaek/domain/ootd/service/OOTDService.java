@@ -40,57 +40,74 @@ public class OOTDService {
 
     @Transactional
     public Long createOOTD(User user, OOTDRequestDTO.Create requestDTO) {
+        Style style = findStyle(requestDTO.styleId());
+        TPO tpo = findTpo(requestDTO.tpoId());
+        ImageBackgroundColor backgroundColor = parseBackground(requestDTO.imageBackground());
+        List<Long> itemIds = extractItemIds(requestDTO);
+        validateDuplicatedItemIds(itemIds);
+        Map<Long, Item> itemMap = loadItemsOrThrow(itemIds);
+        OOTD ootd = createAndSaveOOTD(requestDTO, user, style, tpo, backgroundColor);
+        saveOOTDItems(requestDTO, ootd, itemMap);
+        return ootd.getId();
+    }
 
-        Style style = styleRepository.findById(requestDTO.styleId())
+    private Style findStyle(Long styleId) {
+        return styleRepository.findById(styleId)
                 .orElseThrow(() -> new OOTDException(OOTDErrorStatus.STYLE_NOT_FOUND));
+    }
 
-        TPO tpo = tpoRepository.findById(requestDTO.tpoId())
+    private TPO findTpo(Long tpoId) {
+        return tpoRepository.findById(tpoId)
                 .orElseThrow(() -> new OOTDException(OOTDErrorStatus.TPO_NOT_FOUND));
+    }
 
-        ImageBackgroundColor backgroundColor;
+    private ImageBackgroundColor parseBackground(String value) {
         try {
-            backgroundColor = ImageBackgroundColor.from(requestDTO.imageBackground());
+            return ImageBackgroundColor.from(value);
         } catch (IllegalArgumentException e) {
             throw new OOTDException(OOTDErrorStatus.INVALID_IMAGE_BACKGROUND);
         }
+    }
 
-        List<Long> itemIds = requestDTO.items().stream()
+    private List<Long> extractItemIds(OOTDRequestDTO.Create requestDTO) {
+        return requestDTO.items().stream()
                 .map(OOTDRequestDTO.Item::fashionItemId)
                 .toList();
+    }
 
-        // 중복 ID 검증
+    private void validateDuplicatedItemIds(List<Long> itemIds) {
         if (itemIds.size() != itemIds.stream().distinct().count()) {
             throw new OOTDException(OOTDErrorStatus.DUPLICATED_ITEM_ID);
         }
+    }
 
-        // Item 조회
+    private Map<Long, Item> loadItemsOrThrow(List<Long> itemIds) {
         List<Item> items = itemRepository.findAllById(itemIds);
-
-        // 존재 여부 검증
         if (items.size() != itemIds.size()) {
             throw new OOTDException(OOTDErrorStatus.ITEM_NOT_FOUND);
         }
-
-        Map<Long, Item> itemMap = items.stream()
+        return items.stream()
                 .collect(Collectors.toMap(Item::getId, item -> item));
+    }
 
+    private OOTD createAndSaveOOTD(OOTDRequestDTO.Create requestDTO, User user, Style style, TPO tpo, ImageBackgroundColor bg) {
         OOTD ootd = OOTDConverter.toOOTD(
                 requestDTO,
                 user,
                 style,
                 tpo,
-                backgroundColor
+                bg
         );
         ootdRepository.save(ootd);
+        return ootd;
+    }
 
-        List<OOTDItem> ootdItems =
-                OOTDConverter.toOOTDItems(
-                        requestDTO.items(),
-                        ootd,
-                        itemMap
-                );
+    private void saveOOTDItems(OOTDRequestDTO.Create requestDTO, OOTD ootd, Map<Long, Item> itemMap) {
+        List<OOTDItem> ootdItems = OOTDConverter.toOOTDItems(
+                requestDTO.items(),
+                ootd,
+                itemMap
+        );
         ootdItemRepository.saveAll(ootdItems);
-
-        return ootd.getId();
     }
 }
