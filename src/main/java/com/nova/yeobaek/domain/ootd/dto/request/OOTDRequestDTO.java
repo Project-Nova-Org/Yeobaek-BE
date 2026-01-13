@@ -1,6 +1,7 @@
 package com.nova.yeobaek.domain.ootd.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -28,6 +29,7 @@ public class OOTDRequestDTO {
     private String imageBackground;
 
     @NotEmpty(message = "아이템은 하나 이상 필요합니다.")
+    @Valid
     private List<OOTDItemRequestDTO> items;
 
     @Getter

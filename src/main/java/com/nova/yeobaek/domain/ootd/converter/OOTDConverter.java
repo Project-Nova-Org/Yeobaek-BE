@@ -56,12 +56,7 @@ public class OOTDConverter {
                             .posY(itemDTO.getPosY())
                             .scale(itemDTO.getScale())
                             .rotation(itemDTO.getRotation())
-                            .zIndex(
-                                    Objects.requireNonNull(
-                                            itemDTO.getZIndex(),
-                                            "zIndex는 필수입니다."
-                                    ).intValue()
-                            )
+                            .zIndex(itemDTO.getZIndex().intValue())
                             .build();
                 })
                 .collect(Collectors.toList());

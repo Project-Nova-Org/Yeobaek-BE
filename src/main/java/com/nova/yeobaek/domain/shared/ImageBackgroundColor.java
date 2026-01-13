@@ -10,9 +10,6 @@ public enum ImageBackgroundColor {
 	 - 잘못된 값이면 IllegalArgumentException 발생
 	 */
 	public static ImageBackgroundColor from(String value) {
-		if (value == null || value.isBlank()) {
-			throw new IllegalArgumentException("imageBackground is blank");
-		}
 
 		return Arrays.stream(values())
 				.filter(color -> color.name().equalsIgnoreCase(value))
