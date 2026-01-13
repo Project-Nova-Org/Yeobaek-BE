@@ -41,4 +41,13 @@ public class CalendarResponseDTO {
                     .build();
         }
     }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class EntryDeleteResponse {
+        private String date;
+        private Boolean deleted;
+    }
 }

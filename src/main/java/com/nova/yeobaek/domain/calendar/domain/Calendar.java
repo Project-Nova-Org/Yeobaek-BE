@@ -35,12 +35,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
-@Table(name = "calendars",
-	uniqueConstraints = {
-		@UniqueConstraint(
-			name = "uk_user_date",
-			columnNames = {"user_id", "date"})
-})
+@Table(
+		name = "calendars",
+		uniqueConstraints = {
+				@UniqueConstraint(
+						name = "uk_user_date",
+						columnNames = {"user_id", "date"}
+				)
+		}
+)
 public class Calendar extends BaseEntity {
 
 	@Id
@@ -67,4 +70,24 @@ public class Calendar extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ootd_id")
 	private OOTD ootd;
+
+	/**
+	 * 대표 이미지를 OOTD로 설정 (CUSTOM 있으면 제거해서 썸네일이 OOTD로 나오게)
+	 */
+	public void connectOotd(OOTD ootd) {
+		this.ootd = ootd;
+		this.ootdImageUrl = ootd.getImageUrl();   // CalendarConverter가 이 값을 썸네일로 사용
+		this.customImageUrl = null;               // "대표 이미지를 OOTD로" 명세 반영
+		this.thumbnail = Thumbnail.OOTD;
+	}
+
+	/**
+	 * OOTD 연결 해제 (엔트리 row 삭제 아님)
+	 * ootdImageUrl 컬럼이 NOT NULL이라 null로는 안 만듦.
+	 */
+	public void disconnectOotd() {
+		this.ootd = null;
+		// 썸네일은 customImageUrl이 있으면 CUSTOM로, 없으면 "기록 없음"처럼 내려가게 됨(Converter 로직)
+		// ootdImageUrl은 NOT NULL 컬럼이라 유지
+	}
 }
