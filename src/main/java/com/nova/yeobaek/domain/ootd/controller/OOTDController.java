@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -68,4 +70,19 @@ public class OOTDController implements OOTDControllerDocs {
 
         return CommonResponse.onSuccess(response);
     }
+
+    /** OOTD 상세조회 */
+    @Override
+    @GetMapping("/{ootdId}")
+    public CommonResponse<OOTDDetailResponse> getOOTDDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId
+    ) {
+        OOTDDetailResponse response =
+                ootdService.getOOTDDetail(userDetails.getUser(), ootdId);
+
+        return CommonResponse.onSuccess(response);
+    }
+
+
 }

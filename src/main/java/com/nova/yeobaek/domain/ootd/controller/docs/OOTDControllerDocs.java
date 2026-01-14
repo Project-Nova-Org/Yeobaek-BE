@@ -21,6 +21,19 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+//여기부터
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
+import com.nova.yeobaek.global.auth.security.CustomUserDetails;
+import com.nova.yeobaek.global.payload.response.CommonResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.PathVariable;
+//여기까지 방금 추가
+
 @Tag(name = "OOTD", description = "오늘의 착장 API")
 public interface OOTDControllerDocs {
 
@@ -107,5 +120,20 @@ public interface OOTDControllerDocs {
             @RequestParam(defaultValue = "LATEST") String sort,
             @RequestParam(required = false) Long cursor,
             @RequestParam(defaultValue = "20") Integer limit
+    );
+
+    /** OOTD 상세 조회 */
+    @Operation(
+            summary = "OOTD 상세 조회",
+            description = """
+            로그인 사용자의 OOTD 상세 정보를 조회합니다.
+            status = NORMAL 인 OOTD만 조회됩니다.
+            OOTD 기본 정보와 OOTDItem 목록을 함께 반환합니다.
+            """
+    )
+    @ApiResponse(responseCode = "200", description = "OOTD 상세 조회 성공")
+    CommonResponse<OOTDDetailResponse> getOOTDDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId
     );
 }

@@ -30,6 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDItemDetailResponse;
+import com.nova.yeobaek.domain.ootd.domain.enums.OOTDStatus;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -163,6 +167,41 @@ public class OOTDService {
                 .items(items)
                 .nextCursor(nextCursor)
                 .hasNext(hasNext)
+                .build();
+    }
+
+    /** OOTD 상세조회 */
+    @Transactional(readOnly = true)
+    public OOTDDetailResponse getOOTDDetail(User user, Long ootdId) {
+
+        OOTD ootd = ootdRepository.findById(ootdId)
+                .filter(o -> o.getStatus() == OOTDStatus.NORMAL)
+                .filter(o -> o.getUser().getId().equals(user.getId()))
+                .orElseThrow(() -> new OOTDException(OOTDErrorStatus.OOTD_NOT_FOUND));
+
+        return OOTDDetailResponse.builder()
+                .ootdId(ootd.getId())
+                .name(ootd.getName())
+                .memo(ootd.getMemo())
+                .favorite(ootd.isFavorite())
+                .imageBackground(ootd.getImageBackgroundColor().name())
+                .imageUrl(ootd.getImageUrl())
+                .tpoId(ootd.getTpo().getId())
+                .styleId(ootd.getStyle().getId())
+                .createdAt(ootd.getCreatedAt())
+                .items(
+                        ootd.getOotdItemList().stream()
+                                .map(oi -> OOTDItemDetailResponse.builder()
+                                        .fashionItemId(oi.getItem().getId())
+                                        .posX(oi.getPosX())
+                                        .posY(oi.getPosY())
+                                        .scale(oi.getScale())
+                                        .rotation(oi.getRotation())
+                                        .zIndex(oi.getZIndex())
+                                        .build()
+                                )
+                                .toList()
+                )
                 .build();
     }
 }
