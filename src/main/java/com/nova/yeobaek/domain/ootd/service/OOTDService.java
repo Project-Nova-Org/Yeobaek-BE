@@ -17,6 +17,9 @@ import com.nova.yeobaek.domain.ootd.status.OOTDException;
 import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDListResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDListItemResponse;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -109,5 +112,57 @@ public class OOTDService {
                 itemMap
         );
         ootdItemRepository.saveAll(ootdItems);
+    }
+
+    /** OOTD 목록조회 */
+    @Transactional(readOnly = true)
+    public OOTDListResponse getOOTDList(
+            User user,
+            String keyword,
+            Boolean favorite,
+            List<Long> tpoIds,
+            List<Long> styleIds,
+            String sort,
+            Long cursor,
+            int limit
+    ) {
+        List<OOTD> ootds = ootdRepository.findOOTDList(
+                user,
+                keyword,
+                favorite,
+                tpoIds,
+                styleIds,
+                sort,
+                cursor,
+                limit + 1
+        );
+
+        boolean hasNext = ootds.size() > limit;
+        if (hasNext) {
+            ootds = ootds.subList(0, limit);
+        }
+
+        List<OOTDListItemResponse> items = ootds.stream()
+                .map(ootd -> OOTDListItemResponse.builder()
+                        .ootdId(ootd.getId())
+                        .name(ootd.getName())
+                        .tpoId(ootd.getTpo().getId())
+                        .styleId(ootd.getStyle().getId())
+                        .favorite(ootd.isFavorite())
+                        .imageBackground(ootd.getImageBackgroundColor().name())
+                        .coverImageUrl(ootd.getImageUrl())
+                        .itemNum(ootd.getOotdItemList().size())
+                        .createdAt(ootd.getCreatedAt())
+                        .build()
+                )
+                .toList();
+
+        Long nextCursor = hasNext ? items.get(items.size() - 1).getOotdId() : null;
+
+        return OOTDListResponse.builder()
+                .items(items)
+                .nextCursor(nextCursor)
+                .hasNext(hasNext)
+                .build();
     }
 }
