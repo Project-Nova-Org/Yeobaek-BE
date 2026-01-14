@@ -2,52 +2,33 @@ package com.nova.yeobaek.domain.calendar.dto.response;
 
 import com.nova.yeobaek.domain.calendar.domain.enums.Thumbnail;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 public class CalendarResponseDTO {
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class EntryDetailResponse {
-
-        private String date;                 // YYYY-MM-DD
-        private Thumbnail thumbnail;         // CUSTOM / OOTD (없으면 null)
-        private String thumbnailImageUrl;    // 썸네일 이미지 URL (없으면 null)
-
-        private OotdInfo ootd;               // 없으면 null
-        private String customImageUrl;       // 없으면 null
-
-        @Getter
-        @Builder
-        @NoArgsConstructor
-        @AllArgsConstructor
-        public static class OotdInfo {
-            private Long ootdId;
-            private String ootdImageUrl;
-        }
-
+    public record EntryDetailResponse(
+            String date,                 // YYYY-MM-DD
+            Thumbnail thumbnail,          // CUSTOM / OOTD (없으면 null)
+            String thumbnailImageUrl,     // 썸네일 이미지 URL (없으면 null)
+            OotdInfo ootd,                // 없으면 null
+            String customImageUrl         // 없으면 null
+    ) {
         public static EntryDetailResponse empty(String date) {
-            return EntryDetailResponse.builder()
-                    .date(date)
-                    .thumbnail(null)
-                    .thumbnailImageUrl(null)
-                    .ootd(null)
-                    .customImageUrl(null)
-                    .build();
+            return new EntryDetailResponse(
+                    date,
+                    null,
+                    null,
+                    null,
+                    null
+            );
         }
     }
 
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class EntryDeleteResponse {
-        private String date;
-        private Boolean deleted;
-    }
+    public record OotdInfo(
+            Long ootdId,
+            String ootdImageUrl
+    ) {}
+
+    public record EntryDeleteResponse(
+            String date,
+            boolean deleted
+    ) {}
 }

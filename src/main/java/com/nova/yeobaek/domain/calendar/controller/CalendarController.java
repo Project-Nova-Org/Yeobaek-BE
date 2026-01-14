@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/calendar")
+@RequestMapping("/api/calendars")
 @Validated
 public class CalendarController implements CalendarControllerDocs {
 
@@ -47,7 +47,8 @@ public class CalendarController implements CalendarControllerDocs {
 			@PathVariable String date,
 			@RequestBody @Valid CalendarRequestDTO.CreateEntryRequest request
 	) {
-		return CommonResponse.onSuccess(calendarService.createEntry(user.getId(), date, request.getOotdId()));
+		//  record accessor
+		return CommonResponse.onSuccess(calendarService.createEntry(user.getId(), date, request.ootdId()));
 	}
 
 	@Override
@@ -66,7 +67,8 @@ public class CalendarController implements CalendarControllerDocs {
 			@PathVariable String date,
 			@RequestBody @Valid CalendarRequestDTO.CustomImageRequest request
 	) {
-		return CommonResponse.onSuccess(calendarService.addCustomImage(user.getId(), date, request.getImageUrl()));
+		//  record accessor
+		return CommonResponse.onSuccess(calendarService.addCustomImage(user.getId(), date, request.imageUrl()));
 	}
 
 	@Override
@@ -85,6 +87,7 @@ public class CalendarController implements CalendarControllerDocs {
 			@PathVariable String date,
 			@RequestBody @Valid CalendarRequestDTO.UpdateThumbnailRequest request
 	) {
-		return CommonResponse.onSuccess(calendarService.updateThumbnail(user.getId(), date, request.getThumbnail()));
+		//  record accessor
+		return CommonResponse.onSuccess(calendarService.updateThumbnail(user.getId(), date, request.thumbnail()));
 	}
 }

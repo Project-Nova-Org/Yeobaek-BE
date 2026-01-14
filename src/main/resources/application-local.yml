@@ -11,7 +11,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update # Flyway가 DDL 담당 -> validate나 none으로 둬야 함
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:

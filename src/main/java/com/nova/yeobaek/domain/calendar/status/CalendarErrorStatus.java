@@ -20,9 +20,17 @@ public enum CalendarErrorStatus implements ErrorReason {
 	CALENDAR4040(HttpStatus.NOT_FOUND, "CALENDAR4040", "해당 날짜의 캘린더 기록이 존재하지 않습니다."),
 	CALENDAR4041(HttpStatus.NOT_FOUND, "CALENDAR4041", "존재하지 않는 OOTD입니다."),
 	CALENDAR4042(HttpStatus.NOT_FOUND, "CALENDAR4042", "해당 날짜의 캘린더 엔트리가 존재하지 않습니다."),
-	CALENDAR4043(HttpStatus.NOT_FOUND, "CALENDAR4043", "삭제할 커스텀 이미지가 존재하지 않습니다.");
+	CALENDAR4043(HttpStatus.NOT_FOUND, "CALENDAR4043", "삭제할 커스텀 이미지가 존재하지 않습니다."),
+
+	// 409 (중복 생성)
+	DUPLICATED_CALENDAR_CREATE(
+			HttpStatus.CONFLICT,
+			"CALENDAR4090",
+			"이미 해당 날짜의 캘린더 기록이 존재합니다."
+	);
 
 	private final HttpStatus httpStatus;
 	private final String code;
 	private final String message;
 }
+

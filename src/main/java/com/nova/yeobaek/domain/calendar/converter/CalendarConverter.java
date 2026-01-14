@@ -16,11 +16,13 @@ public class CalendarConverter {
         Thumbnail thumbnail = null;
         String thumbnailImageUrl = null;
 
-        // ✅ 대표 이미지 규칙
+        //  대표 이미지 규칙
         if (hasOotd && hasCustom) {
             // 둘 다 있으면 DB 컬럼 thumbnail 기준
             thumbnail = calendar.getThumbnail();
-            thumbnailImageUrl = (thumbnail == Thumbnail.CUSTOM) ? calendar.getCustomImageUrl() : calendar.getOotdImageUrl();
+            thumbnailImageUrl = (thumbnail == Thumbnail.CUSTOM)
+                    ? calendar.getCustomImageUrl()
+                    : calendar.getOotdImageUrl();
         } else if (hasCustom) {
             thumbnail = Thumbnail.CUSTOM;
             thumbnailImageUrl = calendar.getCustomImageUrl();
@@ -29,20 +31,22 @@ public class CalendarConverter {
             thumbnailImageUrl = calendar.getOotdImageUrl();
         }
 
-        CalendarResponseDTO.EntryDetailResponse.OotdInfo ootdInfo = null;
+        //  record로 바뀌면 OotdInfo는 EntryDetailResponse 내부가 아니라 CalendarResponseDTO의 record로 사용
+        CalendarResponseDTO.OotdInfo ootdInfo = null;
         if (calendar.getOotd() != null) {
-            ootdInfo = CalendarResponseDTO.EntryDetailResponse.OotdInfo.builder()
-                    .ootdId(calendar.getOotd().getId())
-                    .ootdImageUrl(calendar.getOotdImageUrl())
-                    .build();
+            ootdInfo = new CalendarResponseDTO.OotdInfo(
+                    calendar.getOotd().getId(),
+                    calendar.getOotdImageUrl()
+            );
         }
 
-        return CalendarResponseDTO.EntryDetailResponse.builder()
-                .date(calendar.getDate().toString())
-                .thumbnail(thumbnail)
-                .thumbnailImageUrl(thumbnailImageUrl)
-                .ootd(ootdInfo)
-                .customImageUrl(calendar.getCustomImageUrl())
-                .build();
+        //  builder 제거 (record 생성자 사용)
+        return new CalendarResponseDTO.EntryDetailResponse(
+                calendar.getDate().toString(),
+                thumbnail,
+                thumbnailImageUrl,
+                ootdInfo,
+                calendar.getCustomImageUrl()
+        );
     }
 }

@@ -11,14 +11,13 @@ import com.nova.yeobaek.domain.calendar.converter.CalendarConverter;
 import com.nova.yeobaek.domain.calendar.domain.Calendar;
 import com.nova.yeobaek.domain.calendar.domain.enums.Thumbnail;
 import com.nova.yeobaek.domain.calendar.dto.response.CalendarResponseDTO;
+import com.nova.yeobaek.domain.calendar.exception.CalendarException;
 import com.nova.yeobaek.domain.calendar.repository.CalendarRepository;
 import com.nova.yeobaek.domain.calendar.status.CalendarErrorStatus;
 import com.nova.yeobaek.domain.ootd.domain.OOTD;
 import com.nova.yeobaek.domain.ootd.repository.OOTDRepository;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
-import com.nova.yeobaek.global.payload.exception.GeneralException;
-import com.nova.yeobaek.global.payload.status.CommonErrorStatus;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,20 +44,20 @@ public class CalendarService {
     }
 
     /**
-     * ✅ POST /api/calendar/entries/{date}
+     *  POST /api/calendar/entries/{date}
      * - "기록 없는 날짜"는 row 자체가 없어야 하므로, 여기서만 row를 생성한다.
      * - ootdId 필수
      * - ootd.createdAt.toLocalDate() == date 검증
-     * - 이미 존재하면 CONFLICT4006 (DUPLICATED_CALENDAR_CREATE)
+     * - 이미 존재하면 DUPLICATED_CALENDAR_CREATE
      */
     public CalendarResponseDTO.EntryDetailResponse createEntry(Long userId, String date, Long ootdId) {
         LocalDate parsedDate = parseDateOrThrow(date);
 
         OOTD ootd = ootdRepository.findById(ootdId)
-                .orElseThrow(() -> new GeneralException(CalendarErrorStatus.CALENDAR4041));
+                .orElseThrow(() -> new CalendarException(CalendarErrorStatus.CALENDAR4041));
 
         if (ootd.getCreatedAt() == null || !ootd.getCreatedAt().toLocalDate().equals(parsedDate)) {
-            throw new GeneralException(CalendarErrorStatus.OOTD_NOT_IN_DATE);
+            throw new CalendarException(CalendarErrorStatus.OOTD_NOT_IN_DATE);
         }
 
         User userRef = userRepository.getReferenceById(userId);
@@ -75,42 +74,40 @@ public class CalendarService {
         try {
             calendarRepository.save(calendar);
         } catch (DataIntegrityViolationException e) {
-            // UNIQUE(user_id, date) 충돌
-            throw new GeneralException(CommonErrorStatus.DUPLICATED_CALENDAR_CREATE);
+            throw new CalendarException(CalendarErrorStatus.DUPLICATED_CALENDAR_CREATE);
         }
 
         return calendarConverter.toEntryDetailResponse(calendar);
     }
 
     /**
-     * ✅ DELETE /api/calendar/entries/{date}
-     * - OOTD 연결 해제 ❌
-     * - calendars row 자체 삭제 ✅
+     *  DELETE /api/calendar/entries/{date}
+     * - calendars row 자체 삭제
      * - 없으면 CALENDAR4040
      */
     public CalendarResponseDTO.EntryDeleteResponse deleteEntry(Long userId, String date) {
         LocalDate parsedDate = parseDateOrThrow(date);
 
         Calendar calendar = calendarRepository.findByUserIdAndDate(userId, parsedDate)
-                .orElseThrow(() -> new GeneralException(CalendarErrorStatus.CALENDAR4040));
+                .orElseThrow(() -> new CalendarException(CalendarErrorStatus.CALENDAR4040));
 
         calendarRepository.delete(calendar);
 
-        return CalendarResponseDTO.EntryDeleteResponse.builder()
-                .date(parsedDate.toString())
-                .deleted(true)
-                .build();
+        return new CalendarResponseDTO.EntryDeleteResponse(
+                parsedDate.toString(),
+                true
+        );
     }
 
     /**
-     * ✅ POST /api/calendar/entries/{date}/custom-image
+     *  POST /api/calendar/entries/{date}/custom-image
      * - calendars row 반드시 존재해야 함 (없으면 CALENDAR4040)
      */
     public CalendarResponseDTO.EntryDetailResponse addCustomImage(Long userId, String date, String imageUrl) {
         LocalDate parsedDate = parseDateOrThrow(date);
 
         Calendar calendar = calendarRepository.findByUserIdAndDate(userId, parsedDate)
-                .orElseThrow(() -> new GeneralException(CalendarErrorStatus.CALENDAR4040));
+                .orElseThrow(() -> new CalendarException(CalendarErrorStatus.CALENDAR4040));
 
         calendar.setCustomImage(imageUrl);
 
@@ -118,18 +115,18 @@ public class CalendarService {
     }
 
     /**
-     * ✅ DELETE /api/calendar/entries/{date}/custom-image
+     *  DELETE /api/calendar/entries/{date}/custom-image
      * - custom 이미지만 삭제
-     * - 대표가 CUSTOM이었다면 thumbnail = OOTD로 복귀
+     * - 삭제할 custom이 없으면 CALENDAR4043
      */
     public CalendarResponseDTO.EntryDetailResponse deleteCustomImage(Long userId, String date) {
         LocalDate parsedDate = parseDateOrThrow(date);
 
         Calendar calendar = calendarRepository.findByUserIdAndDate(userId, parsedDate)
-                .orElseThrow(() -> new GeneralException(CalendarErrorStatus.CALENDAR4040));
+                .orElseThrow(() -> new CalendarException(CalendarErrorStatus.CALENDAR4040));
 
         if (calendar.getCustomImageUrl() == null || calendar.getCustomImageUrl().isBlank()) {
-            throw new GeneralException(CalendarErrorStatus.CALENDAR4043);
+            throw new CalendarException(CalendarErrorStatus.CALENDAR4043);
         }
 
         calendar.removeCustomImageAndFallbackThumbnail();
@@ -138,7 +135,7 @@ public class CalendarService {
     }
 
     /**
-     * ✅ PATCH /api/calendar/entries/{date}/thumbnail
+     *  PATCH /api/calendar/entries/{date}/thumbnail
      * - OOTD | CUSTOM
      * - CUSTOM 선택 시 custom_image_url 필수
      */
@@ -146,11 +143,11 @@ public class CalendarService {
         LocalDate parsedDate = parseDateOrThrow(date);
 
         Calendar calendar = calendarRepository.findByUserIdAndDate(userId, parsedDate)
-                .orElseThrow(() -> new GeneralException(CalendarErrorStatus.CALENDAR4040));
+                .orElseThrow(() -> new CalendarException(CalendarErrorStatus.CALENDAR4040));
 
         if (thumbnail == Thumbnail.CUSTOM) {
             if (calendar.getCustomImageUrl() == null || calendar.getCustomImageUrl().isBlank()) {
-                throw new GeneralException(CalendarErrorStatus.CUSTOM_IMAGE_REQUIRED);
+                throw new CalendarException(CalendarErrorStatus.CUSTOM_IMAGE_REQUIRED);
             }
         }
 
@@ -163,7 +160,7 @@ public class CalendarService {
         try {
             return LocalDate.parse(date);
         } catch (DateTimeParseException e) {
-            throw new GeneralException(CalendarErrorStatus.INVALID_DATE);
+            throw new CalendarException(CalendarErrorStatus.INVALID_DATE);
         }
     }
 }

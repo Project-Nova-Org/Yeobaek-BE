@@ -58,8 +58,8 @@ public interface CalendarControllerDocs {
             summary = "날짜 기록 삭제",
             description = """
                     해당 날짜 calendars row 자체를 삭제합니다.
-                    - OOTD 연결 해제 ❌
-                    - row delete ✅
+                    - OOTD 연결 해제 
+                    - row delete 
                     - 기록이 없으면 CALENDAR4040
                     """
     )
