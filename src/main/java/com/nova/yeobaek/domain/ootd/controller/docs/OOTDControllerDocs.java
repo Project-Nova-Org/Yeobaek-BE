@@ -21,18 +21,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-//여기부터
 import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
-import com.nova.yeobaek.global.auth.security.CustomUserDetails;
-import com.nova.yeobaek.global.payload.response.CommonResponse;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
-//여기까지 방금 추가
 
 @Tag(name = "OOTD", description = "오늘의 착장 API")
 public interface OOTDControllerDocs {
