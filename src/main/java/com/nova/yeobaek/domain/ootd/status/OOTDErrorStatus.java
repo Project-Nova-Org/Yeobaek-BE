@@ -45,7 +45,7 @@ public enum OOTDErrorStatus implements ErrorReason {
 
 	OOTD_NOT_FOUND(
 			HttpStatus.NOT_FOUND,
-			"OOTD4041",
+			"OOTD4044",
 			"존재하지 않거나 접근할 수 없는 OOTD입니다."
 	);
 	private final HttpStatus httpStatus;
