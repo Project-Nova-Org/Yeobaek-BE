@@ -51,10 +51,24 @@ public class Closet extends BaseEntity {
 	private String imageUrl;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id")
+	@JoinColumn(name = "user_id",nullable = false)
 	private User user;
 
 	@OneToMany(mappedBy = "closet", cascade = CascadeType.ALL)
 	@Builder.Default
 	private List<ClosetItem> closetItemList = new ArrayList<>();
+	//옷장생성 메서드
+	public static Closet create(User user, String name, String imageUrl) {
+		return Closet.builder()
+				.user(user)
+				.name(name)
+				.imageUrl(imageUrl)
+				.favorite(false)
+				.build();
+	}
+    //즐겨찾기
+	public void toggleFavorite() {
+		this.favorite = !this.favorite;
+	}
+
 }

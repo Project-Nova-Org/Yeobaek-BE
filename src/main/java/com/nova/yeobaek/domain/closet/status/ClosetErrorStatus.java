@@ -1,9 +1,7 @@
 package com.nova.yeobaek.domain.closet.status;
 
 import org.springframework.http.HttpStatus;
-
 import com.nova.yeobaek.global.payload.status.ErrorReason;
-
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -11,7 +9,23 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum ClosetErrorStatus implements ErrorReason {
 
-	;
+	INVALID_NAME(
+			HttpStatus.BAD_REQUEST,
+			"CLOSET_4001",
+			"특수문자는 사용할 수 없습니다."
+	),
+
+	EMPTY_ITEMS(
+			HttpStatus.BAD_REQUEST,
+			"CLOSET_4002",
+			"하나 이상의 아이템이 포함되어야 합니다."
+	),
+
+	SERVER_ERROR(
+			HttpStatus.INTERNAL_SERVER_ERROR,
+			"CLOSET_5001",
+			"서버 오류 발생."
+	);
 
 	private final HttpStatus httpStatus;
 	private final String code;
