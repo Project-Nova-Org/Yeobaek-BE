@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
+import jakarta.validation.constraints.Max;
 
 @Slf4j
 @RestController
@@ -52,7 +53,9 @@ public class OOTDController implements OOTDControllerDocs {
             @RequestParam(required = false) List<Long> styleId,
             @RequestParam(defaultValue = "LATEST") String sort,
             @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "20") Integer limit
+            @RequestParam(defaultValue = "20")
+            @Max(100)
+            Integer limit
     ) {
         List<Long> safeTpoIds = (tpoId == null || tpoId.isEmpty()) ? null : tpoId;
         List<Long> safeStyleIds = (styleId == null || styleId.isEmpty()) ? null : styleId;
