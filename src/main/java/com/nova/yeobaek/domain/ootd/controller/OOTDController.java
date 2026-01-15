@@ -10,14 +10,15 @@ import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springdoc.core.annotations.ParameterObject;
 
 import java.util.List;
 
@@ -50,29 +51,27 @@ public class OOTDController implements OOTDControllerDocs {
     @GetMapping
     public CommonResponse<OOTDListResponse> getOOTDList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Boolean favorite,
-            @RequestParam(required = false) List<Long> tpoId,
-            @RequestParam(required = false) List<Long> styleId,
-            @RequestParam(defaultValue = "LATEST") String sort,
-            @RequestParam(required = false) Long cursor,
-            @RequestParam(defaultValue = "20")
-            @Min(1)
-            @Max(100)
-            Integer limit
+            @ParameterObject @Valid @ModelAttribute OOTDRequestDTO.SearchCondition condition
     ) {
-        List<Long> safeTpoIds = (tpoId == null || tpoId.isEmpty()) ? null : tpoId;
-        List<Long> safeStyleIds = (styleId == null || styleId.isEmpty()) ? null : styleId;
+        List<Long> safeTpoIds =
+                (condition.tpoId() == null || condition.tpoId().isEmpty())
+                        ? null
+                        : condition.tpoId();
+
+        List<Long> safeStyleIds =
+                (condition.styleId() == null || condition.styleId().isEmpty())
+                        ? null
+                        : condition.styleId();
 
         OOTDListResponse response = ootdService.getOOTDList(
                 userDetails.getUser(),
-                keyword,
-                favorite,
+                condition.keyword(),
+                condition.favorite(),
                 safeTpoIds,
                 safeStyleIds,
-                sort,
-                cursor,
-                limit
+                condition.sort() != null ? condition.sort() : "LATEST",
+                condition.cursor(),
+                condition.limit() != null ? condition.limit() : 20
         );
 
         return CommonResponse.onSuccess(response);
