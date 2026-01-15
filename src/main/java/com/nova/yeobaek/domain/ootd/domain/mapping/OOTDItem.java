@@ -55,7 +55,7 @@ public class OOTDItem extends BaseEntity {
 	@JoinColumn(name = "ootd_id")
 	private OOTD ootd;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "item_id")
+	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+	@JoinColumn(name = "item_id", nullable = false)
 	private Item item;
 }
