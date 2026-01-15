@@ -41,10 +41,10 @@ public class OOTDRepositoryImpl implements OOTDRepositoryCustom {
         if (favorite != null) {
             jpql.append(" AND o.favorite = :favorite");
         }
-        if (tpoIds != null) {
+        if (tpoIds != null && !tpoIds.isEmpty()) {
             jpql.append(" AND o.tpo.id IN :tpoIds");
         }
-        if (styleIds != null) {
+        if (styleIds != null && !styleIds.isEmpty()) {
             jpql.append(" AND o.style.id IN :styleIds");
         }
         if (cursor != null) {
@@ -67,10 +67,10 @@ public class OOTDRepositoryImpl implements OOTDRepositoryCustom {
         if (favorite != null) {
             query.setParameter("favorite", favorite);
         }
-        if (tpoIds != null) {
+        if (tpoIds != null && !tpoIds.isEmpty()) {
             query.setParameter("tpoIds", tpoIds);
         }
-        if (styleIds != null) {
+        if (styleIds != null && !styleIds.isEmpty()) {
             query.setParameter("styleIds", styleIds);
         }
         if (cursor != null) {
