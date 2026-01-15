@@ -58,7 +58,6 @@ public class OOTDRequestDTO {
 
     /** OOTD 목록 조회 조건 */
     public record SearchCondition(
-
             @Schema(description = "검색 키워드")
             String keyword,
 
@@ -88,9 +87,20 @@ public class OOTDRequestDTO {
             @Max(100)
             Integer limit
     ) {
-        public SearchCondition {
-            if (sort == null) sort = "LATEST";
-            if (limit == null) limit = 20;
+        public String resolvedSort() {
+            return sort != null ? sort : "LATEST";
+        }
+
+        public int resolvedLimit() {
+            return limit != null ? limit : 20;
+        }
+
+        public List<Long> resolvedTpoIds() {
+            return (tpoId == null || tpoId.isEmpty()) ? null : tpoId;
+        }
+
+        public List<Long> resolvedStyleIds() {
+            return (styleId == null || styleId.isEmpty()) ? null : styleId;
         }
     }
 }

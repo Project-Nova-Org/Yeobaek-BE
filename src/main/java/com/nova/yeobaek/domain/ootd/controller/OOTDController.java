@@ -53,26 +53,11 @@ public class OOTDController implements OOTDControllerDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @ParameterObject @Valid @ModelAttribute OOTDRequestDTO.SearchCondition condition
     ) {
-        List<Long> safeTpoIds =
-                (condition.tpoId() == null || condition.tpoId().isEmpty())
-                        ? null
-                        : condition.tpoId();
-
-        List<Long> safeStyleIds =
-                (condition.styleId() == null || condition.styleId().isEmpty())
-                        ? null
-                        : condition.styleId();
-
-        OOTDListResponse response = ootdService.getOOTDList(
-                userDetails.getUser(),
-                condition.keyword(),
-                condition.favorite(),
-                safeTpoIds,
-                safeStyleIds,
-                condition.sort() != null ? condition.sort() : "LATEST",
-                condition.cursor(),
-                condition.limit() != null ? condition.limit() : 20
-        );
+        OOTDListResponse response =
+                ootdService.getOOTDList(
+                        userDetails.getUser(),
+                        condition
+                );
 
         return CommonResponse.onSuccess(response);
     }
