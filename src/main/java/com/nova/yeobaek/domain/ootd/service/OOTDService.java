@@ -45,6 +45,7 @@ public class OOTDService {
     private final TPORepository tpoRepository;
     private final ItemRepository itemRepository;
 
+    /** OOTD 등록 */
     @Transactional
     public Long createOOTD(User user, OOTDRequestDTO.Create requestDTO) {
         Style style = findStyle(requestDTO.styleId());
@@ -116,6 +117,104 @@ public class OOTDService {
                 itemMap
         );
         ootdItemRepository.saveAll(ootdItems);
+    }
+
+    /** OOTD 수정 */
+    @Transactional
+    public void updateOOTD(
+            User user,
+            Long ootdId,
+            OOTDRequestDTO.Update requestDTO
+    ) {
+        // 1. OOTD 조회, 권한 검증
+        OOTD ootd = ootdRepository.findById(ootdId)
+                .filter(o -> o.getStatus() == OOTDStatus.NORMAL)
+                .filter(o -> o.getUser().getId().equals(user.getId()))
+                .orElseThrow(() -> new OOTDException(OOTDErrorStatus.OOTD_NOT_FOUND));
+
+        // 2. 기본 필드 수정 (null이면 스킵)
+        if (requestDTO.name() != null) {
+            ootd.updateName(requestDTO.name());
+        }
+
+        if (requestDTO.memo() != null) {
+            ootd.updateMemo(requestDTO.memo());
+        }
+
+        if (requestDTO.favorite() != null) {
+            ootd.updateFavorite(requestDTO.favorite());
+        }
+
+        // 3. TPO / Style 수정
+        if (requestDTO.tpoId() != null) {
+            TPO tpo = findTpo(requestDTO.tpoId());
+            ootd.updateTpo(tpo);
+        }
+        if (requestDTO.styleId() != null) {
+            Style style = findStyle(requestDTO.styleId());
+            ootd.updateStyle(style);
+        }
+
+        // 4. 이미지 배경 색상 수정
+        if (requestDTO.imageBackground() != null) {
+            ImageBackgroundColor backgroundColor =
+                    parseBackground(requestDTO.imageBackground());
+            ootd.updateImageBackground(backgroundColor);
+        }
+
+        // 5. 아이템 수정 (전체교체방식)
+        if (requestDTO.items() != null) {
+
+            // 기존아이템 삭제
+            ootdItemRepository.deleteAllByOotd_Id(ootd.getId());
+
+            // 아이템 검증
+            List<Long> itemIds = requestDTO.items().stream()
+                    .map(OOTDRequestDTO.Item::fashionItemId)
+                    .toList();
+
+            validateDuplicatedItemIds(itemIds);
+            Map<Long, Item> itemMap = loadItemsOrThrow(itemIds);
+
+            // 새 아이템 저장
+            List<OOTDItem> newItems =
+                    OOTDConverter.toOOTDItems(requestDTO.items(), ootd, itemMap);
+
+            ootdItemRepository.saveAll(newItems);
+
+            // 아이템 변경 횟수 카운트
+            ootd.increaseChangeItemCount();
+        }
+    }
+
+    /** OOTD 삭제 */
+    @Transactional
+    public void deleteOOTD(User user, Long ootdId) {
+
+        OOTD ootd = ootdRepository.findById(ootdId)
+                .filter(o -> o.getStatus() == OOTDStatus.NORMAL)
+                .filter(o -> o.getUser().getId().equals(user.getId()))
+                .orElseThrow(() -> new OOTDException(OOTDErrorStatus.OOTD_NOT_FOUND));
+
+        ootd.changeStatus(OOTDStatus.ABNORMAL);
+    }
+
+    /** OOTD 목록조회 */
+    @Transactional(readOnly = true)
+    public OOTDListResponse getOOTDList(
+            User user,
+            OOTDRequestDTO.SearchCondition condition
+    ) {
+        return getOOTDList(
+                user,
+                condition.keyword(),
+                condition.favorite(),
+                condition.resolvedTpoIds(),
+                condition.resolvedStyleIds(),
+                condition.resolvedSort(),
+                condition.cursor(),
+                condition.resolvedLimit()
+        );
     }
 
     /** OOTD 목록조회 */

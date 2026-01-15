@@ -74,4 +74,36 @@ public class OOTDController implements OOTDControllerDocs {
 
         return CommonResponse.onSuccess(response);
     }
+
+    /** OOTD 수정 */
+    @Override
+    @PatchMapping("/{ootdId}")
+    public CommonResponse<Void> updateOOTD(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId,
+            @Valid @RequestBody OOTDRequestDTO.Update requestDTO
+    ) {
+        ootdService.updateOOTD(
+                userDetails.getUser(),
+                ootdId,
+                requestDTO
+        );
+
+        return CommonResponse.onSuccess(null);
+    }
+
+    /** OOTD 삭제 */
+    @Override
+    @DeleteMapping("/{ootdId}")
+    public CommonResponse<Void> deleteOOTD(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId
+    ) {
+        ootdService.deleteOOTD(
+                userDetails.getUser(),
+                ootdId
+        );
+
+        return CommonResponse.onSuccess(null);
+    }
 }

@@ -134,4 +134,57 @@ public interface OOTDControllerDocs {
             @PathVariable Long ootdId
     );
 
+    /** OOTD 수정 */
+    @Operation(
+            summary = "OOTD 수정",
+            description = """
+            로그인 사용자의 OOTD 정보를 수정합니다.
+            PATCH 방식으로 부분 수정이 가능하며,
+            전달되지 않은 필드는 기존 값을 유지합니다.
+
+            - 아이템 목록이 전달될 경우 전체 교체 방식으로 수정됩니다.
+            - 본인 OOTD만 수정할 수 있습니다.
+            """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "OOTD 수정 성공",
+            content = @Content(schema = @Schema(implementation = CommonResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "존재하지 않거나 접근할 수 없는 OOTD",
+            content = @Content(mediaType = "application/json")
+    )
+    CommonResponse<Void> updateOOTD(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId,
+            @Valid @RequestBody OOTDRequestDTO.Update requestDTO
+    );
+
+    /** OOTD 삭제 */
+    @Operation(
+            summary = "OOTD 삭제",
+            description = """
+            로그인 사용자의 OOTD를 삭제합니다.
+            실제 데이터는 삭제되지 않으며,
+            status 값을 변경하는 논리 삭제 방식으로 처리됩니다.
+
+            - 본인 OOTD만 삭제할 수 있습니다.
+            """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "OOTD 삭제 성공",
+            content = @Content(schema = @Schema(implementation = CommonResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "존재하지 않거나 접근할 수 없는 OOTD",
+            content = @Content(mediaType = "application/json")
+    )
+    CommonResponse<Void> deleteOOTD(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId
+    );
 }
