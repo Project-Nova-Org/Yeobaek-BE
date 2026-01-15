@@ -47,7 +47,7 @@ public class OOTDRepositoryImpl implements OOTDRepositoryCustom {
         if (styleIds != null && !styleIds.isEmpty()) {
             jpql.append(" AND o.style.id IN :styleIds");
         }
-        if (cursor != null) {
+        if (cursor != null && !"NAME_ASC".equals(sort)) {
             jpql.append(" AND o.id < :cursor");
         }
 
@@ -73,7 +73,7 @@ public class OOTDRepositoryImpl implements OOTDRepositoryCustom {
         if (styleIds != null && !styleIds.isEmpty()) {
             query.setParameter("styleIds", styleIds);
         }
-        if (cursor != null) {
+        if (cursor != null && !"NAME_ASC".equals(sort)) {
             query.setParameter("cursor", cursor);
         }
 
