@@ -17,6 +17,9 @@ import com.nova.yeobaek.domain.ootd.status.OOTDException;
 import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDListResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDListItemResponse;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +29,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDItemDetailResponse;
+import com.nova.yeobaek.domain.ootd.domain.enums.OOTDStatus;
 
 @Slf4j
 @Service
@@ -109,5 +116,92 @@ public class OOTDService {
                 itemMap
         );
         ootdItemRepository.saveAll(ootdItems);
+    }
+
+    /** OOTD 목록조회 */
+    @Transactional(readOnly = true)
+    public OOTDListResponse getOOTDList(
+            User user,
+            String keyword,
+            Boolean favorite,
+            List<Long> tpoIds,
+            List<Long> styleIds,
+            String sort,
+            Long cursor,
+            int limit
+    ) {
+        List<OOTD> ootds = ootdRepository.findOOTDList(
+                user,
+                keyword,
+                favorite,
+                tpoIds,
+                styleIds,
+                sort,
+                cursor,
+                limit + 1
+        );
+
+        boolean hasNext = ootds.size() > limit;
+        if (hasNext) {
+            ootds = ootds.subList(0, limit);
+        }
+
+        List<OOTDListItemResponse> items = ootds.stream()
+                .map(ootd -> OOTDListItemResponse.builder()
+                        .ootdId(ootd.getId())
+                        .name(ootd.getName())
+                        .tpoId(ootd.getTpo() != null ? ootd.getTpo().getId() : null)
+                        .styleId(ootd.getStyle() != null ? ootd.getStyle().getId() : null)
+                        .favorite(ootd.isFavorite())
+                        .imageBackground(ootd.getImageBackgroundColor().name())
+                        .coverImageUrl(ootd.getImageUrl())
+                        .itemNum(ootd.getOotdItemList().size())
+                        .createdAt(ootd.getCreatedAt())
+                        .build()
+                )
+                .toList();
+
+        Long nextCursor = hasNext ? items.get(items.size() - 1).getOotdId() : null;
+
+        return OOTDListResponse.builder()
+                .items(items)
+                .nextCursor(nextCursor)
+                .hasNext(hasNext)
+                .build();
+    }
+
+    /** OOTD 상세조회 */
+    @Transactional(readOnly = true)
+    public OOTDDetailResponse getOOTDDetail(User user, Long ootdId) {
+
+        OOTD ootd = ootdRepository.findById(ootdId)
+                .filter(o -> o.getStatus() == OOTDStatus.NORMAL)
+                .filter(o -> o.getUser().getId().equals(user.getId()))
+                .orElseThrow(() -> new OOTDException(OOTDErrorStatus.OOTD_NOT_FOUND));
+
+        return OOTDDetailResponse.builder()
+                .ootdId(ootd.getId())
+                .name(ootd.getName())
+                .memo(ootd.getMemo())
+                .favorite(ootd.isFavorite())
+                .imageBackground(ootd.getImageBackgroundColor().name())
+                .imageUrl(ootd.getImageUrl())
+                .tpoId(ootd.getTpo() != null ? ootd.getTpo().getId() : null)
+                .styleId(ootd.getStyle() != null ? ootd.getStyle().getId() : null)
+                .createdAt(ootd.getCreatedAt())
+                .items(
+                        ootd.getOotdItemList().stream()
+                                .map(oi -> OOTDItemDetailResponse.builder()
+                                        .fashionItemId(oi.getItem().getId())
+                                        .posX(oi.getPosX())
+                                        .posY(oi.getPosY())
+                                        .scale(oi.getScale())
+                                        .rotation(oi.getRotation())
+                                        .zIndex(oi.getZIndex())
+                                        .build()
+                                )
+                                .toList()
+                )
+                .build();
     }
 }

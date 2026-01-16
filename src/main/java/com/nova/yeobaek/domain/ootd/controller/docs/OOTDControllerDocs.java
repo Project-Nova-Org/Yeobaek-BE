@@ -2,8 +2,10 @@ package com.nova.yeobaek.domain.ootd.controller.docs;
 
 import com.nova.yeobaek.domain.ootd.dto.request.OOTDRequestDTO;
 import com.nova.yeobaek.domain.ootd.dto.response.CreateOOTDResponse;
-import com.nova.yeobaek.global.payload.response.CommonResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDListResponse;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
+import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
 
@@ -13,13 +15,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Parameter;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Tag(name = "OOTD", description = "오늘의 착장 API")
 public interface OOTDControllerDocs {
 
+    /** OOTD 등록 */
     @Operation(
             summary = "OOTD 등록",
             description = """
@@ -31,9 +38,7 @@ public interface OOTDControllerDocs {
     @ApiResponse(
             responseCode = "201",
             description = "OOTD 등록 성공",
-            content = @Content(
-                    schema = @Schema(implementation = CommonResponse.class)
-            )
+            content = @Content(schema = @Schema(implementation = CommonResponse.class))
     )
     @ApiResponse(
             responseCode = "400",
@@ -73,60 +78,60 @@ public interface OOTDControllerDocs {
     )
     @ApiResponse(
             responseCode = "404",
-            description = "존재하지 않는 스타일",
-            content = @Content(
-                    mediaType = "application/json",
-                    examples = @ExampleObject(
-                            name = "STYLE_NOT_FOUND",
-                            value = """
-                            {
-                              "success": false,
-                              "code": "OOTD4041",
-                              "message": "존재하지 않는 스타일입니다.",
-                              "timestamp": "2026-01-13T15:08:28.878"
-                            }
-                            """
-                    )
-            )
-    )
-    @ApiResponse(
-            responseCode = "404",
-            description = "존재하지 않는 TPO",
-            content = @Content(
-                    mediaType = "application/json",
-                    examples = @ExampleObject(
-                            name = "TPO_NOT_FOUND",
-                            value = """
-                        {
-                          "success": false,
-                          "code": "OOTD4042",
-                          "message": "존재하지 않는 TPO입니다.",
-                          "timestamp": "2026-01-13T15:11:10.123456"
-                        }
-                        """
-                    )
-            )
-    )
-    @ApiResponse(
-            responseCode = "404",
-            description = "존재하지 않는 아이템",
-            content = @Content(
-                    mediaType = "application/json",
-                    examples = @ExampleObject(
-                            name = "ITEM_NOT_FOUND",
-                            value = """
-                            {
-                              "success": false,
-                              "code": "OOTD4043",
-                              "message": "존재하지 않는 아이템이 포함되어 있습니다.",
-                              "timestamp": "2026-01-13T15:10:12.221"
-                            }
-                            """
-                    )
-            )
+            description = "존재하지 않는 스타일 / TPO / 아이템",
+            content = @Content(mediaType = "application/json")
     )
     CommonResponse<CreateOOTDResponse> createOOTD(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody OOTDRequestDTO.Create requestDTO
     );
+
+    /** OOTD 목록조회 */
+    @Operation(
+            summary = "OOTD 목록 조회",
+            description = """
+            로그인 사용자의 OOTD 목록을 조회합니다.
+            status = NORMAL 인 OOTD만 반환합니다.
+            cursor 기반 무한 스크롤을 지원합니다.
+
+            - sort 기본값: LATEST
+            - limit 기본값: 20 (최대 100)
+            """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "OOTD 목록 조회 성공",
+            content = @Content(schema = @Schema(implementation = OOTDListResponse.class))
+    )
+    CommonResponse<OOTDListResponse> getOOTDList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+
+            @Parameter(
+                    description = "OOTD 목록 조회 조건 (기본값: sort=LATEST, limit=20)",
+                    schema = @Schema(
+                            defaultValue = "{\"sort\":\"LATEST\",\"limit\":20}"
+                    )
+            )
+            @ParameterObject
+            @Valid
+            @ModelAttribute
+            OOTDRequestDTO.SearchCondition condition
+    );
+
+    /** OOTD 상세 조회 */
+    @Operation(
+            summary = "OOTD 상세 조회",
+            description = """
+            로그인 사용자의 OOTD 상세 정보를 조회합니다.
+            status = NORMAL 인 OOTD만 조회됩니다.
+            OOTD 기본 정보와 OOTDItem 목록을 함께 반환합니다.
+            """
+
+    )
+    @ApiResponse(responseCode = "200", description = "OOTD 상세 조회 성공")
+    CommonResponse<OOTDDetailResponse> getOOTDDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId
+    );
+
 }
