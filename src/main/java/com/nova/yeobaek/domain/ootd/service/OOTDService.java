@@ -121,31 +121,43 @@ public class OOTDService {
 
     /** OOTD 수정 */
     @Transactional
+    //OOTD 수정 유스케이스
     public void updateOOTD(
             User user,
             Long ootdId,
             OOTDRequestDTO.Update requestDTO
     ) {
-        // 1. OOTD 조회, 권한 검증
-        OOTD ootd = ootdRepository.findById(ootdId)
+        OOTD ootd = getAuthorizedOOTD(user, ootdId);
+
+        updateBasicFields(ootd, requestDTO);
+        updateRelations(ootd, requestDTO);
+        updateImageBackgroundIfNeeded(ootd, requestDTO);
+        updateItemsIfNeeded(ootd, requestDTO);
+    }
+
+    //수정,삭제 OOTD 조회 및 권한 검증
+    private OOTD getAuthorizedOOTD(User user, Long ootdId) {
+        return ootdRepository.findById(ootdId)
                 .filter(o -> o.getStatus() == OOTDStatus.NORMAL)
                 .filter(o -> o.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new OOTDException(OOTDErrorStatus.OOTD_NOT_FOUND));
+    }
 
-        // 2. 기본 필드 수정 (null이면 스킵)
+    //OOTD 기본 필드 수정
+    private void updateBasicFields(OOTD ootd, OOTDRequestDTO.Update requestDTO) {
         if (requestDTO.name() != null) {
             ootd.updateName(requestDTO.name());
         }
-
         if (requestDTO.memo() != null) {
             ootd.updateMemo(requestDTO.memo());
         }
-
         if (requestDTO.favorite() != null) {
             ootd.updateFavorite(requestDTO.favorite());
         }
+    }
 
-        // 3. TPO / Style 수정
+    //OOTD 연관 엔티티 수정
+    private void updateRelations(OOTD ootd, OOTDRequestDTO.Update requestDTO) {
         if (requestDTO.tpoId() != null) {
             TPO tpo = findTpo(requestDTO.tpoId());
             ootd.updateTpo(tpo);
@@ -154,44 +166,42 @@ public class OOTDService {
             Style style = findStyle(requestDTO.styleId());
             ootd.updateStyle(style);
         }
+    }
 
-        // 4. 이미지 배경 색상 수정
+    //OOTD 이미지 배경색상 수정
+    private void updateImageBackgroundIfNeeded(OOTD ootd, OOTDRequestDTO.Update requestDTO) {
         if (requestDTO.imageBackground() != null) {
             ImageBackgroundColor backgroundColor =
                     parseBackground(requestDTO.imageBackground());
             ootd.updateImageBackground(backgroundColor);
         }
+    }
 
-        // 5. 아이템 수정 (전체교체방식)
-        if (requestDTO.items() != null) {
-
-            // 기존 아이템 스냅샷 (캘린더/착용횟수 diff 계산용 - TODO:추후 사용)
-            List<OOTDItem> beforeItems = ootd.getOotdItemList();
-
-            // 기존 아이템 매핑 삭제
-            ootdItemRepository.deleteAllByOotd_Id(ootd.getId());
-
-            // 아이템 검증
-            List<Long> itemIds = requestDTO.items().stream()
-                    .map(OOTDRequestDTO.Item::fashionItemId)
-                    .toList();
-
-            validateDuplicatedItemIds(itemIds);
-            Map<Long, Item> itemMap = loadItemsOrThrow(itemIds);
-
-            // 새 아이템 저장
-            List<OOTDItem> newItems =
-                    OOTDConverter.toOOTDItems(requestDTO.items(), ootd, itemMap);
-
-            ootdItemRepository.saveAll(newItems);
-
-            // 아이템 변경 횟수 카운트
-            ootd.increaseChangeItemCount();
-
-            // TODO(#calendar): 해당 OOTD가 기록된 캘린더 엔트리들의 ootdImageUrl 최신화
-            // TODO(#item): 캘린더 기록 수 기준으로 아이템 착용 횟수 diff 반영
-            // beforeItems 와 newItems 비교하여 계산 예정
+    //OOTD 아이템 구성 수정
+    private void updateItemsIfNeeded(OOTD ootd, OOTDRequestDTO.Update requestDTO) {
+        if (requestDTO.items() == null) {
+            return;
         }
+
+        List<OOTDItem> beforeItems = ootd.getOotdItemList();
+
+        ootdItemRepository.deleteAllByOotd_Id(ootd.getId());
+
+        List<Long> itemIds = requestDTO.items().stream()
+                .map(OOTDRequestDTO.Item::fashionItemId)
+                .toList();
+
+        validateDuplicatedItemIds(itemIds);
+        Map<Long, Item> itemMap = loadItemsOrThrow(itemIds);
+
+        List<OOTDItem> newItems =
+                OOTDConverter.toOOTDItems(requestDTO.items(), ootd, itemMap);
+
+        ootdItemRepository.saveAll(newItems);
+        ootd.increaseChangeItemCount();
+
+        // TODO(#calendar): 해당 OOTD가 기록된 캘린더 엔트리들의 ootdImageUrl 최신화
+        // TODO(#item): 캘린더 기록 수 기준으로 아이템 착용 횟수 diff 반영
     }
 
     /** OOTD 삭제 (하드 딜리트) */
