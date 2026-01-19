@@ -165,7 +165,10 @@ public class OOTDService {
         // 5. 아이템 수정 (전체교체방식)
         if (requestDTO.items() != null) {
 
-            // 기존아이템 삭제
+            // 기존 아이템 스냅샷 (캘린더/착용횟수 diff 계산용 - TODO:추후 사용)
+            List<OOTDItem> beforeItems = ootd.getOotdItemList();
+
+            // 기존 아이템 매핑 삭제
             ootdItemRepository.deleteAllByOotd_Id(ootd.getId());
 
             // 아이템 검증
@@ -184,19 +187,31 @@ public class OOTDService {
 
             // 아이템 변경 횟수 카운트
             ootd.increaseChangeItemCount();
+
+            // TODO(#calendar): 해당 OOTD가 기록된 캘린더 엔트리들의 ootdImageUrl 최신화
+            // TODO(#item): 캘린더 기록 수 기준으로 아이템 착용 횟수 diff 반영
+            // beforeItems 와 newItems 비교하여 계산 예정
         }
     }
 
-    /** OOTD 삭제 */
+    /** OOTD 삭제 (하드 딜리트) */
     @Transactional
     public void deleteOOTD(User user, Long ootdId) {
 
         OOTD ootd = ootdRepository.findById(ootdId)
-                .filter(o -> o.getStatus() == OOTDStatus.NORMAL)
                 .filter(o -> o.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new OOTDException(OOTDErrorStatus.OOTD_NOT_FOUND));
 
-        ootd.changeStatus(OOTDStatus.ABNORMAL);
+        // 1. OOTD에 연결된 아이템 매핑 삭제
+        ootdItemRepository.deleteAllByOotd_Id(ootd.getId());
+
+        // 2. TODO: 캘린더 파트 머지 후 연동
+        // TODO(#calendar): 해당 OOTD가 기록된 모든 캘린더 엔트리 삭제
+        // TODO(#calendar): 캘린더 삭제에 따른 아이템 사용 횟수 차감
+        // 아직 캘린더 도메인이 푸쉬되지 않아서 제가 건드릴 수 없어서 일단 투두로 뒀습니다!!
+
+        // 3. OOTD 하드딜리트
+        ootdRepository.delete(ootd);
     }
 
     /** OOTD 목록조회 */
