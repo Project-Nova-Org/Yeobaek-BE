@@ -35,12 +35,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @DynamicInsert
 @DynamicUpdate
-@Table(name = "calendars",
-	uniqueConstraints = {
-		@UniqueConstraint(
-			name = "uk_user_date",
-			columnNames = {"user_id", "date"})
-})
+@Table(
+		name = "calendars",
+		uniqueConstraints = {
+				@UniqueConstraint(
+						name = "uk_user_date",
+						columnNames = {"user_id", "date"}
+				)
+		}
+)
 public class Calendar extends BaseEntity {
 
 	@Id
@@ -67,4 +70,38 @@ public class Calendar extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ootd_id")
 	private OOTD ootd;
+
+	/**
+	 * ✅ OOTD 연결(혹은 생성 시 세팅) - customImageUrl 건드리면 안 됨
+	 */
+	public void connectOotd(OOTD ootd) {
+		this.ootd = ootd;
+		this.ootdImageUrl = ootd.getImageUrl();
+		this.thumbnail = Thumbnail.OOTD;
+	}
+
+	/**
+	 * ❌ 최종 정책에서 사용 금지 (row 삭제가 정답)
+	 */
+	@Deprecated
+	public void disconnectOotd() {
+		this.ootd = null;
+		// NOT NULL 컬럼(ootdImageUrl)은 유지
+	}
+
+	public void setCustomImage(String imageUrl) {
+		this.customImageUrl = imageUrl;
+		// 대표는 별도 PATCH로 선택하므로 여기서는 thumbnail 변경 X
+	}
+
+	public void removeCustomImageAndFallbackThumbnail() {
+		this.customImageUrl = null;
+		if (this.thumbnail == Thumbnail.CUSTOM) {
+			this.thumbnail = Thumbnail.OOTD;
+		}
+	}
+
+	public void changeThumbnail(Thumbnail thumbnail) {
+		this.thumbnail = thumbnail;
+	}
 }
