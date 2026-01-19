@@ -53,11 +53,16 @@ public class OOTDController implements OOTDControllerDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @ParameterObject @Valid @ModelAttribute OOTDRequestDTO.SearchCondition condition
     ) {
-        OOTDListResponse response =
-                ootdService.getOOTDList(
-                        userDetails.getUser(),
-                        condition
-                );
+        OOTDListResponse response = ootdService.getOOTDList(
+                userDetails.getUser(),
+                condition.keyword(),
+                condition.favorite(),
+                condition.resolvedTpoIds(),
+                condition.resolvedStyleIds(),
+                condition.resolvedSort(),
+                condition.cursor(),
+                condition.resolvedLimit()
+        );
 
         return CommonResponse.onSuccess(response);
     }
