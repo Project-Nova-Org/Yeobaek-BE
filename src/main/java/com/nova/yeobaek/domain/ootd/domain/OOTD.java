@@ -129,4 +129,9 @@ public class OOTD extends BaseEntity {
     public void changeStatus(OOTDStatus status) {
         this.status = status;
     }
+
+	//OOTD 즐겨찾기
+	public void toggleFavorite() {
+		this.favorite = !this.favorite;
+	}
 }

@@ -46,6 +46,16 @@ public class OOTDController implements OOTDControllerDocs {
         return CommonResponse.onCreated(new CreateOOTDResponse(ootdId));
     }
 
+    /** OOTD 즐겨찾기 */
+    @PatchMapping("/{ootdId}/favorite")
+    public CommonResponse<Void> toggleFavorite(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId
+    ) {
+        ootdService.toggleFavorite(userDetails.getUser(), ootdId);
+        return CommonResponse.onSuccess(null);
+    }
+
     /** OOTD 목록 조회 */
     @Override
     @GetMapping
