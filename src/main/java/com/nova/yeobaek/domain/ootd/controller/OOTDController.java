@@ -55,13 +55,7 @@ public class OOTDController implements OOTDControllerDocs {
     ) {
         OOTDListResponse response = ootdService.getOOTDList(
                 userDetails.getUser(),
-                condition.keyword(),
-                condition.favorite(),
-                condition.resolvedTpoIds(),
-                condition.resolvedStyleIds(),
-                condition.resolvedSort(),
-                condition.cursor(),
-                condition.resolvedLimit()
+                condition
         );
 
         return CommonResponse.onSuccess(response);
