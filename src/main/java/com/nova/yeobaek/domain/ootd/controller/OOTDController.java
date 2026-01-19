@@ -53,11 +53,10 @@ public class OOTDController implements OOTDControllerDocs {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @ParameterObject @Valid @ModelAttribute OOTDRequestDTO.SearchCondition condition
     ) {
-        OOTDListResponse response =
-                ootdService.getOOTDList(
-                        userDetails.getUser(),
-                        condition
-                );
+        OOTDListResponse response = ootdService.getOOTDList(
+                userDetails.getUser(),
+                condition
+        );
 
         return CommonResponse.onSuccess(response);
     }
@@ -73,5 +72,37 @@ public class OOTDController implements OOTDControllerDocs {
                 ootdService.getOOTDDetail(userDetails.getUser(), ootdId);
 
         return CommonResponse.onSuccess(response);
+    }
+
+    /** OOTD 수정 */
+    @Override
+    @PatchMapping("/{ootdId}")
+    public CommonResponse<Void> updateOOTD(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId,
+            @Valid @RequestBody OOTDRequestDTO.Update requestDTO
+    ) {
+        ootdService.updateOOTD(
+                userDetails.getUser(),
+                ootdId,
+                requestDTO
+        );
+
+        return CommonResponse.onSuccess(null);
+    }
+
+    /** OOTD 삭제 */
+    @Override
+    @DeleteMapping("/{ootdId}")
+    public CommonResponse<Void> deleteOOTD(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId
+    ) {
+        ootdService.deleteOOTD(
+                userDetails.getUser(),
+                ootdId
+        );
+
+        return CommonResponse.onSuccess(null);
     }
 }

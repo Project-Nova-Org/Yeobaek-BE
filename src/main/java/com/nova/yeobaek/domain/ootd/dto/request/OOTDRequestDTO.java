@@ -103,4 +103,31 @@ public class OOTDRequestDTO {
             return (styleId == null || styleId.isEmpty()) ? null : styleId;
         }
     }
+
+    /** OOTD 수정 요청 */
+    public record Update(
+
+            @Schema(description = "OOTD 이름")
+            String name,
+
+            @Schema(description = "OOTD 메모")
+            String memo,
+
+            @Schema(description = "즐겨찾기 여부")
+            Boolean favorite,
+
+            @Schema(description = "TPO ID")
+            Long tpoId,
+
+            @Schema(description = "Style ID")
+            Long styleId,
+
+            @Schema(description = "이미지 배경 색상")
+            String imageBackground,
+
+            @Schema(description = "OOTD 아이템 목록 (전체 교체)")
+            @Valid
+            List<Item> items
+    ) {
+    }
 }
