@@ -152,6 +152,11 @@ public interface OOTDControllerDocs {
             content = @Content(schema = @Schema(implementation = CommonResponse.class))
     )
     @ApiResponse(
+            responseCode = "400",
+            description = "유효하지 않은 요청 (이미지 배경 색상, 아이템 ID 중복 등)",
+            content = @Content(mediaType = "application/json")
+    )
+    @ApiResponse(
             responseCode = "404",
             description = "존재하지 않거나 접근할 수 없는 OOTD",
             content = @Content(mediaType = "application/json")
@@ -167,8 +172,8 @@ public interface OOTDControllerDocs {
             summary = "OOTD 삭제",
             description = """
             로그인 사용자의 OOTD를 삭제합니다.
-               OOTD를 하드딜리트합니다.
-               OOTD와 연결된 아이템 매핑(OOTDItem)도 함께 삭제됩니다.
+            OOTD를 하드딜리트합니다.
+            OOTD와 연결된 아이템 매핑(OOTDItem)도 함께 삭제됩니다.
 
             - 본인 OOTD만 삭제할 수 있습니다.
             """
