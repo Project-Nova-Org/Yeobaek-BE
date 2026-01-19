@@ -65,8 +65,9 @@ public class OOTD extends BaseEntity {
 	@Column(nullable = false, columnDefinition = "VARCHAR DEFAULT 'NORMAL'")
 	private OOTDStatus status;
 
+	@Builder.Default
 	@Column(nullable = false)
-	private Long changeItemCount;
+	private Long changeItemCount = 0L; //초기값 설정
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id")
