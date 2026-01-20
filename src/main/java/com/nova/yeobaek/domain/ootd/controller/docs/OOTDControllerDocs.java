@@ -118,6 +118,22 @@ public interface OOTDControllerDocs {
             OOTDRequestDTO.SearchCondition condition
     );
 
+    /** OOTD 즐겨찾기 */
+    @Operation(
+            summary = "OOTD 즐겨찾기 설정/해제",
+            description = """
+        로그인 사용자의 OOTD 즐겨찾기 상태를 토글합니다.
+        - 즐겨찾기 → 해제
+        - 해제 → 즐겨찾기
+        """
+    )
+    @ApiResponse(responseCode = "200", description = "즐겨찾기 상태 변경 성공")
+    @ApiResponse(responseCode = "404", description = "존재하지 않거나 접근할 수 없는 OOTD")
+    CommonResponse<Void> toggleFavorite(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long ootdId
+    );
+
     /** OOTD 상세 조회 */
     @Operation(
             summary = "OOTD 상세 조회",

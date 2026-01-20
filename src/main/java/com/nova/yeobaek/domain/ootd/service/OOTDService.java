@@ -119,6 +119,13 @@ public class OOTDService {
         ootdItemRepository.saveAll(ootdItems);
     }
 
+    /** OOTD 즐겨찾기 */
+    @Transactional
+    public void toggleFavorite(User user, Long ootdId) {
+        OOTD ootd = getAuthorizedOOTD(user, ootdId);
+        ootd.toggleFavorite();
+    }
+
     /** OOTD 수정 */
     @Transactional
     //OOTD 수정 유스케이스
