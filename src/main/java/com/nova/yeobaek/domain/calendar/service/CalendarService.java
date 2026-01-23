@@ -46,7 +46,7 @@ public class CalendarService {
     private final OOTDRepository ootdRepository;
     private final UserRepository userRepository;
 
-    //  user_histories는 Repository 없이 EntityManager로 접근
+    // user_histories는 Repository 없이 EntityManager로 접근
     @PersistenceContext
     private EntityManager em;
 
@@ -64,7 +64,7 @@ public class CalendarService {
     }
 
     /**
-     *  POST /api/calendar/entries/{date}
+     * POST /api/calendar/entries/{date}
      * - "기록 없는 날짜"는 row 자체가 없어야 하므로, 여기서만 row를 생성한다.
      * - ootdId 필수
      * - ✅ (변경) ootd.createdAt.toLocalDate() == date 검증 제거: OOTD는 여러 날짜에 재사용 가능
@@ -75,12 +75,6 @@ public class CalendarService {
 
         OOTD ootd = ootdRepository.findById(ootdId)
                 .orElseThrow(() -> new CalendarException(CalendarErrorStatus.CALENDAR4041));
-
-        // ✅ 제거됨: "해당 날짜에 속하지 않은 OOTD" 검증
-        // 요구사항: OOTD는 독립 엔티티이며, Calendar가 날짜를 소유 → 동일 OOTD를 여러 날짜에 연결 가능해야 함
-        // if (ootd.getCreatedAt() == null || !ootd.getCreatedAt().toLocalDate().equals(parsedDate)) {
-        //     throw new CalendarException(CalendarErrorStatus.OOTD_NOT_IN_DATE);
-        // }
 
         User userRef = userRepository.getReferenceById(userId);
 
@@ -103,7 +97,7 @@ public class CalendarService {
     }
 
     /**
-     *  DELETE /api/calendar/entries/{date}
+     * DELETE /api/calendar/entries/{date}
      * - calendars row 자체 삭제
      * - 없으면 CALENDAR4040
      */
@@ -122,7 +116,7 @@ public class CalendarService {
     }
 
     /**
-     *  POST /api/calendar/entries/{date}/custom-image
+     * POST /api/calendar/entries/{date}/custom-image
      * - calendars row 반드시 존재해야 함 (없으면 CALENDAR4040)
      */
     public CalendarResponseDTO.EntryDetailResponse addCustomImage(Long userId, String date, String imageUrl) {
@@ -137,7 +131,7 @@ public class CalendarService {
     }
 
     /**
-     *  DELETE /api/calendar/entries/{date}/custom-image
+     * DELETE /api/calendar/entries/{date}/custom-image
      * - custom 이미지만 삭제
      * - 삭제할 custom이 없으면 CALENDAR4043
      */
@@ -157,7 +151,7 @@ public class CalendarService {
     }
 
     /**
-     *  PATCH /api/calendar/entries/{date}/thumbnail
+     * PATCH /api/calendar/entries/{date}/thumbnail
      * - OOTD | CUSTOM
      * - CUSTOM 선택 시 custom_image_url 필수
      */
@@ -179,21 +173,22 @@ public class CalendarService {
     }
 
     // =========================
-    //  월 캘린더 로직
+    // 월 캘린더 로직
     // =========================
 
     /**
      * GET /api/calendars/months/{yearMonth}
-     * - 최근 3개월 이내: 6x7(42칸) grid 반환
-     * - 3개월 초과/미래 월: days=[]
+     * - ✅ 최근 3개월 이내만 조회 가능 (현재월 포함)
+     * - ✅ 3개월 초과 과거/미래 월: COMMON400 (조회 자체 불가)
      * - 주 시작 요일: 월요일
      */
     @Transactional(readOnly = true)
     public CalendarResponseDTO.MonthlyCalendarResponse getMonthlyCalendar(Long userId, String yearMonth) {
         YearMonth ym = parseYearMonthOrThrow(yearMonth);
 
+        // ✅ 3개월 초과 과거 / 미래 월은 조회 자체를 막음 (COMMON400)
         if (!isRecent3Months(ym)) {
-            return new CalendarResponseDTO.MonthlyCalendarResponse(yearMonth, List.of());
+            throw new CalendarException(CalendarErrorStatus.MONTH_OUT_OF_RECENT_3MONTHS);
         }
 
         LocalDate firstDay = ym.atDay(1);
@@ -235,7 +230,8 @@ public class CalendarService {
     /**
      * GET /api/calendars/months/{yearMonth}/image
      * - user_histories.monthlyOotdImageUrl 조회
-     * - 없으면 CALENDAR4044
+     * - ✅ 과거 월 포함 조회 가능
+     * - ❌ 없으면 CALENDAR4044
      */
     @Transactional(readOnly = true)
     public CalendarResponseDTO.MonthImageResponse getMonthImage(Long userId, String yearMonth) {
@@ -252,17 +248,16 @@ public class CalendarService {
 
     /**
      * POST /api/calendars/months/{yearMonth}/image
-     * - 월 대표 이미지를 저장/갱신한다. (과거 월 포함 허용)
-     * - 최근 3개월은 "유저 선택 저장", 3개월 초과는 "자동 저장"이지만
-     *   이는 프론트 정책이며 백엔드는 저장을 막지 않는다.
+     * - 월 대표 이미지를 저장/갱신한다.
+     * - ✅ 최근 3개월 이내만 저장 가능 (정책 강제)
+     * - ❌ 미래 월 저장 불가
      */
     public CalendarResponseDTO.MonthImageSaveResponse saveMonthImage(Long userId, String yearMonth, String imageUrl) {
         YearMonth ym = parseYearMonthOrThrow(yearMonth);
 
-        //  미래 월 저장은 막음
-        YearMonth now = YearMonth.now();
-        if (ym.isAfter(now)) {
-            throw new CalendarException(CalendarErrorStatus.INVALID_YEAR_MONTH);
+        // ✅ 월 이미지 저장은 최근 3개월만 허용
+        if (!isRecent3Months(ym)) {
+            throw new CalendarException(CalendarErrorStatus.MONTH_IMAGE_ONLY_RECENT_3MONTHS);
         }
 
         String ymStr = ym.toString();
@@ -281,7 +276,6 @@ public class CalendarService {
             em.persist(history);
         } else {
             history.changeMonthlyOotdImageUrl(imageUrl);
-            // managed 상태면 merge 없어도 됨 (필요하면 유지 가능)
         }
 
         return new CalendarResponseDTO.MonthImageSaveResponse(ymStr, imageUrl);
@@ -307,10 +301,14 @@ public class CalendarService {
         }
     }
 
+    /**
+     * 최근 3개월(현재 월 포함)만 true
+     * - now, now-1, now-2
+     * - 미래 월은 false
+     */
     private boolean isRecent3Months(YearMonth target) {
         YearMonth now = YearMonth.now();
 
-        // 미래 월 제외
         if (target.isAfter(now)) return false;
 
         return target.equals(now)

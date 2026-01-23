@@ -47,11 +47,10 @@ public class CalendarResponseDTO {
 
     public record DaySummary(
             String date,                  // YYYY-MM-DD
-            Thumbnail thumbnail,           // CUSTOM / OOTD
-            String ootdImageUrl,           // NOT NULL (기록 있는 날만 생성됨)
+            Thumbnail thumbnail,           // CUSTOM / OOTD (기록 없는 날짜는 null)
+            String ootdImageUrl,           // nullable (기록 없는 날짜는 null, 기록 있는 날짜도 OOTD 이미지 없으면 null)
             String customImageUrl          // nullable
     ) {}
-
     /* =========================
      * 월 이미지
      * ========================= */
