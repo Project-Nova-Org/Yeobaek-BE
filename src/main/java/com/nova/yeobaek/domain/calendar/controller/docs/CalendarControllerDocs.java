@@ -121,4 +121,64 @@ public interface CalendarControllerDocs {
 
             @RequestBody @Valid CalendarRequestDTO.UpdateThumbnailRequest request
     );
+
+    // =========================
+    //  월 캘린더 API
+    // =========================
+
+    @Operation(
+            summary = "월 캘린더 조회",
+            description = """
+                    해당 월의 달력 grid(6x7, 42일)를 조회합니다.
+                    - 주 시작 요일: 월요일
+                    - 최근 3개월 이내면 42일 grid 반환
+                    - 3개월 초과 또는 미래 월이면 days = []
+                    - 기록 없는 날짜(캘린더 row 없음)는 DaySummary의 thumbnail/ootdImageUrl/customImageUrl이 모두 null로 반환됩니다.
+                    - yearMonth 형식이 틀리면 COMMON400
+                    """
+    )
+    CommonResponse<CalendarResponseDTO.MonthlyCalendarResponse> getMonthlyCalendar(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "user") User user,
+
+            @Parameter(description = "조회 월 (YYYY-MM)", example = "2026-01")
+            @PathVariable("yearMonth") String yearMonth
+    );
+
+    @Operation(
+            summary = "월 이미지 조회",
+            description = """
+                    월 대표 이미지를 조회합니다.
+                    - ERD: user_histories.monthly_ootd_image_url 사용
+                    - 월 이미지가 없으면 CALENDAR4044
+                    - yearMonth 형식이 틀리면 COMMON400
+                    """
+    )
+    CommonResponse<CalendarResponseDTO.MonthImageResponse> getMonthImage(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "user") User user,
+
+            @Parameter(description = "조회 월 (YYYY-MM)", example = "2026-01")
+            @PathVariable("yearMonth") String yearMonth
+    );
+
+    @Operation(
+            summary = "월 이미지 저장",
+            description = """
+                    월 대표 이미지를 저장합니다.
+                    - request body: { "monthlyOotdImageUrl": "https://..." }
+                    - ERD: user_histories.monthly_ootd_image_url 저장
+                    - 최근 3개월 이내만 가능 (아니면 COMMON400)
+                    - yearMonth 형식이 틀리면 COMMON400
+                    """
+    )
+    CommonResponse<CalendarResponseDTO.MonthImageSaveResponse> saveMonthImage(
+            @Parameter(hidden = true)
+            @AuthenticationPrincipal(expression = "user") User user,
+
+            @Parameter(description = "저장 월 (YYYY-MM)", example = "2026-01")
+            @PathVariable("yearMonth") String yearMonth,
+
+            @RequestBody @Valid CalendarRequestDTO.SaveMonthImageRequest request
+    );
 }
