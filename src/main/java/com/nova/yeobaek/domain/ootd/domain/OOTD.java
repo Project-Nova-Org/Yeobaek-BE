@@ -88,4 +88,50 @@ public class OOTD extends BaseEntity {
 	@OneToMany(mappedBy = "ootd", cascade = CascadeType.ALL)
 	@Builder.Default
 	private List<OOTDItem> ootdItemList = new ArrayList<>();
+
+	/** OOTD 수정 */
+    // 이름 수정
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    // 메모 수정
+    public void updateMemo(String memo) {
+        this.memo = memo;
+    }
+
+    //즐겨찾기 수정
+    public void updateFavorite(boolean favorite) {
+        this.favorite = favorite;
+    }
+
+    //TPO 수정
+    public void updateTpo(TPO tpo) {
+        this.tpo = tpo;
+    }
+
+    //Style 수정
+    public void updateStyle(Style style) {
+        this.style = style;
+    }
+
+    //이미지 배경 색상 수정
+    public void updateImageBackground(ImageBackgroundColor backgroundColor) {
+        this.imageBackgroundColor = backgroundColor;
+    }
+
+    //아이템 변경 횟수 증가
+    public void increaseChangeItemCount() {
+        this.changeItemCount++;
+    }
+
+    //OOTD 상태 변경
+    public void changeStatus(OOTDStatus status) {
+        this.status = status;
+    }
+
+	//OOTD 즐겨찾기
+	public void toggleFavorite() {
+		this.favorite = !this.favorite;
+	}
 }
