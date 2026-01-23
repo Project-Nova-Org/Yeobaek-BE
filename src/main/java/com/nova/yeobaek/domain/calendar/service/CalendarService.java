@@ -178,17 +178,24 @@ public class CalendarService {
 
     /**
      * GET /api/calendars/months/{yearMonth}
-     * - ✅ 최근 3개월 이내만 조회 가능 (현재월 포함)
-     * - ✅ 3개월 초과 과거/미래 월: COMMON400 (조회 자체 불가)
+     * - 최근 3개월 이내: NORMAL 모드로 6x7(42칸) grid 반환
+     * - 3개월 초과/미래 월: IMAGE_ONLY 모드로 days=[] 반환 (차단하지 않음)
      * - 주 시작 요일: 월요일
      */
     @Transactional(readOnly = true)
     public CalendarResponseDTO.MonthlyCalendarResponse getMonthlyCalendar(Long userId, String yearMonth) {
         YearMonth ym = parseYearMonthOrThrow(yearMonth);
 
-        // ✅ 3개월 초과 과거 / 미래 월은 조회 자체를 막음 (COMMON400)
+        // ✅ 3개월 초과(과거/미래)면 IMAGE_ONLY로 반환 (200)
         if (!isRecent3Months(ym)) {
-            throw new CalendarException(CalendarErrorStatus.MONTH_OUT_OF_RECENT_3MONTHS);
+            String monthImageUrl = findMonthlyImageUrlOrNull(userId, ym.toString());
+
+            return new CalendarResponseDTO.MonthlyCalendarResponse(
+                    yearMonth,
+                    CalendarResponseDTO.CalendarMode.IMAGE_ONLY,
+                    List.of(),
+                    monthImageUrl
+            );
         }
 
         LocalDate firstDay = ym.atDay(1);
@@ -210,28 +217,45 @@ public class CalendarService {
                 // 기록 없는 날짜: row 자체 없음 → grid에서 빈칸 처리
                 days.add(new CalendarResponseDTO.DaySummary(
                         d.toString(),
-                        null,
-                        null,
-                        null
+                        false,   // hasOotd
+                        false,   // hasCustomImage
+                        null,    // thumbnail
+                        null,    // thumbnailImageUrl
+                        null,    // ootdImageUrl
+                        null     // customImageUrl
                 ));
             } else {
+                boolean hasCustom = c.getCustomImageUrl() != null && !c.getCustomImageUrl().isBlank();
+                boolean hasOotd = c.getOotdImageUrl() != null && !c.getOotdImageUrl().isBlank();
+
+                String thumbnailImageUrl = null;
+                if (hasCustom) thumbnailImageUrl = c.getCustomImageUrl();
+                else if (hasOotd) thumbnailImageUrl = c.getOotdImageUrl();
+
                 days.add(new CalendarResponseDTO.DaySummary(
                         d.toString(),
+                        hasOotd,
+                        hasCustom,
                         c.getThumbnail(),
+                        thumbnailImageUrl,
                         c.getOotdImageUrl(),
                         c.getCustomImageUrl()
                 ));
             }
         }
 
-        return new CalendarResponseDTO.MonthlyCalendarResponse(yearMonth, days);
+        return new CalendarResponseDTO.MonthlyCalendarResponse(
+                yearMonth,
+                CalendarResponseDTO.CalendarMode.NORMAL,
+                days,
+                null
+        );
     }
 
     /**
      * GET /api/calendars/months/{yearMonth}/image
      * - user_histories.monthlyOotdImageUrl 조회
-     * - ✅ 과거 월 포함 조회 가능
-     * - ❌ 없으면 CALENDAR4044
+     * - 없으면 CALENDAR4044
      */
     @Transactional(readOnly = true)
     public CalendarResponseDTO.MonthImageResponse getMonthImage(Long userId, String yearMonth) {
@@ -248,16 +272,17 @@ public class CalendarService {
 
     /**
      * POST /api/calendars/months/{yearMonth}/image
-     * - 월 대표 이미지를 저장/갱신한다.
-     * - ✅ 최근 3개월 이내만 저장 가능 (정책 강제)
-     * - ❌ 미래 월 저장 불가
+     * - 월 대표 이미지를 저장/갱신한다. (과거 월 포함 허용)
+     * - 최근 3개월은 "유저 선택 저장", 3개월 초과는 "자동 저장"이지만
+     *   이는 프론트 정책이며 백엔드는 저장을 막지 않는다.
      */
     public CalendarResponseDTO.MonthImageSaveResponse saveMonthImage(Long userId, String yearMonth, String imageUrl) {
         YearMonth ym = parseYearMonthOrThrow(yearMonth);
 
-        // ✅ 월 이미지 저장은 최근 3개월만 허용
-        if (!isRecent3Months(ym)) {
-            throw new CalendarException(CalendarErrorStatus.MONTH_IMAGE_ONLY_RECENT_3MONTHS);
+        // 미래 월 저장은 막음
+        YearMonth now = YearMonth.now();
+        if (ym.isAfter(now)) {
+            throw new CalendarException(CalendarErrorStatus.INVALID_YEAR_MONTH);
         }
 
         String ymStr = ym.toString();
@@ -301,14 +326,10 @@ public class CalendarService {
         }
     }
 
-    /**
-     * 최근 3개월(현재 월 포함)만 true
-     * - now, now-1, now-2
-     * - 미래 월은 false
-     */
     private boolean isRecent3Months(YearMonth target) {
         YearMonth now = YearMonth.now();
 
+        // 미래 월 제외
         if (target.isAfter(now)) return false;
 
         return target.equals(now)
@@ -328,5 +349,19 @@ public class CalendarService {
         } catch (NoResultException e) {
             return null;
         }
+    }
+
+    /**
+     * ✅ 월 대표 이미지 URL (user_histories) 조회용 헬퍼
+     * - 없으면 null
+     */
+    private String findMonthlyImageUrlOrNull(Long userId, String yearMonth) {
+        UserHistory history = findUserHistoryOrNull(userId, yearMonth);
+        if (history == null) return null;
+
+        String url = history.getMonthlyOotdImageUrl();
+        if (url == null || url.isBlank()) return null;
+
+        return url;
     }
 }

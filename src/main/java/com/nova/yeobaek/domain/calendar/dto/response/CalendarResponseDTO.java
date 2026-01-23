@@ -42,15 +42,33 @@ public class CalendarResponseDTO {
      * ========================= */
     public record MonthlyCalendarResponse(
             String yearMonth,             // YYYY-MM
-            List<DaySummary> days         // 최근 3개월 아니면 empty list
+            CalendarMode mode,            // NORMAL / IMAGE_ONLY
+            List<DaySummary> days,        // IMAGE_ONLY면 empty list
+            String monthImageUrl          // IMAGE_ONLY에서 보여줄 월 대표 이미지(없으면 null)
     ) {}
+
+    /**
+     * NORMAL: 최근 3개월 이내 → days 채움
+     * IMAGE_ONLY: 3개월 초과 → days 비움 + monthImageUrl 사용
+     */
+    public enum CalendarMode {
+        NORMAL,
+        IMAGE_ONLY
+    }
 
     public record DaySummary(
             String date,                  // YYYY-MM-DD
-            Thumbnail thumbnail,           // CUSTOM / OOTD (기록 없는 날짜는 null)
-            String ootdImageUrl,           // nullable (기록 없는 날짜는 null, 기록 있는 날짜도 OOTD 이미지 없으면 null)
-            String customImageUrl          // nullable
+
+            boolean hasOotd,              // ootd 존재 여부(프론트 분기용)
+            boolean hasCustomImage,       // custom 이미지 존재 여부(프론트 분기용)
+
+            Thumbnail thumbnail,          // CUSTOM / OOTD (기록 없는 날짜는 null)
+            String thumbnailImageUrl,     // 최종 썸네일 URL (없으면 null)
+
+            String ootdImageUrl,          // nullable
+            String customImageUrl         // nullable
     ) {}
+
     /* =========================
      * 월 이미지
      * ========================= */
