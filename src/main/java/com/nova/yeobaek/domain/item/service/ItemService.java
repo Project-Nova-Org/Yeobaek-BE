@@ -17,6 +17,8 @@ import com.nova.yeobaek.domain.item.repository.category.CategoryRepository;
 import com.nova.yeobaek.domain.item.repository.color.ColorRepository;
 import com.nova.yeobaek.domain.item.repository.material.MaterialRepository;
 import com.nova.yeobaek.domain.item.status.ItemErrorStatus;
+import com.nova.yeobaek.domain.ootd.domain.enums.OOTDStatus;
+import com.nova.yeobaek.domain.ootd.repository.OOTDRepository;
 import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +41,7 @@ public class ItemService {
     private final ColorRepository colorRepository;
     private final MaterialRepository materialRepository;
     private final BrandRepository brandRepository;
+    private final OOTDRepository ootdRepository;
 
     public ItemResponseDTO.CreateResponse createItem(User user, ItemRequestDTO.Create request) {
         // 1. 이미지 배경 색상 검증
@@ -129,5 +132,101 @@ public class ItemService {
         }
 
         return seasons;
+    }
+
+    public void updateItem(User user, Long itemId, ItemRequestDTO.Update request) {
+        // 1. 본인 아이템 조회
+        Item item = itemRepository.findByIdAndUser(itemId, user)
+                .orElseThrow(() -> new ItemException(ItemErrorStatus.ITEM_NOT_FOUND));
+
+        // 2. 이미지 URL 수정
+        if (request.imageUrl() != null && !request.imageUrl().isBlank()) {
+            item.updateImageUrl(request.imageUrl());
+        }
+
+        // 3. 이미지 배경 색상 수정
+        if (request.imageBackground() != null && !request.imageBackground().isBlank()) {
+            ImageBackgroundColor imageBackgroundColor = parseImageBackground(request.imageBackground());
+            item.updateImageBackgroundColor(imageBackgroundColor);
+        }
+
+        // 4. 카테고리 수정
+        if (request.categoryId() != null) {
+            Category category = categoryRepository.findById(request.categoryId())
+                    .orElseThrow(() -> new ItemException(ItemErrorStatus.CATEGORY_NOT_FOUND));
+            item.updateCategory(category);
+        }
+
+        // 5. 색상 수정 (전체 교체)
+        if (request.colors() != null && !request.colors().isEmpty()) {
+            List<Color> colors = findAndValidateColors(request.colors());
+            item.clearColors();
+            for (Color color : colors) {
+                ItemsColor itemsColor = ItemsColor.builder()
+                        .item(item)
+                        .color(color)
+                        .build();
+                item.getItemsColors().add(itemsColor);
+            }
+        }
+
+        // 6. 계절 수정
+        if (request.seasons() != null && !request.seasons().isEmpty()) {
+            Set<Season> seasons = parseAndValidateSeasons(request.seasons());
+            item.updateSeasons(seasons);
+        }
+
+        // 7. 브랜드 수정
+        if (request.brandName() != null) {
+            if (request.brandName().isBlank()) {
+                item.updateBrand(null);
+            } else {
+                Brand brand = brandRepository.findByName(request.brandName())
+                        .orElseGet(() -> brandRepository.save(
+                                Brand.builder()
+                                        .name(request.brandName())
+                                        .build()
+                        ));
+                item.updateBrand(brand);
+            }
+        }
+
+        // 8. 소재 수정
+        if (request.material() != null) {
+            if (request.material().isBlank()) {
+                item.updateMaterial(null);
+            } else {
+                Material material = materialRepository.findByName(request.material())
+                        .orElseThrow(() -> new ItemException(ItemErrorStatus.INVALID_MATERIAL));
+                item.updateMaterial(material);
+            }
+        }
+
+        // 9. 사이즈 수정
+        if (request.size() != null) {
+            item.updateSize(request.size().isBlank() ? null : request.size());
+        }
+
+        // 10. 가격 수정
+        if (request.price() != null) {
+            item.updatePrice(request.price());
+        }
+
+        // 11. 메모 수정
+        if (request.memo() != null) {
+            item.updateMemo(request.memo().isBlank() ? null : request.memo());
+        }
+    }
+
+    public void deleteItem(User user, Long itemId) {
+        // 1. 본인 아이템 조회
+        Item item = itemRepository.findByIdAndUser(itemId, user)
+                .orElseThrow(() -> new ItemException(ItemErrorStatus.ITEM_NOT_FOUND));
+
+        // 2. 해당 아이템이 포함된 OOTD들의 status를 ABNORMAL로 변경
+        ootdRepository.updateStatusByItemId(itemId, OOTDStatus.ABNORMAL);
+
+        // 3. 아이템 삭제 (cascade로 연관 데이터 삭제)
+        itemRepository.delete(item);
     }
 }

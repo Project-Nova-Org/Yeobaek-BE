@@ -105,4 +105,47 @@ public class Item extends BaseEntity {
 	@OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
 	@Builder.Default
 	private List<ClosetItem> closetItemList = new ArrayList<>();
+
+	// === Update Methods ===
+
+	public void updateImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
+	}
+
+	public void updateImageBackgroundColor(ImageBackgroundColor imageBackgroundColor) {
+		this.imageBackgroundColor = imageBackgroundColor;
+	}
+
+	public void updateCategory(Category category) {
+		this.category = category;
+	}
+
+	public void updateMaterial(Material material) {
+		this.material = material;
+	}
+
+	public void updateBrand(Brand brand) {
+		this.brand = brand;
+	}
+
+	public void updateSize(String size) {
+		this.size = size;
+	}
+
+	public void updatePrice(Long price) {
+		this.price = price;
+	}
+
+	public void updateMemo(String memo) {
+		this.memo = memo;
+	}
+
+	public void updateSeasons(Set<Season> seasons) {
+		this.seasonSet.clear();
+		this.seasonSet.addAll(seasons);
+	}
+
+	public void clearColors() {
+		this.itemsColors.clear();
+	}
 }

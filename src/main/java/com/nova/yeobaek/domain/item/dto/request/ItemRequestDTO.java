@@ -49,4 +49,40 @@ public class ItemRequestDTO {
             String memo
     ) {
     }
+
+    @Schema(description = "아이템 수정 요청 (모든 필드 선택)")
+    public record Update(
+            @Schema(description = "이미지 URL", example = "https://example.com/new-image.png")
+            String imageUrl,
+
+            @Schema(description = "이미지 배경 색상", example = "GRAY", allowableValues = {"WHITE", "GRAY"})
+            String imageBackground,
+
+            @Schema(description = "카테고리 ID (2레벨)", example = "7")
+            Long categoryId,
+
+            @Schema(description = "색상 목록 (1~2개)", example = "[\"RED\"]")
+            @Size(min = 1, max = 2, message = "색상은 1~2개 선택해야 합니다.")
+            List<String> colors,
+
+            @Schema(description = "계절 목록 (1개 이상)", example = "[\"WINTER\"]")
+            @Size(min = 1, message = "계절은 최소 1개 이상 선택해야 합니다.")
+            List<String> seasons,
+
+            @Schema(description = "브랜드명", example = "아디다스")
+            String brandName,
+
+            @Schema(description = "소재", example = "울")
+            String material,
+
+            @Schema(description = "사이즈", example = "L")
+            String size,
+
+            @Schema(description = "가격", example = "80000")
+            Long price,
+
+            @Schema(description = "메모", example = "따뜻한 니트")
+            String memo
+    ) {
+    }
 }
