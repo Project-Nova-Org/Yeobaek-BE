@@ -26,11 +26,10 @@ import com.nova.yeobaek.domain.ootd.domain.OOTD;
 import com.nova.yeobaek.domain.ootd.repository.OOTDRepository;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.UserHistory;
+import com.nova.yeobaek.domain.user.repository.UserHistoryRepository;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
+import com.nova.yeobaek.domain.user.service.ItemUsageService;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.NoResultException;
-import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,9 +45,11 @@ public class CalendarService {
     private final OOTDRepository ootdRepository;
     private final UserRepository userRepository;
 
-    // user_histories는 Repository 없이 EntityManager로 접근
-    @PersistenceContext
-    private EntityManager em;
+    // ✅ EntityManager 제거 → Repository로 책임 분리
+    private final UserHistoryRepository userHistoryRepository;
+
+    // ✅ 아이템 사용횟수 증감 서비스
+    private final ItemUsageService itemUsageService;
 
     // =========================
     // 날짜 단위 API
@@ -65,9 +66,8 @@ public class CalendarService {
 
     /**
      * POST /api/calendar/entries/{date}
-     * - "기록 없는 날짜"는 row 자체가 없어야 하므로, 여기서만 row를 생성한다.
+     * - 기록 없는 날짜만 row 생성
      * - ootdId 필수
-     * - ✅ (변경) ootd.createdAt.toLocalDate() == date 검증 제거: OOTD는 여러 날짜에 재사용 가능
      * - 이미 존재하면 DUPLICATED_CALENDAR_CREATE
      */
     public CalendarResponseDTO.EntryDetailResponse createEntry(Long userId, String date, Long ootdId) {
@@ -93,6 +93,9 @@ public class CalendarService {
             throw new CalendarException(CalendarErrorStatus.DUPLICATED_CALENDAR_CREATE);
         }
 
+        // ✅ (마지막 기능) 캘린더에 ootd 등록 → 해당 ootd의 item 사용횟수 증가
+        itemUsageService.increaseByOotd(userRef, ootd.getId(), parsedDate);
+
         return calendarConverter.toEntryDetailResponse(calendar);
     }
 
@@ -106,6 +109,13 @@ public class CalendarService {
 
         Calendar calendar = calendarRepository.findByUserIdAndDate(userId, parsedDate)
                 .orElseThrow(() -> new CalendarException(CalendarErrorStatus.CALENDAR4040));
+
+        User userRef = userRepository.getReferenceById(userId);
+
+        // ✅ (마지막 기능) 캘린더에서 ootd 삭제 → 해당 ootd의 item 사용횟수 감소
+        if (calendar.getOotd() != null) {
+            itemUsageService.decreaseByOotd(userRef, calendar.getOotd().getId());
+        }
 
         calendarRepository.delete(calendar);
 
@@ -179,14 +189,13 @@ public class CalendarService {
     /**
      * GET /api/calendars/months/{yearMonth}
      * - 최근 3개월 이내: NORMAL 모드로 6x7(42칸) grid 반환
-     * - 3개월 초과/미래 월: IMAGE_ONLY 모드로 days=[] 반환 (차단하지 않음)
+     * - 3개월 초과/미래 월: IMAGE_ONLY 모드로 days=[] 반환
      * - 주 시작 요일: 월요일
      */
     @Transactional(readOnly = true)
     public CalendarResponseDTO.MonthlyCalendarResponse getMonthlyCalendar(Long userId, String yearMonth) {
         YearMonth ym = parseYearMonthOrThrow(yearMonth);
 
-        // ✅ 3개월 초과(과거/미래)면 IMAGE_ONLY로 반환 (200)
         if (!isRecent3Months(ym)) {
             String monthImageUrl = findMonthlyImageUrlOrNull(userId, ym.toString());
 
@@ -214,23 +223,21 @@ public class CalendarService {
             Calendar c = byDate.get(d);
 
             if (c == null) {
-                // 기록 없는 날짜: row 자체 없음 → grid에서 빈칸 처리
                 days.add(new CalendarResponseDTO.DaySummary(
                         d.toString(),
-                        false,   // hasOotd
-                        false,   // hasCustomImage
-                        null,    // thumbnail
-                        null,    // thumbnailImageUrl
-                        null,    // ootdImageUrl
-                        null     // customImageUrl
+                        false,
+                        false,
+                        null,
+                        null,
+                        null,
+                        null
                 ));
             } else {
                 boolean hasCustom = c.getCustomImageUrl() != null && !c.getCustomImageUrl().isBlank();
                 boolean hasOotd = c.getOotdImageUrl() != null && !c.getOotdImageUrl().isBlank();
 
-                String thumbnailImageUrl = null;
-                if (hasCustom) thumbnailImageUrl = c.getCustomImageUrl();
-                else if (hasOotd) thumbnailImageUrl = c.getOotdImageUrl();
+                // ✅ thumbnail 필드 값을 기준으로 실제 썸네일 URL을 결정 (일관성 유지)
+                String thumbnailImageUrl = resolveThumbnailImageUrl(c, hasOotd, hasCustom);
 
                 days.add(new CalendarResponseDTO.DaySummary(
                         d.toString(),
@@ -273,13 +280,11 @@ public class CalendarService {
     /**
      * POST /api/calendars/months/{yearMonth}/image
      * - 월 대표 이미지를 저장/갱신한다. (과거 월 포함 허용)
-     * - 최근 3개월은 "유저 선택 저장", 3개월 초과는 "자동 저장"이지만
-     *   이는 프론트 정책이며 백엔드는 저장을 막지 않는다.
+     * - 미래 월 저장은 막음
      */
     public CalendarResponseDTO.MonthImageSaveResponse saveMonthImage(Long userId, String yearMonth, String imageUrl) {
         YearMonth ym = parseYearMonthOrThrow(yearMonth);
 
-        // 미래 월 저장은 막음
         YearMonth now = YearMonth.now();
         if (ym.isAfter(now)) {
             throw new CalendarException(CalendarErrorStatus.INVALID_YEAR_MONTH);
@@ -298,7 +303,7 @@ public class CalendarService {
                     .monthlyOotdImageUrl(imageUrl)
                     .build();
 
-            em.persist(history);
+            userHistoryRepository.save(history);
         } else {
             history.changeMonthlyOotdImageUrl(imageUrl);
         }
@@ -328,8 +333,6 @@ public class CalendarService {
 
     private boolean isRecent3Months(YearMonth target) {
         YearMonth now = YearMonth.now();
-
-        // 미래 월 제외
         if (target.isAfter(now)) return false;
 
         return target.equals(now)
@@ -338,23 +341,9 @@ public class CalendarService {
     }
 
     private UserHistory findUserHistoryOrNull(Long userId, String yearMonth) {
-        try {
-            return em.createQuery(
-                            "select uh from UserHistory uh where uh.user.id = :userId and uh.yearMonth = :ym",
-                            UserHistory.class
-                    )
-                    .setParameter("userId", userId)
-                    .setParameter("ym", yearMonth)
-                    .getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        }
+        return userHistoryRepository.findByUser_IdAndYearMonth(userId, yearMonth).orElse(null);
     }
 
-    /**
-     * ✅ 월 대표 이미지 URL (user_histories) 조회용 헬퍼
-     * - 없으면 null
-     */
     private String findMonthlyImageUrlOrNull(Long userId, String yearMonth) {
         UserHistory history = findUserHistoryOrNull(userId, yearMonth);
         if (history == null) return null;
@@ -363,5 +352,32 @@ public class CalendarService {
         if (url == null || url.isBlank()) return null;
 
         return url;
+    }
+
+    /**
+     * ✅ 썸네일 타입(thumbnail)을 기준으로 thumbnailImageUrl 결정
+     * - 사용자가 OOTD를 선택했으면 OOTD URL
+     * - 사용자가 CUSTOM을 선택했으면 CUSTOM URL
+     * - 혹시 데이터가 비정상일 때(선택값에 해당하는 URL이 없음) 안전 fallback 적용
+     */
+    private String resolveThumbnailImageUrl(Calendar c, boolean hasOotd, boolean hasCustom) {
+        Thumbnail t = c.getThumbnail();
+
+        if (t == Thumbnail.CUSTOM) {
+            if (hasCustom) return c.getCustomImageUrl();
+            if (hasOotd) return c.getOotdImageUrl(); // fallback
+            return null;
+        }
+
+        if (t == Thumbnail.OOTD) {
+            if (hasOotd) return c.getOotdImageUrl();
+            if (hasCustom) return c.getCustomImageUrl(); // fallback
+            return null;
+        }
+
+        // t가 null/예외값인 경우 안전 처리
+        if (hasCustom) return c.getCustomImageUrl();
+        if (hasOotd) return c.getOotdImageUrl();
+        return null;
     }
 }

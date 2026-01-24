@@ -32,11 +32,11 @@ import lombok.NoArgsConstructor;
 @DynamicInsert
 @DynamicUpdate
 @Table(name = "item_usages",
-	uniqueConstraints = {
-		@UniqueConstraint(
-			name = "uk_user_item",
-			columnNames = {"user_id", "item_id"})
-})
+		uniqueConstraints = {
+				@UniqueConstraint(
+						name = "uk_user_item",
+						columnNames = {"user_id", "item_id"})
+		})
 public class ItemUsage extends BaseEntity {
 
 	@Id
@@ -54,4 +54,19 @@ public class ItemUsage extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "item_id")
 	private Item item;
+
+	// =========================
+	// ✅ business methods
+	// =========================
+
+	/** 사용 횟수 +1 + 마지막 사용일 갱신 */
+	public void increase(LocalDate usedDate) {
+		this.useCount += 1;
+		this.lastUsedDate = usedDate;
+	}
+
+	/** 사용 횟수 -1 (0 미만 방지), lastUsedDate는 재계산 비용 커서 유지 */
+	public void decrease() {
+		this.useCount = Math.max(0, this.useCount - 1);
+	}
 }
