@@ -19,13 +19,13 @@ public interface ClosetControllerDocs {
             description = "로그인한 사용자의 옷장을 생성합니다.",
             responses = {
 
-                    // ✅ 성공
+
                     @ApiResponse(
                             responseCode = "201",
                             description = "옷장 생성 성공"
                     ),
 
-                    // ❌ 400 - 이름 특수문자
+
                     @ApiResponse(
                             responseCode = "400",
                             description = "이름에 특수문자 포함",
@@ -45,7 +45,7 @@ public interface ClosetControllerDocs {
                             )
                     ),
 
-                    // ❌ 400 - 아이템 없음
+
                     @ApiResponse(
                             responseCode = "400",
                             description = "아이템 미포함",
@@ -65,7 +65,7 @@ public interface ClosetControllerDocs {
                             )
                     ),
 
-                    // ❌ 401
+
                     @ApiResponse(
                             responseCode = "401",
                             description = "인증 필요",
@@ -84,7 +84,7 @@ public interface ClosetControllerDocs {
                             )
                     ),
 
-                    // ❌ 500
+
                     @ApiResponse(
                             responseCode = "500",
                             description = "서버 오류",

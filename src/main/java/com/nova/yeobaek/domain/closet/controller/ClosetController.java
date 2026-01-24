@@ -1,13 +1,18 @@
 package com.nova.yeobaek.domain.closet.controller;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.nova.yeobaek.domain.closet.controller.docs.ClosetControllerDocs;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.closet.service.ClosetService;
+import com.nova.yeobaek.domain.closet.status.ClosetErrorStatus;
 import com.nova.yeobaek.domain.user.domain.User;
+import com.nova.yeobaek.global.payload.exception.GeneralException;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
@@ -28,6 +33,10 @@ public class ClosetController implements ClosetControllerDocs {
 			@AuthenticationPrincipal(expression = "user") User user,
 			@Valid @RequestBody ClosetRequestDTO.Create request
 	) {
+		if (request.items() == null || request.items().isEmpty()) {
+			throw new GeneralException(ClosetErrorStatus.EMPTY_ITEMS);
+		}
+
 		Long closetId = closetService.create(user, request);
 		return CommonResponse.onCreated(new ClosetResponseDTO.Create(closetId));
 	}
