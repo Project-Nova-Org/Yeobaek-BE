@@ -77,9 +77,6 @@ public class Item extends BaseEntity {
 	@JoinColumn(name = "material_id")
 	private Material material;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "pattern_id")
-	private Pattern pattern;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "brand_id")
