@@ -1,6 +1,5 @@
 package com.nova.yeobaek.domain.item.converter;
 
-import com.nova.yeobaek.domain.item.domain.Brand;
 import com.nova.yeobaek.domain.item.domain.Category;
 import com.nova.yeobaek.domain.item.domain.Item;
 import com.nova.yeobaek.domain.item.domain.Material;
@@ -18,7 +17,6 @@ public class ItemConverter {
             ItemRequestDTO.Create request,
             User user,
             Category category,
-            Brand brand,
             Material material,
             Set<Season> seasons,
             ImageBackgroundColor imageBackgroundColor
@@ -27,7 +25,7 @@ public class ItemConverter {
                 .imageUrl(request.imageUrl())
                 .imageBackgroundColor(imageBackgroundColor)
                 .category(category)
-                .brand(brand)
+                .brandName(request.brandName())
                 .material(material)
                 .seasonSet(seasons)
                 .size(request.size())

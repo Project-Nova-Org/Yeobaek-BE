@@ -32,11 +32,11 @@ public interface ItemControllerDocs {
               - BLACK, WHITE, GRAY, BEIGE, BROWN, RED, ORANGE, YELLOW, GREEN, BLUE, PURPLE, PINK
             - seasons: 계절 목록 (1개 이상)
               - SPRING, SUMMER, AUTUMN, WINTER
-
-            **선택 항목:**
-            - brandName: 브랜드명 (없으면 자동 생성)
+            - brandName: 브랜드명
             - material: 소재
               - 데님, 면, 나일론, 폴리에스터, 가죽, 캐시미어, 울, 스웨이드, 코듀로이, 아크릴, 레이온, 린넨, 알파카, 기타
+
+            **선택 항목:**
             - size: 사이즈 (자유 입력)
             - price: 가격
             - memo: 메모

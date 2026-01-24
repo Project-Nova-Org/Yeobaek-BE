@@ -61,6 +61,9 @@ public class Item extends BaseEntity {
 
 	private String memo;
 
+	@Column(name = "brand_name")
+	private String brandName;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private ImageBackgroundColor imageBackgroundColor;
@@ -76,11 +79,6 @@ public class Item extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "material_id")
 	private Material material;
-
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "brand_id")
-	private Brand brand;
 
     @Builder.Default
 	@ElementCollection(targetClass = Season.class)
@@ -124,8 +122,8 @@ public class Item extends BaseEntity {
 		this.material = material;
 	}
 
-	public void updateBrand(Brand brand) {
-		this.brand = brand;
+	public void updateBrandName(String brandName) {
+		this.brandName = brandName;
 	}
 
 	public void updateSize(String size) {

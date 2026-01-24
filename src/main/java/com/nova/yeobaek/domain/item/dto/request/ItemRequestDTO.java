@@ -33,10 +33,12 @@ public class ItemRequestDTO {
             @NotEmpty(message = "계절은 최소 1개 이상 선택해야 합니다.")
             List<String> seasons,
 
-            @Schema(description = "브랜드명 (없으면 자동 생성)", example = "나이키")
+            @Schema(description = "브랜드명", example = "나이키")
+            @NotBlank(message = "브랜드명은 필수입니다.")
             String brandName,
 
             @Schema(description = "소재", example = "면")
+            @NotBlank(message = "소재는 필수입니다.")
             String material,
 
             @Schema(description = "사이즈", example = "M")

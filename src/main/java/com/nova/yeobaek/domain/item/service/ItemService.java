@@ -1,7 +1,6 @@
 package com.nova.yeobaek.domain.item.service;
 
 import com.nova.yeobaek.domain.item.converter.ItemConverter;
-import com.nova.yeobaek.domain.item.domain.Brand;
 import com.nova.yeobaek.domain.item.domain.Category;
 import com.nova.yeobaek.domain.item.domain.Color;
 import com.nova.yeobaek.domain.item.domain.Item;
@@ -12,7 +11,6 @@ import com.nova.yeobaek.domain.item.dto.request.ItemRequestDTO;
 import com.nova.yeobaek.domain.item.dto.response.ItemResponseDTO;
 import com.nova.yeobaek.domain.item.exception.ItemException;
 import com.nova.yeobaek.domain.item.repository.ItemRepository;
-import com.nova.yeobaek.domain.item.repository.brand.BrandRepository;
 import com.nova.yeobaek.domain.item.repository.category.CategoryRepository;
 import com.nova.yeobaek.domain.item.repository.color.ColorRepository;
 import com.nova.yeobaek.domain.item.repository.material.MaterialRepository;
@@ -40,7 +38,6 @@ public class ItemService {
     private final CategoryRepository categoryRepository;
     private final ColorRepository colorRepository;
     private final MaterialRepository materialRepository;
-    private final BrandRepository brandRepository;
     private final OOTDRepository ootdRepository;
 
     public ItemResponseDTO.CreateResponse createItem(User user, ItemRequestDTO.Create request) {
@@ -57,39 +54,24 @@ public class ItemService {
         // 4. 계절 검증
         Set<Season> seasons = parseAndValidateSeasons(request.seasons());
 
-        // 5. 소재 조회 (선택)
-        Material material = null;
-        if (request.material() != null && !request.material().isBlank()) {
-            material = materialRepository.findByName(request.material())
-                    .orElseThrow(() -> new ItemException(ItemErrorStatus.INVALID_MATERIAL));
-        }
+        // 5. 소재 조회 (필수)
+        Material material = materialRepository.findByName(request.material())
+                .orElseThrow(() -> new ItemException(ItemErrorStatus.INVALID_MATERIAL));
 
-        // 6. 브랜드 조회 또는 생성 (선택)
-        Brand brand = null;
-        if (request.brandName() != null && !request.brandName().isBlank()) {
-            brand = brandRepository.findByName(request.brandName())
-                    .orElseGet(() -> brandRepository.save(
-                            Brand.builder()
-                                    .name(request.brandName())
-                                    .build()
-                    ));
-        }
-
-        // 7. Item 엔티티 생성
+        // 6. Item 엔티티 생성
         Item item = ItemConverter.toItem(
                 request,
                 user,
                 category,
-                brand,
                 material,
                 seasons,
                 imageBackgroundColor
         );
 
-        // 8. Item 저장
+        // 7. Item 저장
         Item savedItem = itemRepository.save(item);
 
-        // 9. ItemsColor 연관관계 설정
+        // 8. ItemsColor 연관관계 설정
         for (Color color : colors) {
             ItemsColor itemsColor = ItemsColor.builder()
                     .item(savedItem)
@@ -176,30 +158,16 @@ public class ItemService {
             item.updateSeasons(seasons);
         }
 
-        // 7. 브랜드 수정
+        // 7. 브랜드명 수정
         if (request.brandName() != null) {
-            if (request.brandName().isBlank()) {
-                item.updateBrand(null);
-            } else {
-                Brand brand = brandRepository.findByName(request.brandName())
-                        .orElseGet(() -> brandRepository.save(
-                                Brand.builder()
-                                        .name(request.brandName())
-                                        .build()
-                        ));
-                item.updateBrand(brand);
-            }
+            item.updateBrandName(request.brandName().isBlank() ? null : request.brandName());
         }
 
         // 8. 소재 수정
-        if (request.material() != null) {
-            if (request.material().isBlank()) {
-                item.updateMaterial(null);
-            } else {
-                Material material = materialRepository.findByName(request.material())
-                        .orElseThrow(() -> new ItemException(ItemErrorStatus.INVALID_MATERIAL));
-                item.updateMaterial(material);
-            }
+        if (request.material() != null && !request.material().isBlank()) {
+            Material material = materialRepository.findByName(request.material())
+                    .orElseThrow(() -> new ItemException(ItemErrorStatus.INVALID_MATERIAL));
+            item.updateMaterial(material);
         }
 
         // 9. 사이즈 수정
