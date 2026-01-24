@@ -3,9 +3,11 @@ package com.nova.yeobaek.domain.user.service;
 import java.time.LocalDate;
 import java.util.List;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.nova.yeobaek.domain.item.domain.Item;
 import com.nova.yeobaek.domain.ootd.domain.mapping.OOTDItem;
 import com.nova.yeobaek.domain.ootd.repository.ootdItem.OOTDItemRepository;
 import com.nova.yeobaek.domain.user.domain.User;
@@ -30,18 +32,8 @@ public class ItemUsageService {
         for (OOTDItem oi : ootdItems) {
             Long itemId = oi.getItem().getId();
 
-            ItemUsage usage = itemUsageRepository
-                    .findByUser_IdAndItem_Id(user.getId(), itemId)
-                    .orElseGet(() -> itemUsageRepository.save(
-                            ItemUsage.builder()
-                                    .user(user)
-                                    .item(oi.getItem())
-                                    .useCount(0)
-                                    .build()
-                    ));
-
+            ItemUsage usage = getOrCreateUsage(user, oi.getItem(), itemId);
             usage.increase(date);
-
         }
     }
 
@@ -57,5 +49,30 @@ public class ItemUsageService {
             itemUsageRepository.findByUser_IdAndItem_Id(user.getId(), itemId)
                     .ifPresent(ItemUsage::decrease);
         }
+    }
+
+    /**
+     * ✅ 동시성 안전 get-or-create
+     * - find 후 없으면 save 시도
+     * - uk_user_item 유니크 충돌 발생 시(다른 트랜잭션이 먼저 생성) 재조회하여 반환
+     */
+    private ItemUsage getOrCreateUsage(User user, Item item, Long itemId) {
+
+        return itemUsageRepository.findByUser_IdAndItem_Id(user.getId(), itemId)
+                .orElseGet(() -> {
+                    try {
+                        return itemUsageRepository.save(
+                                ItemUsage.builder()
+                                        .user(user)
+                                        .item(item)
+                                        .useCount(0)
+                                        .build()
+                        );
+                    } catch (DataIntegrityViolationException e) {
+                        // 동시 생성 레이스로 유니크 충돌 → 기존 row 재조회 후 사용
+                        return itemUsageRepository.findByUser_IdAndItem_Id(user.getId(), itemId)
+                                .orElseThrow(() -> e);
+                    }
+                });
     }
 }
