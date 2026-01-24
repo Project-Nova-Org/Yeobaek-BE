@@ -31,11 +31,15 @@ public class CalendarController implements CalendarControllerDocs {
 
 	private final CalendarService calendarService;
 
+	// =========================
+	// 날짜 단위 API
+	// =========================
+
 	@Override
 	@GetMapping("/entries/{date}")
 	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> getEntryDetail(
 			@AuthenticationPrincipal(expression = "user") User user,
-			@PathVariable String date
+			@PathVariable("date") String date
 	) {
 		return CommonResponse.onSuccess(calendarService.getEntryDetail(user.getId(), date));
 	}
@@ -44,10 +48,9 @@ public class CalendarController implements CalendarControllerDocs {
 	@PostMapping("/entries/{date}")
 	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> createEntry(
 			@AuthenticationPrincipal(expression = "user") User user,
-			@PathVariable String date,
+			@PathVariable("date") String date,
 			@RequestBody @Valid CalendarRequestDTO.CreateEntryRequest request
 	) {
-		//  record accessor
 		return CommonResponse.onSuccess(calendarService.createEntry(user.getId(), date, request.ootdId()));
 	}
 
@@ -55,7 +58,7 @@ public class CalendarController implements CalendarControllerDocs {
 	@DeleteMapping("/entries/{date}")
 	public CommonResponse<CalendarResponseDTO.EntryDeleteResponse> deleteEntry(
 			@AuthenticationPrincipal(expression = "user") User user,
-			@PathVariable String date
+			@PathVariable("date") String date
 	) {
 		return CommonResponse.onSuccess(calendarService.deleteEntry(user.getId(), date));
 	}
@@ -64,10 +67,9 @@ public class CalendarController implements CalendarControllerDocs {
 	@PostMapping("/entries/{date}/custom-image")
 	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> addCustomImage(
 			@AuthenticationPrincipal(expression = "user") User user,
-			@PathVariable String date,
+			@PathVariable("date") String date,
 			@RequestBody @Valid CalendarRequestDTO.CustomImageRequest request
 	) {
-		//  record accessor
 		return CommonResponse.onSuccess(calendarService.addCustomImage(user.getId(), date, request.imageUrl()));
 	}
 
@@ -75,7 +77,7 @@ public class CalendarController implements CalendarControllerDocs {
 	@DeleteMapping("/entries/{date}/custom-image")
 	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> deleteCustomImage(
 			@AuthenticationPrincipal(expression = "user") User user,
-			@PathVariable String date
+			@PathVariable("date") String date
 	) {
 		return CommonResponse.onSuccess(calendarService.deleteCustomImage(user.getId(), date));
 	}
@@ -84,10 +86,43 @@ public class CalendarController implements CalendarControllerDocs {
 	@PatchMapping("/entries/{date}/thumbnail")
 	public CommonResponse<CalendarResponseDTO.EntryDetailResponse> updateThumbnail(
 			@AuthenticationPrincipal(expression = "user") User user,
-			@PathVariable String date,
+			@PathVariable("date") String date,
 			@RequestBody @Valid CalendarRequestDTO.UpdateThumbnailRequest request
 	) {
-		//  record accessor
 		return CommonResponse.onSuccess(calendarService.updateThumbnail(user.getId(), date, request.thumbnail()));
+	}
+
+	// =========================
+	//  월 캘린더 API (Docs 구현 방식으로 통일)
+	// =========================
+
+	@Override
+	@GetMapping("/months/{yearMonth}")
+	public CommonResponse<CalendarResponseDTO.MonthlyCalendarResponse> getMonthlyCalendar(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@PathVariable("yearMonth") String yearMonth
+	) {
+		return CommonResponse.onSuccess(calendarService.getMonthlyCalendar(user.getId(), yearMonth));
+	}
+
+	@Override
+	@GetMapping("/months/{yearMonth}/image")
+	public CommonResponse<CalendarResponseDTO.MonthImageResponse> getMonthImage(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@PathVariable("yearMonth") String yearMonth
+	) {
+		return CommonResponse.onSuccess(calendarService.getMonthImage(user.getId(), yearMonth));
+	}
+
+	@Override
+	@PostMapping("/months/{yearMonth}/image")
+	public CommonResponse<CalendarResponseDTO.MonthImageSaveResponse> saveMonthImage(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@PathVariable("yearMonth") String yearMonth,
+			@RequestBody @Valid CalendarRequestDTO.SaveMonthImageRequest request
+	) {
+		return CommonResponse.onCreated(
+				calendarService.saveMonthImage(user.getId(), yearMonth, request.monthlyOotdImageUrl())
+		);
 	}
 }
