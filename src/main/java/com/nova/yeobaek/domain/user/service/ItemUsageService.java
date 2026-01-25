@@ -13,6 +13,7 @@ import com.nova.yeobaek.domain.ootd.repository.ootdItem.OOTDItemRepository;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.mapping.ItemUsage;
 import com.nova.yeobaek.domain.user.repository.itemUsage.ItemUsageRepository;
+import com.nova.yeobaek.domain.item.repository.ItemRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -22,6 +23,7 @@ public class ItemUsageService {
 
     private final ItemUsageRepository itemUsageRepository;
     private final OOTDItemRepository ootdItemRepository;
+    private final ItemRepository itemRepository;
 
     @Transactional
     public void increaseByOotd(User user, Long ootdId, LocalDate date) {
@@ -32,7 +34,7 @@ public class ItemUsageService {
         for (OOTDItem oi : ootdItems) {
             Long itemId = oi.getItem().getId();
 
-            ItemUsage usage = getOrCreateUsage(user, oi.getItem(), itemId);
+            ItemUsage usage = getOrCreateUsage(user, oi.getItem());
             usage.increase(date);
         }
     }
@@ -55,9 +57,8 @@ public class ItemUsageService {
     public void increase(User user, Long itemId, int count) {
         if (count <= 0) return;
 
-        ItemUsage usage = itemUsageRepository
-                .findByUser_IdAndItem_Id(user.getId(), itemId)
-                .orElseThrow(); // 캘린더에 있었다면 반드시 존재
+        Item itemRef = itemRepository.getReferenceById(itemId);
+        ItemUsage usage = getOrCreateUsage(user, itemRef);
 
         usage.increase(count);
     }
@@ -75,7 +76,9 @@ public class ItemUsageService {
      * - find 후 없으면 save 시도
      * - uk_user_item 유니크 충돌 발생 시(다른 트랜잭션이 먼저 생성) 재조회하여 반환
      */
-    private ItemUsage getOrCreateUsage(User user, Item item, Long itemId) {
+    private ItemUsage getOrCreateUsage(User user, Item item) {
+
+        Long itemId = item.getId();
 
         return itemUsageRepository.findByUser_IdAndItem_Id(user.getId(), itemId)
                 .orElseGet(() -> {
@@ -88,7 +91,7 @@ public class ItemUsageService {
                                         .build()
                         );
                     } catch (DataIntegrityViolationException e) {
-                        // 동시 생성 레이스로 유니크 충돌 → 기존 row 재조회 후 사용
+                        // 동시 생성 레이스 → 기존 row 재조회
                         return itemUsageRepository.findByUser_IdAndItem_Id(user.getId(), itemId)
                                 .orElseThrow(() -> e);
                     }
