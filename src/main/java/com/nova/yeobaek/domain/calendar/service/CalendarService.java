@@ -380,4 +380,54 @@ public class CalendarService {
         if (hasOotd) return c.getOotdImageUrl();
         return null;
     }
+
+    /** OOTD 삭제 시 사용 */
+    // 특정 OOTD가 기록된 모든 캘린더 엔트리를 삭제
+    //캘린더 엔트리 1건 삭제 = 아이템사용횟수 1회 감소
+    // ItemUsageService는 Calendar 도메인에서만 호출
+    // OOTDService에서는 아이템사용횟수를 만지지 않음
+     @Transactional
+    public void deleteAllEntriesByOotd(User user, Long ootdId) {
+        if (ootdId == null) return;
+
+        List<Calendar> calendars =
+                calendarRepository.findAllByUser_IdAndOotd_Id(user.getId(), ootdId);
+
+        for (Calendar calendar : calendars) {
+            // 캘린더 1건 삭제 = 아이템 사용 횟수 1회 차감
+            itemUsageService.decreaseByOotd(user, ootdId);
+            calendarRepository.delete(calendar);
+        }
+    }
+
+    /** OOTD 수정 시 사용 */
+    @Transactional
+    public void updateItemUsageByOotdChange(
+            User user,
+            Long ootdId,
+            List<Long> removedItemIds,
+            List<Long> addedItemIds
+    ) {
+        if ((removedItemIds == null || removedItemIds.isEmpty())
+                && (addedItemIds == null || addedItemIds.isEmpty())) {
+            return;
+        }
+
+        // 이 OOTD가 캘린더에 등록된 모든 날짜 수
+        List<Calendar> calendars =
+                calendarRepository.findAllByUser_IdAndOotd_Id(user.getId(), ootdId);
+
+        int usedCount = calendars.size();
+        if (usedCount == 0) return;
+
+        // 제거된 아이템 → 사용 횟수 감소
+        for (Long itemId : removedItemIds) {
+            itemUsageService.decrease(user, itemId, usedCount);
+        }
+
+        // 추가된 아이템 → 사용 횟수 증가
+        for (Long itemId : addedItemIds) {
+            itemUsageService.increase(user, itemId, usedCount);
+        }
+    }
 }

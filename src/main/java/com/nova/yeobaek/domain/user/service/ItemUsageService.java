@@ -51,6 +51,25 @@ public class ItemUsageService {
         }
     }
 
+    @Transactional
+    public void increase(User user, Long itemId, int count) {
+        if (count <= 0) return;
+
+        ItemUsage usage = itemUsageRepository
+                .findByUser_IdAndItem_Id(user.getId(), itemId)
+                .orElseThrow(); // 캘린더에 있었다면 반드시 존재
+
+        usage.increase(count);
+    }
+
+    @Transactional
+    public void decrease(User user, Long itemId, int count) {
+        if (count <= 0) return;
+
+        itemUsageRepository.findByUser_IdAndItem_Id(user.getId(), itemId)
+                .ifPresent(usage -> usage.decrease(count));
+    }
+
     /**
      * ✅ 동시성 안전 get-or-create
      * - find 후 없으면 save 시도

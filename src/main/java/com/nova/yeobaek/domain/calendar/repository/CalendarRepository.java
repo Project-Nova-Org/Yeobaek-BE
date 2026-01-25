@@ -15,6 +15,10 @@ public interface CalendarRepository extends JpaRepository<Calendar, Long> {
     //  월 캘린더 조회(기간 내 기록 있는 날짜들만)
     List<Calendar> findAllByUserIdAndDateBetween(Long userId, LocalDate start, LocalDate end);
 
+    /** OOTD 삭제 연동용
+     특정 사용자의 특정 OOTD가 기록된 모든 캘린더 엔트리 조회 */
+    List<Calendar> findAllByUser_IdAndOotd_Id(Long userId, Long ootdId);
+
     // (선택) 월 로직엔 필수는 아니지만, 삭제/생성 로직에 쓰면 편함
     boolean existsByUserIdAndDate(Long userId, LocalDate date);
     void deleteByUserIdAndDate(Long userId, LocalDate date);
