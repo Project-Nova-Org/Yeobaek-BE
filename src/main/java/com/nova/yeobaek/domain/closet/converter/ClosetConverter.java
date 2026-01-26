@@ -11,7 +11,12 @@ import com.nova.yeobaek.domain.user.domain.User;
 public class ClosetConverter {
 
     public Closet toEntity(User user, ClosetRequestDTO.Create request) {
-        return Closet.create(user, request.name(), request.imageUrl());
+        return Closet.builder()
+                .user(user)
+                .name(request.name())
+                .imageUrl(request.imageUrl())
+                .favorite(false)
+                .build();
     }
 
     public ClosetResponseDTO.Create toCreateResponse(Closet closet) {

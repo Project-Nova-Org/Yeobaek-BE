@@ -33,9 +33,7 @@ public class ClosetController implements ClosetControllerDocs {
 			@AuthenticationPrincipal(expression = "user") User user,
 			@Valid @RequestBody ClosetRequestDTO.Create request
 	) {
-		if (request.items() == null || request.items().isEmpty()) {
-			throw new GeneralException(ClosetErrorStatus.EMPTY_ITEMS);
-		}
+
 
 		Long closetId = closetService.create(user, request);
 		return CommonResponse.onCreated(new ClosetResponseDTO.Create(closetId));
