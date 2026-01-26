@@ -29,18 +29,6 @@ public class StatsController implements StatsControllerDocs {
             @RequestParam(defaultValue = "3") int inactivePreviewLimit,
             @RequestParam(defaultValue = "30") int inactiveDays
     ) {
-        // ✅ 디버그용 (지금 문제는 여기서 userId가 1로 들어오냐가 핵심)
-        System.out.println("[StatsController] user = " + user);
-        System.out.println("[StatsController] userId = " + (user == null ? null : user.getId()));
-        System.out.println("[StatsController] frequentLimit=" + frequentLimit
-                + ", inactivePreviewLimit=" + inactivePreviewLimit
-                + ", inactiveDays=" + inactiveDays);
-
-        // ✅ user가 null이면 조용히 빈 배열 만들지 말고 바로 원인 드러내기
-        if (user == null || user.getId() == null) {
-            throw new IllegalStateException("AuthenticationPrincipal(user)가 null 입니다. (principal 매핑 확인 필요)");
-        }
-
         return CommonResponse.onSuccess(
                 statsService.getItemsSummary(
                         user.getId(),

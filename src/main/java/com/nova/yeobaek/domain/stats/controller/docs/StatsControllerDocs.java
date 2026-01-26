@@ -23,7 +23,7 @@ public interface StatsControllerDocs {
                     """
     )
     CommonResponse<StatsResponseDTO.ItemsSummaryResponse> getItemsSummary(
-            @AuthenticationPrincipal User user,
+            @AuthenticationPrincipal(expression = "user") User user,
 
             @Parameter(description = "자주 착용한 아이템 개수", example = "10")
             @RequestParam(defaultValue = "10") int frequentLimit,
