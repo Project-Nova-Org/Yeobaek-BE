@@ -34,11 +34,14 @@ import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
 import com.nova.yeobaek.domain.ootd.dto.response.OOTDItemDetailResponse;
 import com.nova.yeobaek.domain.ootd.domain.enums.OOTDStatus;
 
+import com.nova.yeobaek.domain.calendar.service.CalendarService;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OOTDService {
 
+    private final CalendarService calendarService;
     private final OOTDRepository ootdRepository;
     private final OOTDItemRepository ootdItemRepository;
     private final StyleRepository styleRepository;
@@ -190,25 +193,46 @@ public class OOTDService {
             return;
         }
 
-        List<OOTDItem> beforeItems = ootd.getOotdItemList();
+        // 1. before 아이템 ID 목록
+        List<Long> beforeItemIds = ootd.getOotdItemList().stream()
+                .map(oi -> oi.getItem().getId())
+                .toList();
 
-        ootdItemRepository.deleteAllByOotd_Id(ootd.getId());
-
-        List<Long> itemIds = requestDTO.items().stream()
+        // 2. after 아이템 ID 목록
+        List<Long> afterItemIds = requestDTO.items().stream()
                 .map(OOTDRequestDTO.Item::fashionItemId)
                 .toList();
 
-        validateDuplicatedItemIds(itemIds);
-        Map<Long, Item> itemMap = loadItemsOrThrow(itemIds);
+        validateDuplicatedItemIds(afterItemIds);
 
+        // 3. diff 계산
+        List<Long> removedItemIds = beforeItemIds.stream()
+                .filter(id -> !afterItemIds.contains(id))
+                .toList();
+
+        List<Long> addedItemIds = afterItemIds.stream()
+                .filter(id -> !beforeItemIds.contains(id))
+                .toList();
+
+        // 4. 기존 매핑 삭제
+        ootdItemRepository.deleteAllByOotd_Id(ootd.getId());
+        ootd.clearOotdItems();
+
+        // 5. 새 매핑 저장
+        Map<Long, Item> itemMap = loadItemsOrThrow(afterItemIds);
         List<OOTDItem> newItems =
                 OOTDConverter.toOOTDItems(requestDTO.items(), ootd, itemMap);
-
         ootdItemRepository.saveAll(newItems);
+
         ootd.increaseChangeItemCount();
 
-        // TODO(#calendar): 해당 OOTD가 기록된 캘린더 엔트리들의 ootdImageUrl 최신화
-        // TODO(#item): 캘린더 기록 수 기준으로 아이템 착용 횟수 diff 반영
+        // 6. 캘린더 기준 아이템 사용횟수 diff 반영
+        calendarService.updateItemUsageByOotdChange(
+                ootd.getUser(),
+                ootd.getId(),
+                removedItemIds,
+                addedItemIds
+        );
     }
 
     /** OOTD 삭제 (하드 딜리트) */
@@ -219,15 +243,13 @@ public class OOTDService {
                 .filter(o -> o.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new OOTDException(OOTDErrorStatus.OOTD_NOT_FOUND));
 
-        // 1. OOTD에 연결된 아이템 매핑 삭제
-        ootdItemRepository.deleteAllByOotd_Id(ootd.getId());
+        // 캘린더 도메인에 위임 (아이템 사용 횟수 감소도 여기서 처리)
+        calendarService.deleteAllEntriesByOotd(user, ootdId);
 
-        // 2. TODO: 캘린더 파트 머지 후 연동
-        // TODO(#calendar): 해당 OOTD가 기록된 모든 캘린더 엔트리 삭제
-        // TODO(#calendar): 캘린더 삭제에 따른 아이템 사용 횟수 차감
-        // 아직 캘린더 도메인이 푸쉬되지 않아서 제가 건드릴 수 없어서 일단 투두로 뒀습니다!!
+        // OOTD-Item 매핑 삭제
+        ootdItemRepository.deleteAllByOotd_Id(ootdId);
 
-        // 3. OOTD 하드딜리트
+        // OOTD 하드 딜리트
         ootdRepository.delete(ootd);
     }
 

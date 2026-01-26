@@ -69,4 +69,22 @@ public class ItemUsage extends BaseEntity {
 	public void decrease() {
 		this.useCount = Math.max(0, this.useCount - 1);
 	}
+
+    /**
+     * OOTD 수정 diff 반영용
+     * - 특정 아이템 사용 횟수를 N회 증가
+     */
+    public void increase(int count) {
+        if (count <= 0) return;
+        this.useCount += count;
+    }
+
+    /**
+     * OOTD 수정 diff 반영용
+     * - 특정 아이템 사용 횟수를 N회 감소 (0 미만 방지)
+     */
+    public void decrease(int count) {
+        if (count <= 0) return;
+        this.useCount = Math.max(0, this.useCount - count);
+    }
 }

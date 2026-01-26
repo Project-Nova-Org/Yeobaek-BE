@@ -120,6 +120,11 @@ public class OOTD extends BaseEntity {
         this.imageBackgroundColor = backgroundColor;
     }
 
+	//OOTD수정시 기존 매핑 삭제
+	public void clearOotdItems() {
+		this.ootdItemList.clear();
+	}
+
     //아이템 변경 횟수 증가
     public void increaseChangeItemCount() {
         this.changeItemCount++;
