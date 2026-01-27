@@ -1,3 +1,4 @@
+
 package com.nova.yeobaek.domain.closet.service;
 
 import java.util.HashSet;
@@ -29,6 +30,8 @@ public class ClosetService {
 
     public Long create(User user, ClosetRequestDTO.Create request) {
 
+        // (선택) 빠른 사전 중복 체크: UX용
+        // 동시성 완전 방지는 DB 유니크 제약 + catch 로 처리
         if (closetRepository.existsByUserAndName(user, request.name())) {
             throw new GeneralException(ClosetErrorStatus.DUPLICATED_NAME);
         }
@@ -37,9 +40,12 @@ public class ClosetService {
         request.items().forEach(item -> {
             Long itemId = item.itemId();
 
+
             if (!itemIdSet.add(itemId)) {
                 throw new GeneralException(ClosetErrorStatus.DUPLICATED_ITEM_ID);
             }
+
+
             if (!itemRepository.existsById(itemId)) {
                 throw new GeneralException(ClosetErrorStatus.ITEM_NOT_FOUND);
             }
@@ -50,6 +56,7 @@ public class ClosetService {
         try {
             return closetRepository.save(closet).getId();
         } catch (DataIntegrityViolationException e) {
+
             throw new GeneralException(ClosetErrorStatus.DUPLICATED_NAME);
         }
     }
