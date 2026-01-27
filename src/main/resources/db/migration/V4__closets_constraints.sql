@@ -1,4 +1,6 @@
 -- user_id NULL인 데이터 정리
+DELETE FROM closet_items
+WHERE closet_id IN (SELECT id FROM closets WHERE user_id IS NULL);
 DELETE FROM closets WHERE user_id IS NULL;
 
 --  user_id NOT NULL
