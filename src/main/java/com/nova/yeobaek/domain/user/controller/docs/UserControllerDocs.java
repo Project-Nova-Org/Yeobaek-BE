@@ -59,8 +59,8 @@ public interface UserControllerDocs {
             - SOFT DELETE로 진행되며 30일후에 Hard delete 됩니다.
             """
     )
-    @DeleteMapping("/me")
-    CommonResponse<Void> withdraw(
+    @DeleteMapping
+    CommonResponse<UserResponseDTO.WithDrawResponse> withdraw(
             @AuthenticationPrincipal(expression = "user") User user
     );
 
@@ -74,7 +74,7 @@ public interface UserControllerDocs {
             - 단계별 별명,닉네임, 소셜 계정(이메일)을 보여줍니다.
             """
     )
-    @GetMapping("/me")
+    @GetMapping
     CommonResponse<UserResponseDTO.GetMyPageResponse> getMypage(
             @AuthenticationPrincipal CustomUserDetails userDetails
     );

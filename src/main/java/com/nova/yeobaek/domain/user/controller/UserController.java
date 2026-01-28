@@ -49,16 +49,17 @@ public class UserController implements UserControllerDocs {
     }
 
     @Override
-    @DeleteMapping("/me")
-    public CommonResponse<Void> withdraw(
+    @DeleteMapping
+    public CommonResponse<UserResponseDTO.WithDrawResponse> withdraw(
             @AuthenticationPrincipal(expression = "user") User user
     ) {
+        UserResponseDTO.WithDrawResponse response =
         userService.withdraw(user.getId());
-        return CommonResponse.onSuccess(null);
+        return CommonResponse.onSuccess(response);
     }
 
     @Override
-    @GetMapping("/me")
+    @GetMapping
     public CommonResponse<UserResponseDTO.GetMyPageResponse> getMypage(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
