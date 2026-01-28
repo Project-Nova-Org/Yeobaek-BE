@@ -28,11 +28,11 @@ public class UserController implements UserControllerDocs {
     @PatchMapping("/nickname")
     public CommonResponse<?> setNickname(
             @AuthenticationPrincipal(expression = "user") User user,
-            @RequestBody @Valid RequestDTO.SignupRequest newNickname
+            @RequestBody @Valid RequestDTO.SignupRequest request
     ) {
         Long userId = user.getId();
-        userService.setNickname(userId, newNickname);
-        return CommonResponse.onSuccess(newNickname);
+        userService.setNickname(userId, request);
+        return CommonResponse.onSuccess(request.newNickname());
     }
 
     @Override

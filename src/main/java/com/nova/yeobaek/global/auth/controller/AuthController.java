@@ -51,11 +51,11 @@ public class AuthController implements AuthControllerDocs {
     @PatchMapping("/signup")
     public CommonResponse<?> signup(
             @AuthenticationPrincipal(expression = "user") User user,
-            @RequestBody @Valid RequestDTO.SignupRequest nickname
+            @RequestBody @Valid RequestDTO.SignupRequest request
     ) {
         Long userId = user.getId();
-        userService.createNickname(userId, nickname);
-        return CommonResponse.onSuccess(nickname);
+        userService.createNickname(userId, request);
+        return CommonResponse.onSuccess(request.newNickname());
     }
 
     // 로그아웃
