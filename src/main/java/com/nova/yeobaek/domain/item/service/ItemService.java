@@ -92,10 +92,13 @@ public class ItemService {
     }
 
     private List<Color> findAndValidateColors(List<String> colorNames) {
-        List<Color> colors = colorRepository.findByNameIn(colorNames);
+        // 중복 색상 제거
+        List<String> distinctColorNames = colorNames.stream().distinct().toList();
+
+        List<Color> colors = colorRepository.findByNameIn(distinctColorNames);
 
         // 요청한 색상 수와 조회된 색상 수가 다르면 유효하지 않은 색상 포함
-        if (colors.size() != colorNames.size()) {
+        if (colors.size() != distinctColorNames.size()) {
             throw new ItemException(ItemErrorStatus.INVALID_COLOR);
         }
 
@@ -164,10 +167,14 @@ public class ItemService {
         }
 
         // 8. 소재 수정
-        if (request.material() != null && !request.material().isBlank()) {
-            Material material = materialRepository.findByName(request.material())
-                    .orElseThrow(() -> new ItemException(ItemErrorStatus.INVALID_MATERIAL));
-            item.updateMaterial(material);
+        if (request.material() != null) {
+            if (request.material().isBlank()) {
+                item.updateMaterial(null);
+            } else {
+                Material material = materialRepository.findByName(request.material())
+                        .orElseThrow(() -> new ItemException(ItemErrorStatus.INVALID_MATERIAL));
+                item.updateMaterial(material);
+            }
         }
 
         // 9. 사이즈 수정
@@ -194,7 +201,14 @@ public class ItemService {
         // 2. 해당 아이템이 포함된 OOTD들의 status를 ABNORMAL로 변경
         ootdRepository.updateStatusByItemId(itemId, OOTDStatus.ABNORMAL);
 
-        // 3. 아이템 삭제 (cascade로 연관 데이터 삭제)
-        itemRepository.delete(item);
+        // 3. 연관 데이터 벌크 삭제
+        itemRepository.bulkDeleteOOTDItemsByItemId(itemId);
+        itemRepository.bulkDeleteClosetItemsByItemId(itemId);
+        itemRepository.bulkDeleteItemUsagesByItemId(itemId);
+        itemRepository.bulkDeleteItemsColorsByItemId(itemId);
+        itemRepository.bulkDeleteSeasonsByItemId(itemId);
+
+        // 4. 아이템 벌크 삭제
+        itemRepository.bulkDeleteById(itemId);
     }
 }

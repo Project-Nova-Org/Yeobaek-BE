@@ -10,8 +10,8 @@ import com.nova.yeobaek.domain.ootd.domain.enums.OOTDStatus;
 
 public interface OOTDRepository extends JpaRepository<OOTD, Long>, OOTDRepositoryCustom {
 
-    @Modifying
-    @Query("UPDATE OOTD o SET o.status = :status WHERE o.id IN " +
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE OOTD o SET o.status = :status, o.updatedAt = CURRENT_TIMESTAMP WHERE o.id IN " +
             "(SELECT oi.ootd.id FROM OOTDItem oi WHERE oi.item.id = :itemId)")
     void updateStatusByItemId(@Param("itemId") Long itemId, @Param("status") OOTDStatus status);
 }

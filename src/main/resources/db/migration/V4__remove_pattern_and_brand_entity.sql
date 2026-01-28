@@ -9,19 +9,23 @@ ALTER TABLE IF EXISTS items
 -- Drop patterns table
 DROP TABLE IF EXISTS patterns;
 
--- Remove brand_id foreign key constraint from items table
-ALTER TABLE IF EXISTS items
-    DROP CONSTRAINT IF EXISTS FKi0gnxi21mo1gmbl3q2cqvpx69;
-
--- Remove brand_id column from items table
-ALTER TABLE IF EXISTS items
-    DROP COLUMN IF EXISTS brand_id;
-
--- Add brand_name column to items table
+-- 1. Add brand_name column to items table
 ALTER TABLE IF EXISTS items
     ADD COLUMN brand_name varchar(255);
 
--- Drop brands table
+-- 2. Backfill brand_name from brands table
+UPDATE items SET brand_name = b.name
+FROM brands b WHERE items.brand_id = b.id;
+
+-- 3. Remove brand_id foreign key constraint
+ALTER TABLE IF EXISTS items
+    DROP CONSTRAINT IF EXISTS FKi0gnxi21mo1gmbl3q2cqvpx69;
+
+-- 4. Remove brand_id column
+ALTER TABLE IF EXISTS items
+    DROP COLUMN IF EXISTS brand_id;
+
+-- 5. Drop brands table
 DROP TABLE IF EXISTS brands;
 
 -- Add missing materials
