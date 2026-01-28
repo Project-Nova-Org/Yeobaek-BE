@@ -141,4 +141,27 @@ public class User extends BaseEntity {
 	public void updateNickname(String nickname) {
 		this.nickname = nickname;
 	}
+
+	public void updatePreference(
+			float height,
+			float weight,
+			Gender gender,
+			String bodyImageUrl
+	) {
+		this.height = height;
+		this.weight = weight;
+		if (gender != null) this.gender = gender;
+		if (bodyImageUrl != null) this.bodyImageUrl = bodyImageUrl;
+	}
+
+	// 탈퇴 처리
+	public void withdraw() {
+		this.status = UserStatus.DELETED;
+		this.inactiveDate = LocalDateTime.now();
+	}
+
+	// 탈퇴 확인
+	public boolean isDeleted() {
+		return this.status == UserStatus.DELETED;
+	}
 }
