@@ -7,6 +7,8 @@ import com.nova.yeobaek.domain.closet.domain.Closet;
 import com.nova.yeobaek.domain.item.domain.Item;
 import com.nova.yeobaek.domain.shared.BaseEntity;
 
+
+import jakarta.persistence.*;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -31,10 +33,10 @@ import lombok.NoArgsConstructor;
 @DynamicUpdate
 @Table(name = "closet_items",
 		uniqueConstraints = {
-			@UniqueConstraint(
-				name = "uk_closet_item",
-				columnNames = {"closet_id", "item_id"})
-})
+				@UniqueConstraint(
+						name = "uk_closet_item",
+						columnNames = {"closet_id", "item_id"})
+		})
 public class ClosetItem extends BaseEntity {
 
 	@Id
@@ -48,4 +50,20 @@ public class ClosetItem extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "item_id")
 	private Item item;
+
+	// === added ===
+	@Column(name = "pos_x", nullable = false)
+	private Double posX;
+
+	@Column(name = "pos_y", nullable = false)
+	private Double posY;
+
+	@Column(name = "scale", nullable = false)
+	private Double scale;
+
+	@Column(name = "rotation", nullable = false)
+	private Double rotation;
+
+	@Column(name = "z_index", nullable = false)
+	private Integer zIndex;
 }
