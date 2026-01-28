@@ -54,7 +54,7 @@ public class AuthController implements AuthControllerDocs {
             @RequestBody @Valid RequestDTO.SignupRequest nickname
     ) {
         Long userId = user.getId();
-        userService.setNickname(userId, nickname);
+        userService.createNickname(userId, nickname);
         return CommonResponse.onSuccess(nickname);
     }
 
