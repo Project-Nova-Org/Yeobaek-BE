@@ -39,8 +39,8 @@ public class UserResponseDTO {
             return new GetMyPageResponse(
                     user.getId(),
                     user.getNickname(),
-                    user.getEmail(),
                     user.getProfileImageUrl(),
+                    user.getEmail(),
                     user.getRank(),
                     user.getRank().getName(),
                     user.getOauthProvider()
