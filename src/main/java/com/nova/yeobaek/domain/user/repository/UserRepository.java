@@ -16,6 +16,8 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
             String oauthId
     );
 
+    boolean existsByNickname(String nickname);
+
     Optional<User> findByIdAndStatus(Long id, UserStatus status);
 
     List<User> findAllByStatusAndInactiveDateBefore(

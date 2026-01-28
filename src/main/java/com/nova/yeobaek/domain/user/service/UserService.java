@@ -50,8 +50,12 @@ public class UserService {
 
     // 닉네임 변경 로직
     private void changeNickname(User user, String nickname) {
+        if (userRepository.existsByNickname(nickname)) {
+            throw new UserException(UserErrorStatus.DUPLICATE_NICKNAME);
+        }
         try {
             user.updateNickname(nickname);
+            userRepository.saveAndFlush(user);
         } catch (DataIntegrityViolationException e) {
             throw new UserException(UserErrorStatus.DUPLICATE_NICKNAME);
         }
@@ -76,6 +80,7 @@ public class UserService {
                     request.gender(),
                     request.bodyImageUrl()
             );
+            userRepository.saveAndFlush(user);
         } catch (DataIntegrityViolationException e) {
             throw new UserException(UserErrorStatus.INVALID_PREFERENCE);
         }
@@ -95,7 +100,7 @@ public class UserService {
         return UserResponseDTO.WithDrawResponse.from(user);
     }
 
-    public UserResponseDTO.GetMyPageResponse getMypage(Long userId){
+    public UserResponseDTO.GetMyPageResponse getMypage(Long userId) {
 
         User user = userRepository.findByIdAndStatus(userId, UserStatus.ACTIVE)
                 .orElseThrow(() ->
