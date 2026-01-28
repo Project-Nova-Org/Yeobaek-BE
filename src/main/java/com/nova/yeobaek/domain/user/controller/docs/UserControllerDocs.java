@@ -30,7 +30,7 @@ public interface UserControllerDocs {
     )
     CommonResponse<?> setNickname(
             @AuthenticationPrincipal(expression = "user") User user,
-            @RequestBody @Valid RequestDTO.SignupRequest nickname
+            @RequestBody @Valid RequestDTO.SignupRequest newNickname
     );
 
 

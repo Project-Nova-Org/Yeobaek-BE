@@ -34,18 +34,18 @@ public class UserService {
             throw new UserException(UserErrorStatus.ALREADY_SIGNUP);
         }
 
-        changeNickname(user, request.NewNickname());
+        changeNickname(user, request.newNickname());
     }
 
     // 닉네임 변경
     public void setNickname(Long userId, RequestDTO.SignupRequest request) {
 
         User user = getUser(userId);
-        if (Objects.equals(user.getNickname(), request.NewNickname())) {
+        if (Objects.equals(user.getNickname(), request.newNickname())) {
             throw new UserException(UserErrorStatus.SAME_NICK_NAME);
         }
 
-        changeNickname(user, request.NewNickname());
+        changeNickname(user, request.newNickname());
     }
 
     // 닉네임 변경 로직
