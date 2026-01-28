@@ -26,14 +26,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 @Tag(name = "OOTD", description = "오늘의 착장 API")
 public interface OOTDControllerDocs {
 
-    /** OOTD 등록 */
+    /**
+     * OOTD 등록
+     */
     @Operation(
             summary = "OOTD 등록",
             description = """
-            새로운 OOTD를 생성합니다.
-
-            본 API는 공통 응답(CommonResponse) 형식을 사용합니다.
-            """
+                    새로운 OOTD를 생성합니다.
+                    
+                    본 API는 공통 응답(CommonResponse) 형식을 사용합니다.
+                    """
     )
     @ApiResponse(
             responseCode = "201",
@@ -48,13 +50,13 @@ public interface OOTDControllerDocs {
                     examples = @ExampleObject(
                             name = "INVALID_IMAGE_BACKGROUND",
                             value = """
-                            {
-                              "success": false,
-                              "code": "OOTD4002",
-                              "message": "유효하지 않은 이미지 배경 색상입니다.",
-                              "timestamp": "2026-01-13T15:12:06.689497"
-                            }
-                            """
+                                    {
+                                      "success": false,
+                                      "code": "OOTD4002",
+                                      "message": "유효하지 않은 이미지 배경 색상입니다.",
+                                      "timestamp": "2026-01-13T15:12:06.689497"
+                                    }
+                                    """
                     )
             )
     )
@@ -66,13 +68,13 @@ public interface OOTDControllerDocs {
                     examples = @ExampleObject(
                             name = "DUPLICATED_ITEM_ID",
                             value = """
-                            {
-                              "success": false,
-                              "code": "OOTD4001",
-                              "message": "아이템 ID가 중복되었습니다.",
-                              "timestamp": "2026-01-13T15:09:03.991"
-                            }
-                            """
+                                    {
+                                      "success": false,
+                                      "code": "OOTD4001",
+                                      "message": "아이템 ID가 중복되었습니다.",
+                                      "timestamp": "2026-01-13T15:09:03.991"
+                                    }
+                                    """
                     )
             )
     )
@@ -86,17 +88,19 @@ public interface OOTDControllerDocs {
             @Valid @RequestBody OOTDRequestDTO.Create requestDTO
     );
 
-    /** OOTD 목록조회 */
+    /**
+     * OOTD 목록조회
+     */
     @Operation(
             summary = "OOTD 목록 조회",
             description = """
-            로그인 사용자의 OOTD 목록을 조회합니다.
-            status = NORMAL 인 OOTD만 반환합니다.
-            cursor 기반 무한 스크롤을 지원합니다.
-
-            - sort 기본값: LATEST
-            - limit 기본값: 20 (최대 100)
-            """
+                    로그인 사용자의 OOTD 목록을 조회합니다.
+                    status = NORMAL 인 OOTD만 반환합니다.
+                    cursor 기반 무한 스크롤을 지원합니다.
+                    
+                    - sort 기본값: LATEST
+                    - limit 기본값: 20 (최대 100)
+                    """
     )
     @ApiResponse(
             responseCode = "200",
@@ -118,14 +122,16 @@ public interface OOTDControllerDocs {
             OOTDRequestDTO.SearchCondition condition
     );
 
-    /** OOTD 즐겨찾기 */
+    /**
+     * OOTD 즐겨찾기
+     */
     @Operation(
             summary = "OOTD 즐겨찾기 설정/해제",
             description = """
-        로그인 사용자의 OOTD 즐겨찾기 상태를 토글합니다.
-        - 즐겨찾기 → 해제
-        - 해제 → 즐겨찾기
-        """
+                    로그인 사용자의 OOTD 즐겨찾기 상태를 토글합니다.
+                    - 즐겨찾기 → 해제
+                    - 해제 → 즐겨찾기
+                    """
     )
     @ApiResponse(responseCode = "200", description = "즐겨찾기 상태 변경 성공")
     @ApiResponse(responseCode = "404", description = "존재하지 않거나 접근할 수 없는 OOTD")
@@ -134,14 +140,16 @@ public interface OOTDControllerDocs {
             @PathVariable Long ootdId
     );
 
-    /** OOTD 상세 조회 */
+    /**
+     * OOTD 상세 조회
+     */
     @Operation(
             summary = "OOTD 상세 조회",
             description = """
-            로그인 사용자의 OOTD 상세 정보를 조회합니다.
-            status = NORMAL 인 OOTD만 조회됩니다.
-            OOTD 기본 정보와 OOTDItem 목록을 함께 반환합니다.
-            """
+                    로그인 사용자의 OOTD 상세 정보를 조회합니다.
+                    status = NORMAL 인 OOTD만 조회됩니다.
+                    OOTD 기본 정보와 OOTDItem 목록을 함께 반환합니다.
+                    """
 
     )
     @ApiResponse(responseCode = "200", description = "OOTD 상세 조회 성공")
@@ -150,17 +158,19 @@ public interface OOTDControllerDocs {
             @PathVariable Long ootdId
     );
 
-    /** OOTD 수정 */
+    /**
+     * OOTD 수정
+     */
     @Operation(
             summary = "OOTD 수정",
             description = """
-            로그인 사용자의 OOTD 정보를 수정합니다.
-            PATCH 방식으로 부분 수정이 가능하며,
-            전달되지 않은 필드는 기존 값을 유지합니다.
-
-            - 아이템 목록이 전달될 경우 전체 교체 방식으로 수정됩니다.
-            - 본인 OOTD만 수정할 수 있습니다.
-            """
+                    로그인 사용자의 OOTD 정보를 수정합니다.
+                    PATCH 방식으로 부분 수정이 가능하며,
+                    전달되지 않은 필드는 기존 값을 유지합니다.
+                    
+                    - 아이템 목록이 전달될 경우 전체 교체 방식으로 수정됩니다.
+                    - 본인 OOTD만 수정할 수 있습니다.
+                    """
     )
     @ApiResponse(
             responseCode = "200",
@@ -183,16 +193,18 @@ public interface OOTDControllerDocs {
             @Valid @RequestBody OOTDRequestDTO.Update requestDTO
     );
 
-    /** OOTD 삭제 */
+    /**
+     * OOTD 삭제
+     */
     @Operation(
             summary = "OOTD 삭제",
             description = """
-            로그인 사용자의 OOTD를 삭제합니다.
-            OOTD를 하드딜리트합니다.
-            OOTD와 연결된 아이템 매핑(OOTDItem)도 함께 삭제됩니다.
-
-            - 본인 OOTD만 삭제할 수 있습니다.
-            """
+                    로그인 사용자의 OOTD를 삭제합니다.
+                    OOTD를 하드딜리트합니다.
+                    OOTD와 연결된 아이템 매핑(OOTDItem)도 함께 삭제됩니다.
+                    
+                    - 본인 OOTD만 삭제할 수 있습니다.
+                    """
     )
     @ApiResponse(
             responseCode = "200",

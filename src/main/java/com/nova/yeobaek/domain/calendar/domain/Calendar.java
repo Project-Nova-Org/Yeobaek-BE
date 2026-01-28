@@ -72,7 +72,7 @@ public class Calendar extends BaseEntity {
 	private OOTD ootd;
 
 	/**
-	 * ✅ OOTD 연결(혹은 생성 시 세팅) - customImageUrl 건드리면 안 됨
+	 *  OOTD 연결(혹은 생성 시 세팅) - customImageUrl 건드리면 안 됨
 	 */
 	public void connectOotd(OOTD ootd) {
 		this.ootd = ootd;
@@ -80,9 +80,7 @@ public class Calendar extends BaseEntity {
 		this.thumbnail = Thumbnail.OOTD;
 	}
 
-	/**
-	 * ❌ 최종 정책에서 사용 금지 (row 삭제가 정답)
-	 */
+
 	@Deprecated
 	public void disconnectOotd() {
 		this.ootd = null;

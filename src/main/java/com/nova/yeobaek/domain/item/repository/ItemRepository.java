@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.util.List;
 
 import com.nova.yeobaek.domain.item.domain.Item;
 
@@ -37,4 +38,5 @@ public interface ItemRepository extends JpaRepository<Item, Long>, ItemRepositor
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM Item i WHERE i.id = :itemId")
     void bulkDeleteById(@Param("itemId") Long itemId);
+    List<Item> findAllByUser_Id(Long userId);
 }

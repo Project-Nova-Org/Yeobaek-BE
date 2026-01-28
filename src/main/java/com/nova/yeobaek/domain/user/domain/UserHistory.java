@@ -50,4 +50,9 @@ public class UserHistory extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
+
+	//  월 이미지 변경 메서드
+	public void changeMonthlyOotdImageUrl(String imageUrl) {
+		this.monthlyOotdImageUrl = imageUrl;
+	}
 }
