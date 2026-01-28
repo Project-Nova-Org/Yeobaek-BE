@@ -73,7 +73,11 @@ public class ClosetService {
             if (cursorId == null) {
                 page = closetRepository.findByUserOrderByFavoriteDescIdDesc(user, pageable);
             } else {
-                int cursorFav = Boolean.TRUE.equals(cursorFavorite) ? 1 : 0;
+                boolean effectiveCursorFavorite = (cursorFavorite != null)
+                        ? cursorFavorite
+                        : resolveCursorFavorite(user, cursorId);
+
+                int cursorFav = effectiveCursorFavorite ? 1 : 0;
                 page = closetRepository.findByUserAfterFavoriteDescIdDesc(user, cursorFav, cursorId, pageable);
             }
 
@@ -81,7 +85,11 @@ public class ClosetService {
             if (cursorId == null) {
                 page = closetRepository.findByUserOrderByFavoriteDescIdAsc(user, pageable);
             } else {
-                int cursorFav = Boolean.TRUE.equals(cursorFavorite) ? 1 : 0;
+                boolean effectiveCursorFavorite = (cursorFavorite != null)
+                        ? cursorFavorite
+                        : resolveCursorFavorite(user, cursorId);
+
+                int cursorFav = effectiveCursorFavorite ? 1 : 0;
                 page = closetRepository.findByUserAfterFavoriteDescIdAsc(user, cursorFav, cursorId, pageable);
             }
 
@@ -198,6 +206,8 @@ public class ClosetService {
     private Closet saveCloset(User user, ClosetRequestDTO.Create request) {
         Closet closet = closetConverter.toEntity(user, request);
 
+
+        // saveAll에서 발생하는 DataIntegrityViolationException을 DUPLICATED_NAME으로 오분류하지 않게 함
         try {
             return closetRepository.save(closet);
         } catch (DataIntegrityViolationException e) {
@@ -214,6 +224,16 @@ public class ClosetService {
                 )
                 .toList();
 
+
         closetItemRepository.saveAll(closetItems);
+    }
+
+    // =========================
+    // cursorFavorite derive helper
+    // =========================
+    private boolean resolveCursorFavorite(User user, Long cursorId) {
+        Closet cursorCloset = closetRepository.findByIdAndUser(cursorId, user)
+                .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
+        return cursorCloset.isFavorite();
     }
 }
