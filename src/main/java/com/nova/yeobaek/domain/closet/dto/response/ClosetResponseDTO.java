@@ -6,7 +6,6 @@ public class ClosetResponseDTO {
 
     public record Create(Long closetId) {}
 
-    // === added ===
     public record Summary(
             Long closetId,
             String name,
@@ -14,27 +13,47 @@ public class ClosetResponseDTO {
             boolean favorite
     ) {}
 
-    // === added ===
     public record ListResponse(
-            List<Summary> closets
+            List<Summary> closets,
+            Long nextCursorId,
+            boolean hasNext
     ) {}
 
-    // === added ===
+
     public record ItemPlacement(
-            Long itemId,
-            Double posX,
-            Double posY,
-            Double scale,
-            Double rotation,
-            Integer zIndex
+            Long closetItemId,
+            Long itemId
     ) {}
 
-    // === added ===
+    public record FavoriteUpdate(
+            Long closetId,
+            boolean favorite
+    ) {}
+
+    public record CursorListResponse(
+            List<Summary> closets,
+            Long nextCursorId,
+            Boolean nextCursorFavorite,
+            boolean hasNext
+    ) {}
+
     public record Detail(
             Long closetId,
             String name,
             String imageUrl,
             boolean favorite,
             List<ItemPlacement> items
+    ) {}
+
+    // ✅ /closets/{closetId}/items 커서 응답도 동일하게(배치정보 없음)
+    public record ClosetItemCursor(
+            Long closetItemId,
+            Long itemId
+    ) {}
+
+    public record ClosetItemCursorListResponse(
+            List<ClosetItemCursor> items,
+            Long nextCursorId,
+            boolean hasNext
     ) {}
 }

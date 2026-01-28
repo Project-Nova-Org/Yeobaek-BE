@@ -26,7 +26,6 @@ public class ClosetConverter {
         return new ClosetResponseDTO.Create(closet.getId());
     }
 
-    // === added ===
     public ClosetResponseDTO.Summary toSummary(Closet closet) {
         return new ClosetResponseDTO.Summary(
                 closet.getId(),
@@ -36,16 +35,12 @@ public class ClosetConverter {
         );
     }
 
-    // === added ===
     public ClosetResponseDTO.Detail toDetail(Closet closet, List<ClosetItem> closetItems) {
+
         List<ClosetResponseDTO.ItemPlacement> items = closetItems.stream()
                 .map(ci -> new ClosetResponseDTO.ItemPlacement(
-                        ci.getItem().getId(),
-                        ci.getPosX(),
-                        ci.getPosY(),
-                        ci.getScale(),
-                        ci.getRotation(),
-                        ci.getZIndex()
+                        ci.getId(),
+                        ci.getItem().getId()
                 ))
                 .toList();
 

@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.nova.yeobaek.domain.closet.controller.docs.ClosetControllerDocs;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
+import com.nova.yeobaek.domain.closet.dto.request.ClosetSortType;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.closet.service.ClosetService;
 import com.nova.yeobaek.domain.user.domain.User;
@@ -36,10 +37,14 @@ public class ClosetController implements ClosetControllerDocs {
 
 	@Override
 	@GetMapping
-	public CommonResponse<ClosetResponseDTO.ListResponse> getClosets(
-			@AuthenticationPrincipal(expression = "user") User user
+	public CommonResponse<ClosetResponseDTO.CursorListResponse> getClosets(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@RequestParam(required = false) Long cursorId,
+			@RequestParam(required = false) Boolean cursorFavorite,
+			@RequestParam(defaultValue = "20") Integer size,
+			@RequestParam(defaultValue = "LATEST") ClosetSortType sort
 	) {
-		return CommonResponse.onSuccess(closetService.list(user));
+		return CommonResponse.onSuccess(closetService.listByCursor(user, cursorId, cursorFavorite, size, sort));
 	}
 
 	@Override
@@ -50,4 +55,25 @@ public class ClosetController implements ClosetControllerDocs {
 	) {
 		return CommonResponse.onSuccess(closetService.getDetail(user, closetId));
 	}
+	@GetMapping("/{closetId}/items")
+	public CommonResponse<ClosetResponseDTO.ClosetItemCursorListResponse> getClosetItems(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@PathVariable Long closetId,
+			@RequestParam(required = false) Long cursorId,
+			@RequestParam(defaultValue = "20") Integer size
+	) {
+		return CommonResponse.onSuccess(closetService.getClosetItemsByCursor(user, closetId, cursorId, size));
+	}
+
+
+	@Override
+	@PatchMapping("/{closetId}/favorite")
+	public CommonResponse<ClosetResponseDTO.FavoriteUpdate> updateFavorite(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@PathVariable Long closetId,
+			@Valid @RequestBody ClosetRequestDTO.FavoriteUpdate request
+	) {
+		return CommonResponse.onSuccess(closetService.updateFavorite(user, closetId, request.favorite()));
+	}
+
 }

@@ -8,9 +8,25 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 
 
 public interface ClosetItemRepository extends JpaRepository<ClosetItem, Long>, ClosetItemRepositoryCustom {
+
     @Query("select ci from ClosetItem ci join fetch ci.item where ci.closet.id = :closetId")
     List<ClosetItem> findAllWithItemByClosetId(@Param("closetId") Long closetId);
+
+    // added: cursor paging (id desc)
+    @Query("""
+        select ci from ClosetItem ci
+        join fetch ci.item
+        where ci.closet.id = :closetId
+          and (:cursorId is null or ci.id < :cursorId)
+        order by ci.id desc
+    """)
+    List<ClosetItem> findItemsByClosetIdWithItemByCursor(
+            @Param("closetId") Long closetId,
+            @Param("cursorId") Long cursorId,
+            Pageable pageable
+    );
 }

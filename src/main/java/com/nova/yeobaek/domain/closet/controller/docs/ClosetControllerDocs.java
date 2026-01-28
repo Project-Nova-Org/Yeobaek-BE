@@ -1,11 +1,13 @@
 package com.nova.yeobaek.domain.closet.controller.docs;
 
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
+import com.nova.yeobaek.domain.closet.dto.request.ClosetSortType;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -73,7 +75,6 @@ public interface ClosetControllerDocs {
     )
     CommonResponse<ClosetResponseDTO.Create> createCloset(User user, ClosetRequestDTO.Create request);
 
-    // === added ===
     @Operation(
             summary = "옷장 리스트 조회 API",
             description = "로그인한 사용자의 옷장 목록을 조회합니다.",
@@ -83,12 +84,17 @@ public interface ClosetControllerDocs {
                     @ApiResponse(responseCode = "500", description = "서버 오류")
             }
     )
-    CommonResponse<ClosetResponseDTO.ListResponse> getClosets(User user);
+    CommonResponse<ClosetResponseDTO.CursorListResponse> getClosets(
+            User user,
+            @Parameter(description = "이전 페이지 마지막 closetId(없으면 첫 페이지)") Long cursorId,
+            @Parameter(description = "이전 페이지 마지막 favorite(복합정렬 시 필요)") Boolean cursorFavorite,
+            @Parameter(description = "페이지 크기") Integer size,
+            @Parameter(description = "정렬 방식") ClosetSortType sort
+    );
 
-    // === added ===
     @Operation(
             summary = "옷장 상세 조회 API",
-            description = "로그인한 사용자의 특정 옷장을 상세 조회합니다.",
+            description = "로그인한 사용자의 특정 옷장을 상세 조회합니다. (옷장은 배치정보를 저장하지 않으며, 아이템 목록만 제공합니다.)",
             responses = {
                     @ApiResponse(responseCode = "200", description = "조회 성공"),
                     @ApiResponse(
@@ -109,4 +115,16 @@ public interface ClosetControllerDocs {
             }
     )
     CommonResponse<ClosetResponseDTO.Detail> getClosetDetail(User user, Long closetId);
+
+    @Operation(
+            summary = "옷장 즐겨찾기 설정/해제 API",
+            description = "로그인한 사용자의 옷장 즐겨찾기를 설정/해제합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "수정 성공"),
+                    @ApiResponse(responseCode = "401", description = "인증 필요"),
+                    @ApiResponse(responseCode = "404", description = "옷장 없음(또는 접근 불가)"),
+                    @ApiResponse(responseCode = "500", description = "서버 오류")
+            }
+    )
+    CommonResponse<ClosetResponseDTO.FavoriteUpdate> updateFavorite(User user, Long closetId, ClosetRequestDTO.FavoriteUpdate request);
 }
