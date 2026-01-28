@@ -82,7 +82,7 @@ public class UserService {
         return UserResponseDTO.PreferenceResponse.from(user);
     }
 
-    public void withdraw(Long userId) {
+    public UserResponseDTO.WithDrawResponse withdraw(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorStatus.USER_NOT_FOUND));
 
@@ -92,6 +92,7 @@ public class UserService {
 
         user.withdraw();
         authService.logoutAll(userId);
+        return UserResponseDTO.WithDrawResponse.from(user);
     }
 
     public UserResponseDTO.GetMyPageResponse getMypage(Long userId){
