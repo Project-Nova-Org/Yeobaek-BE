@@ -3,6 +3,8 @@ package com.nova.yeobaek.global.auth.service;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
 import com.nova.yeobaek.domain.user.domain.enums.Role;
+import com.nova.yeobaek.domain.user.domain.enums.UserStatus;
+import com.nova.yeobaek.domain.user.exception.UserException;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
 import com.nova.yeobaek.global.auth.dto.google.GoogleUserResponse;
 import com.nova.yeobaek.global.auth.dto.kakao.KakaoUserResponse;
@@ -52,6 +54,9 @@ public class AuthService {
                 .orElseGet(() -> userRepository.save(
                         createSocialUser(provider, oauthId, Role.USER)
                 ));
+        if (user.getStatus() == UserStatus.DELETED) {
+            throw new UserException(AuthErrorStatus.WITHDRAWN_USER);
+        }
 
         boolean isNewUser = user.getNickname() == null;
 
@@ -204,4 +209,7 @@ public class AuthService {
         }
     }
 
+    public void logoutAll(Long userId) {
+        refreshTokenStore.delete(userId);
+    }
 }
