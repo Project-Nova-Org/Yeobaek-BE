@@ -55,7 +55,7 @@ public class AuthService {
                         createSocialUser(provider, oauthId, Role.USER)
                 ));
         if (user.getStatus() == UserStatus.DELETED) {
-            throw new UserException(AuthErrorStatus.WITHDRAWN_USER);
+            throw new AuthException(AuthErrorStatus.WITHDRAWN_USER);
         }
 
         boolean isNewUser = user.getNickname() == null;
