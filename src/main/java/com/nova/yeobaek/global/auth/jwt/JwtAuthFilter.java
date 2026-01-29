@@ -79,6 +79,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new AuthException(AuthErrorStatus.USER_NOT_FOUND));
 
+        // 삭제된 유저 검증
+        if (user.isDeleted()) {
+            throw new AuthException(AuthErrorStatus.WITHDRAWN_USER);
+        }
+
         CustomUserDetails userDetails = new CustomUserDetails(user);
 
         UsernamePasswordAuthenticationToken authentication =
