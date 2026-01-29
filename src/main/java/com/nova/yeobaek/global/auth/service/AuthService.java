@@ -4,7 +4,6 @@ import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.enums.OauthProvider;
 import com.nova.yeobaek.domain.user.domain.enums.Role;
 import com.nova.yeobaek.domain.user.domain.enums.UserStatus;
-import com.nova.yeobaek.domain.user.exception.UserException;
 import com.nova.yeobaek.domain.user.repository.UserRepository;
 import com.nova.yeobaek.global.auth.dto.google.GoogleUserResponse;
 import com.nova.yeobaek.global.auth.dto.kakao.KakaoUserResponse;
