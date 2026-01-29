@@ -37,8 +37,8 @@ public class ClosetConverter {
 
     public ClosetResponseDTO.Detail toDetail(Closet closet, List<ClosetItem> closetItems) {
 
-        List<ClosetResponseDTO.ItemPlacement> items = closetItems.stream()
-                .map(ci -> new ClosetResponseDTO.ItemPlacement(
+        List<ClosetResponseDTO.ClosetItemReference> items = closetItems.stream()
+                .map(ci -> new ClosetResponseDTO.ClosetItemReference(
                         ci.getId(),
                         ci.getItem().getId()
                 ))
@@ -52,4 +52,5 @@ public class ClosetConverter {
                 items
         );
     }
+
 }

@@ -19,8 +19,8 @@ public class ClosetResponseDTO {
             boolean hasNext
     ) {}
 
-
-    public record ItemPlacement(
+    // (closetItemId, itemId) 참조쌍
+    public record ClosetItemReference(
             Long closetItemId,
             Long itemId
     ) {}
@@ -42,16 +42,21 @@ public class ClosetResponseDTO {
             String name,
             String imageUrl,
             boolean favorite,
-            List<ItemPlacement> items
+            List<ClosetItemReference> items
     ) {}
 
-    // ✅ /closets/{closetId}/items 커서 응답도 동일하게(배치정보 없음)
+    // /closets/{closetId}/items 커서 응답 아이템 1개 단위
     public record ClosetItemCursor(
             Long closetItemId,
             Long itemId
     ) {}
 
+
     public record ClosetItemCursorListResponse(
+            Long closetId,
+            String closetName,
+            String imageUrl,
+            boolean favorite,
             List<ClosetItemCursor> items,
             Long nextCursorId,
             boolean hasNext
