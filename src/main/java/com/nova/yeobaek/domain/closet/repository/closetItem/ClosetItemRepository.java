@@ -29,4 +29,39 @@ public interface ClosetItemRepository extends JpaRepository<ClosetItem, Long>, C
             @Param("cursorId") Long cursorId,
             Pageable pageable
     );
+
+    @Query("""
+        select ci
+        from ClosetItem ci
+        join fetch ci.item i
+        join i.category c
+        where ci.closet.id = :closetId
+          and (:cursorId is null or ci.id < :cursorId)
+          and c.parent.id = :level1CategoryId
+        order by ci.id desc
+    """)
+    List<ClosetItem> findItemsByClosetIdWithItemByCursorAndLevel1Category(
+            @Param("closetId") Long closetId,
+            @Param("cursorId") Long cursorId,
+            @Param("level1CategoryId") Long level1CategoryId,
+            Pageable pageable
+    );
+
+    @Query("""
+        select ci
+        from ClosetItem ci
+        join fetch ci.item i
+        join i.category c
+        where ci.closet.id = :closetId
+          and (:cursorId is null or ci.id < :cursorId)
+          and c.id = :level2CategoryId
+        order by ci.id desc
+    """)
+    List<ClosetItem> findItemsByClosetIdWithItemByCursorAndLevel2Category(
+            @Param("closetId") Long closetId,
+            @Param("cursorId") Long cursorId,
+            @Param("level2CategoryId") Long level2CategoryId,
+            Pageable pageable
+    );
+
 }

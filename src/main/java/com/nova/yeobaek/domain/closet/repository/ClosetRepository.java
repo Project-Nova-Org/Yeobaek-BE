@@ -3,6 +3,7 @@ package com.nova.yeobaek.domain.closet.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.nova.yeobaek.domain.closet.domain.mapping.ClosetItem;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -69,4 +70,32 @@ public interface ClosetRepository extends JpaRepository<Closet, Long> {
             @Param("cursorId") Long cursorId,
             Pageable pageable
     );
+
+    @Query("""
+    select ci
+    from ClosetItem ci
+    join fetch ci.item i
+    where ci.closet.id = :closetId
+      and (:cursorId is null or ci.id < :cursorId)
+      and i.category.id = :level2CategoryId
+    order by ci.id desc
+""")
+    List<ClosetItem> findItemsByClosetIdWithItemByCursorAndLevel2Category(
+            Long closetId, Long cursorId, Long level2CategoryId, Pageable pageable
+    );
+
+    @Query("""
+    select ci
+    from ClosetItem ci
+    join fetch ci.item i
+    join i.category c
+    where ci.closet.id = :closetId
+      and (:cursorId is null or ci.id < :cursorId)
+      and c.parent.id = :level1CategoryId
+    order by ci.id desc
+""")
+    List<ClosetItem> findItemsByClosetIdWithItemByCursorAndLevel1Category(
+            Long closetId, Long cursorId, Long level1CategoryId, Pageable pageable
+    );
+
 }
