@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.*;
 
 import com.nova.yeobaek.domain.closet.controller.docs.ClosetControllerDocs;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
-import com.nova.yeobaek.domain.closet.dto.request.ClosetSortType;
+import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.closet.service.ClosetService;
 import com.nova.yeobaek.domain.user.domain.User;
@@ -55,16 +55,6 @@ public class ClosetController implements ClosetControllerDocs {
 	) {
 		return CommonResponse.onSuccess(closetService.getDetail(user, closetId));
 	}
-	@GetMapping("/{closetId}/items")
-	public CommonResponse<ClosetResponseDTO.ClosetItemCursorListResponse> getClosetItems(
-			@AuthenticationPrincipal(expression = "user") User user,
-			@PathVariable Long closetId,
-			@RequestParam(required = false) Long cursorId,
-			@RequestParam(defaultValue = "20") Integer size
-	) {
-		return CommonResponse.onSuccess(closetService.getClosetItemsByCursor(user, closetId, cursorId, size));
-	}
-
 
 	@Override
 	@PatchMapping("/{closetId}/favorite")
@@ -76,4 +66,24 @@ public class ClosetController implements ClosetControllerDocs {
 		return CommonResponse.onSuccess(closetService.updateFavorite(user, closetId, request.favorite()));
 	}
 
+	@GetMapping("/{closetId}/items")
+	public CommonResponse<ClosetResponseDTO.ClosetItemCursorListResponse> getClosetItems(
+			@AuthenticationPrincipal(expression = "user") User user,
+			@PathVariable Long closetId,
+			@RequestParam(required = false) Long cursorId,
+			@RequestParam(defaultValue = "20") Integer size,
+			@RequestParam(required = false) Long level1CategoryId,
+			@RequestParam(required = false) Long level2CategoryId
+	) {
+		return CommonResponse.onSuccess(
+				closetService.getClosetItemsByCursor(
+						user,
+						closetId,
+						cursorId,
+						size,
+						level1CategoryId,
+						level2CategoryId
+				)
+		);
+	}
 }

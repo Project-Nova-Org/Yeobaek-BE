@@ -14,7 +14,7 @@ import com.nova.yeobaek.domain.closet.converter.ClosetConverter;
 import com.nova.yeobaek.domain.closet.domain.Closet;
 import com.nova.yeobaek.domain.closet.domain.mapping.ClosetItem;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
-import com.nova.yeobaek.domain.closet.dto.request.ClosetSortType;
+import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.closet.repository.ClosetRepository;
 import com.nova.yeobaek.domain.closet.repository.closetItem.ClosetItemRepository;
@@ -124,9 +124,8 @@ public class ClosetService {
 
         List<ClosetItem> closetItems = closetItemRepository.findAllWithItemByClosetId(closetId);
 
-        // ✅ 배치정보 없음: DTO 형태(ItemPlacement)로만 내려줌 (closetItemId, itemId)
-        List<ClosetResponseDTO.ItemPlacement> items = closetItems.stream()
-                .map(ci -> new ClosetResponseDTO.ItemPlacement(
+        List<ClosetResponseDTO.ClosetItemReference> items = closetItems.stream()
+                .map(ci -> new ClosetResponseDTO.ClosetItemReference(
                         ci.getId(),
                         ci.getItem().getId()
                 ))
@@ -146,36 +145,54 @@ public class ClosetService {
             User user,
             Long closetId,
             Long cursorId,
-            int size
+            int size,
+            Long level1CategoryId,
+            Long level2CategoryId
     ) {
-        closetRepository.findByIdAndUser(closetId, user)
+        // ✅ 여기서 closet 엔티티를 가져와서, 응답에 옷장 정보 포함
+        Closet closet = closetRepository.findByIdAndUser(closetId, user)
                 .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
 
         int limit = size + 1;
         Pageable pageable = PageRequest.of(0, limit);
 
-        List<ClosetItem> page = closetItemRepository.findItemsByClosetIdWithItemByCursor(
-                closetId, cursorId, pageable
-        );
+        List<ClosetItem> page;
+
+        if (level2CategoryId != null) {
+            page = closetItemRepository.findItemsByClosetIdWithItemByCursorAndLevel2Category(
+                    closetId, cursorId, level2CategoryId, pageable
+            );
+        } else if (level1CategoryId != null) {
+            page = closetItemRepository.findItemsByClosetIdWithItemByCursorAndLevel1Category(
+                    closetId, cursorId, level1CategoryId, pageable
+            );
+        } else {
+            page = closetItemRepository.findItemsByClosetIdWithItemByCursor(
+                    closetId, cursorId, pageable
+            );
+        }
 
         boolean hasNext = page.size() > size;
         List<ClosetItem> sliced = hasNext ? page.subList(0, size) : page;
 
         List<ClosetResponseDTO.ClosetItemCursor> items = sliced.stream()
-                .map(ci -> new ClosetResponseDTO.ClosetItemCursor(
-                        ci.getId(),
-                        ci.getItem().getId()
-                ))
+                .map(ci -> new ClosetResponseDTO.ClosetItemCursor(ci.getId(), ci.getItem().getId()))
                 .toList();
 
         Long nextCursorId = sliced.isEmpty() ? null : sliced.get(sliced.size() - 1).getId();
 
-        return new ClosetResponseDTO.ClosetItemCursorListResponse(items, nextCursorId, hasNext);
+
+        return new ClosetResponseDTO.ClosetItemCursorListResponse(
+                closet.getId(),
+                closet.getName(),
+                closet.getImageUrl(),
+                closet.isFavorite(),
+                items,
+                nextCursorId,
+                hasNext
+        );
     }
 
-    // =========================
-    // create() SRP 분리
-    // =========================
     private void validateCreateRequest(User user, ClosetRequestDTO.Create request) {
         validateDuplicatedName(user, request.name());
         validateItemsExistAndNoDuplication(request);
@@ -206,8 +223,6 @@ public class ClosetService {
     private Closet saveCloset(User user, ClosetRequestDTO.Create request) {
         Closet closet = closetConverter.toEntity(user, request);
 
-
-        // saveAll에서 발생하는 DataIntegrityViolationException을 DUPLICATED_NAME으로 오분류하지 않게 함
         try {
             return closetRepository.save(closet);
         } catch (DataIntegrityViolationException e) {
@@ -224,13 +239,9 @@ public class ClosetService {
                 )
                 .toList();
 
-
         closetItemRepository.saveAll(closetItems);
     }
 
-    // =========================
-    // cursorFavorite derive helper
-    // =========================
     private boolean resolveCursorFavorite(User user, Long cursorId) {
         Closet cursorCloset = closetRepository.findByIdAndUser(cursorId, user)
                 .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
