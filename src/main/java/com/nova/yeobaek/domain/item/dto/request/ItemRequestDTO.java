@@ -1,6 +1,8 @@
 package com.nova.yeobaek.domain.item.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -9,6 +11,40 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public class ItemRequestDTO {
+
+    /** 아이템 목록 조회 조건 */
+    public record SearchCondition(
+            @Schema(description = "카테고리 ID (2레벨)")
+            Long categoryId,
+
+            @Schema(description = "계절 (SPRING, SUMMER, AUTUMN, WINTER)")
+            String season,
+
+            @Schema(description = "소재")
+            String material,
+
+            @Schema(description = "검색 키워드 (브랜드명, 메모)")
+            String keyword,
+
+            @Schema(description = "정렬 기준: LATEST, NAME_ASC", defaultValue = "LATEST")
+            String sort,
+
+            @Schema(description = "커서 (무한 스크롤)")
+            Long cursor,
+
+            @Schema(description = "조회 개수 (기본 20)", defaultValue = "20")
+            @Min(1)
+            @Max(100)
+            Integer limit
+    ) {
+        public String resolvedSort() {
+            return sort != null ? sort : "LATEST";
+        }
+
+        public int resolvedLimit() {
+            return limit != null ? limit : 20;
+        }
+    }
 
     @Schema(description = "아이템 생성 요청")
     public record Create(
