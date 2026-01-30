@@ -32,13 +32,9 @@ public class StatsService {
             int inactivePreviewLimit,
             int inactiveDays
     ) {
-        // 1) 유저 보유 아이템 전체
         List<Item> items = itemRepository.findAllByUser_Id(userId);
-
-        // 2) 아이템 사용 정보 (useCount DESC)
         List<ItemUsage> usages = itemUsageRepository.findAllByUser_IdOrderByUseCountDesc(userId);
 
-        // itemId -> usage 맵
         Map<Long, ItemUsage> usageMap = usages.stream()
                 .collect(Collectors.toMap(
                         u -> u.getItem().getId(),
@@ -46,7 +42,6 @@ public class StatsService {
                         (a, b) -> a
                 ));
 
-        // 3) 자주 착용한 아이템 (전체 items 기준으로 일관되게)
         List<StatsResponseDTO.ItemUsageCard> frequentItems = items.stream()
                 .map(item -> toCard(item, usageMap.get(item.getId())))
                 .filter(c -> c.useCount() > 0)
@@ -54,12 +49,10 @@ public class StatsService {
                 .limit(frequentLimit)
                 .toList();
 
-        // frequent에 포함된 itemId Set → inactive에서 제외
         Set<Long> frequentItemIds = frequentItems.stream()
                 .map(StatsResponseDTO.ItemUsageCard::itemId)
                 .collect(Collectors.toSet());
 
-        // 4) 최근 착용하지 않은 아이템
         LocalDate cutoff = LocalDate.now().minusDays(inactiveDays);
 
         List<StatsResponseDTO.ItemUsageCard> inactiveAll = items.stream()
@@ -67,7 +60,7 @@ public class StatsService {
                 .filter(card -> !frequentItemIds.contains(card.itemId()))
                 .filter(card ->
                         card.lastUsedDate() == null ||
-                                card.lastUsedDate().isBefore(cutoff) // cutoff 당일은 inactive 아님
+                                card.lastUsedDate().isBefore(cutoff)
                 )
                 .sorted(Comparator
                         .comparing((StatsResponseDTO.ItemUsageCard c) -> c.lastUsedDate() != null)
@@ -95,7 +88,7 @@ public class StatsService {
         Item item = usage.getItem();
         return new StatsResponseDTO.ItemUsageCard(
                 item.getId(),
-                item.getBrandName(),
+                extractBrandName(item),
                 item.getImageUrl(),
                 usage.getUseCount(),
                 usage.getLastUsedDate()
@@ -105,10 +98,15 @@ public class StatsService {
     private StatsResponseDTO.ItemUsageCard toCard(Item item, ItemUsage usage) {
         return new StatsResponseDTO.ItemUsageCard(
                 item.getId(),
-                item.getBrandName(),
+                extractBrandName(item),
                 item.getImageUrl(),
                 usage == null ? 0 : usage.getUseCount(),
                 usage == null ? null : usage.getLastUsedDate()
         );
+    }
+
+    private String extractBrandName(Item item) {
+        // ✅ 여기만 네 Item 필드명에 맞게 바꾸면 끝
+        return item.getBrandName(); // ← 만약 컴파일 안 되면 아래 4) 참고
     }
 }
