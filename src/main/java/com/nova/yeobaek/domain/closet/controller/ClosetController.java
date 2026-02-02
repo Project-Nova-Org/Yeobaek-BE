@@ -10,6 +10,7 @@ import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.closet.service.ClosetService;
 import com.nova.yeobaek.domain.user.domain.User;
+import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
@@ -28,9 +29,10 @@ public class ClosetController implements ClosetControllerDocs {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public CommonResponse<ClosetResponseDTO.Create> createCloset(
-			@AuthenticationPrincipal(expression = "user") User user,
+			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@Valid @RequestBody ClosetRequestDTO.Create request
 	) {
+		User user = userDetails.getUser();
 		Long closetId = closetService.create(user, request);
 		return CommonResponse.onCreated(new ClosetResponseDTO.Create(closetId));
 	}
@@ -38,43 +40,48 @@ public class ClosetController implements ClosetControllerDocs {
 	@Override
 	@GetMapping
 	public CommonResponse<ClosetResponseDTO.CursorListResponse> getClosets(
-			@AuthenticationPrincipal(expression = "user") User user,
+			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@RequestParam(required = false) Long cursorId,
 			@RequestParam(required = false) Boolean cursorFavorite,
 			@RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(defaultValue = "LATEST") ClosetSortType sort
 	) {
+		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(closetService.listByCursor(user, cursorId, cursorFavorite, size, sort));
 	}
 
 	@Override
 	@GetMapping("/{closetId}")
 	public CommonResponse<ClosetResponseDTO.Detail> getClosetDetail(
-			@AuthenticationPrincipal(expression = "user") User user,
+			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId
 	) {
+		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(closetService.getDetail(user, closetId));
 	}
 
 	@Override
 	@PatchMapping("/{closetId}/favorite")
 	public CommonResponse<ClosetResponseDTO.FavoriteUpdate> updateFavorite(
-			@AuthenticationPrincipal(expression = "user") User user,
+			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
 			@Valid @RequestBody ClosetRequestDTO.FavoriteUpdate request
 	) {
+		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(closetService.updateFavorite(user, closetId, request.favorite()));
 	}
 
+	@Override
 	@GetMapping("/{closetId}/items")
 	public CommonResponse<ClosetResponseDTO.ClosetItemCursorListResponse> getClosetItems(
-			@AuthenticationPrincipal(expression = "user") User user,
+			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
 			@RequestParam(required = false) Long cursorId,
 			@RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(required = false) Long level1CategoryId,
 			@RequestParam(required = false) Long level2CategoryId
 	) {
+		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
 				closetService.getClosetItemsByCursor(
 						user,

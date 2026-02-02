@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
 import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
-import com.nova.yeobaek.domain.user.domain.User;
+import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -76,7 +76,7 @@ public interface ClosetControllerDocs {
                     )
             }
     )
-    CommonResponse<ClosetResponseDTO.Create> createCloset(User user, ClosetRequestDTO.Create request);
+    CommonResponse<ClosetResponseDTO.Create> createCloset(CustomUserDetails userDetails, ClosetRequestDTO.Create request);
 
     @Operation(
             summary = "옷장 리스트 조회 API",
@@ -88,7 +88,7 @@ public interface ClosetControllerDocs {
             }
     )
     CommonResponse<ClosetResponseDTO.CursorListResponse> getClosets(
-            User user,
+            CustomUserDetails userDetails,
             @Parameter(description = "이전 페이지 마지막 closetId(없으면 첫 페이지)")
             @RequestParam(required = false) Long cursorId,
 
@@ -125,7 +125,7 @@ public interface ClosetControllerDocs {
             }
     )
     CommonResponse<ClosetResponseDTO.Detail> getClosetDetail(
-            User user,
+            CustomUserDetails userDetails,
             @PathVariable Long closetId
     );
 
@@ -140,7 +140,7 @@ public interface ClosetControllerDocs {
             }
     )
     CommonResponse<ClosetResponseDTO.FavoriteUpdate> updateFavorite(
-            User user,
+            CustomUserDetails userDetails,
             @PathVariable Long closetId,
             ClosetRequestDTO.FavoriteUpdate request
     );
@@ -168,7 +168,7 @@ public interface ClosetControllerDocs {
             }
     )
     CommonResponse<ClosetResponseDTO.ClosetItemCursorListResponse> getClosetItems(
-            User user,
+            CustomUserDetails userDetails,
 
             @Parameter(description = "옷장 ID")
             @PathVariable Long closetId,
