@@ -17,7 +17,7 @@ import java.util.Set;
 public class ItemConverter {
 
     public static Item toItem(
-            ItemRequestDTO.Create request,
+            ItemRequestDTO.CreateItem request,
             User user,
             Category category,
             Material material,

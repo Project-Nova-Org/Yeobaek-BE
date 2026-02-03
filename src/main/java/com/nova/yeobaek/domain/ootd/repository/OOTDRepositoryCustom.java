@@ -15,6 +15,7 @@ public interface OOTDRepositoryCustom {
             List<Long> styleIds,
             String sort,
             Long cursor,
+            String cursorName,
             int limit
     );
 }

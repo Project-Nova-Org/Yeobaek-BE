@@ -8,6 +8,7 @@ import com.nova.yeobaek.domain.item.domain.Material;
 import com.nova.yeobaek.domain.item.domain.enums.Season;
 import com.nova.yeobaek.domain.item.domain.mapping.ItemsColor;
 import com.nova.yeobaek.domain.item.dto.request.ItemRequestDTO;
+import com.nova.yeobaek.domain.item.dto.request.ItemRequestDTO.ItemSearchCondition;
 import com.nova.yeobaek.domain.item.dto.response.ItemResponseDTO;
 import com.nova.yeobaek.domain.item.exception.ItemException;
 import com.nova.yeobaek.domain.item.repository.ItemRepository;
@@ -22,6 +23,9 @@ import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.domain.user.domain.mapping.ItemUsage;
 import com.nova.yeobaek.domain.user.repository.itemUsage.ItemUsageRepository;
+import com.nova.yeobaek.global.payload.exception.GeneralException;
+import com.nova.yeobaek.global.payload.status.CommonErrorStatus;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,7 +48,7 @@ public class ItemService {
     private final OOTDRepository ootdRepository;
     private final ItemUsageRepository itemUsageRepository;
 
-    public ItemResponseDTO.CreateResponse createItem(User user, ItemRequestDTO.Create request) {
+    public ItemResponseDTO.CreateResponse createItem(User user, ItemRequestDTO.CreateItem request) {
         // 1. 이미지 배경 색상 검증
         ImageBackgroundColor imageBackgroundColor = parseImageBackground(request.imageBackground());
 
@@ -123,7 +127,7 @@ public class ItemService {
         return seasons;
     }
 
-    public void updateItem(User user, Long itemId, ItemRequestDTO.Update request) {
+    public void updateItem(User user, Long itemId, ItemRequestDTO.UpdateItem request) {
         // 1. 본인 아이템 조회
         Item item = itemRepository.findByIdAndUser(itemId, user)
                 .orElseThrow(() -> new ItemException(ItemErrorStatus.ITEM_NOT_FOUND));
@@ -217,7 +221,17 @@ public class ItemService {
     }
 
     @Transactional(readOnly = true)
-    public ItemResponseDTO.ListResponse getItemList(User user, ItemRequestDTO.SearchCondition condition) {
+    public ItemResponseDTO.ListResponse getItemList(User user, ItemSearchCondition condition) {
+
+        if (condition.resolvedSort() == ItemSearchCondition.SortType.NAME_ASC) {
+            boolean hasCursor = condition.cursor() != null;
+            boolean hasCursorBrand = condition.cursorBrandName() != null && !condition.cursorBrandName().isBlank();
+
+            if (hasCursor != hasCursorBrand) {
+                throw new GeneralException(CommonErrorStatus.INVALID_CURSOR);
+            }
+        }
+
         List<Item> items = itemRepository.findItemList(
                 user,
                 condition.categoryId(),

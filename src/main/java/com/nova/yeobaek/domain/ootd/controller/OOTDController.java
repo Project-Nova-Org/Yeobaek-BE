@@ -20,8 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springdoc.core.annotations.ParameterObject;
 
-import java.util.List;
-
 @Slf4j
 @Validated
 @RestController
@@ -36,7 +34,7 @@ public class OOTDController implements OOTDControllerDocs {
     @PostMapping
     public CommonResponse<CreateOOTDResponse> createOOTD(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody OOTDRequestDTO.Create requestDTO
+            @Valid @RequestBody OOTDRequestDTO.CreateOOTD requestDTO
     ) {
         Long ootdId = ootdService.createOOTD(
                 userDetails.getUser(),
@@ -61,7 +59,7 @@ public class OOTDController implements OOTDControllerDocs {
     @GetMapping
     public CommonResponse<OOTDListResponse> getOOTDList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @ParameterObject @Valid @ModelAttribute OOTDRequestDTO.SearchCondition condition
+            @ParameterObject @Valid @ModelAttribute OOTDRequestDTO.OOTDSearchCondition condition
     ) {
         OOTDListResponse response = ootdService.getOOTDList(
                 userDetails.getUser(),
@@ -90,7 +88,7 @@ public class OOTDController implements OOTDControllerDocs {
     public CommonResponse<Void> updateOOTD(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long ootdId,
-            @Valid @RequestBody OOTDRequestDTO.Update requestDTO
+            @Valid @RequestBody OOTDRequestDTO.UpdateOOTD requestDTO
     ) {
         ootdService.updateOOTD(
                 userDetails.getUser(),

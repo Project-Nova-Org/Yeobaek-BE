@@ -116,7 +116,7 @@ public interface ItemControllerDocs {
                     description = "아이템 생성 요청",
                     required = true,
                     content = @Content(
-                            schema = @Schema(implementation = ItemRequestDTO.Create.class),
+                            schema = @Schema(implementation = ItemRequestDTO.CreateItem.class),
                             examples = @ExampleObject(
                                     name = "아이템 생성 예시",
                                     value = """
@@ -136,7 +136,7 @@ public interface ItemControllerDocs {
                             )
                     )
             )
-            @Valid ItemRequestDTO.Create request
+            @Valid ItemRequestDTO.CreateItem request
     );
 
     @Operation(
@@ -177,7 +177,7 @@ public interface ItemControllerDocs {
             @ParameterObject
             @Valid
             @ModelAttribute
-            ItemRequestDTO.SearchCondition condition
+            ItemRequestDTO.ItemSearchCondition condition
     );
 
     @Operation(
@@ -268,7 +268,7 @@ public interface ItemControllerDocs {
                     description = "아이템 수정 요청 (모든 필드 선택)",
                     required = true,
                     content = @Content(
-                            schema = @Schema(implementation = ItemRequestDTO.Update.class),
+                            schema = @Schema(implementation = ItemRequestDTO.UpdateItem.class),
                             examples = @ExampleObject(
                                     name = "아이템 수정 예시",
                                     value = """
@@ -288,7 +288,7 @@ public interface ItemControllerDocs {
                             )
                     )
             )
-            @Valid ItemRequestDTO.Update request
+            @Valid ItemRequestDTO.UpdateItem request
     );
 
     @Operation(

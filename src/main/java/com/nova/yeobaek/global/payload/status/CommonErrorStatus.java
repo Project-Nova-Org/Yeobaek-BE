@@ -23,6 +23,9 @@ public enum CommonErrorStatus implements ErrorReason {
 	TYPE_OR_FORMAT_NOT_VALID(HttpStatus.BAD_REQUEST, "ARGUMENT4002", "Argument의 타입이나 형식이 올바르지 않습니다."),
 	CONSTRAINTS_VIOLATION_EXCEPTION_ERROR(HttpStatus.BAD_REQUEST, "ARGUMENT4003", "ConstraintsViolationException 추출 도중 에러 발생"),
 
+	// cursor 관련
+	INVALID_CURSOR(HttpStatus.BAD_REQUEST, "CURSOR4001", "이름 정렬 시 커서 ID와 이름이 모두 필요합니다."),
+
 	// DataIntegrityViolationException 관련
 	DUPLICATED_BRAND_NAME(HttpStatus.CONFLICT, "CONFLICT4001", "이미 존재하는 브랜드 이름입니다."),
 	DUPLICATED_HISTORY_MONTH(HttpStatus.CONFLICT, "CONFLICT4002", "해당 월의 기록이 이미 존재합니다."),

@@ -15,7 +15,7 @@ import com.nova.yeobaek.domain.item.domain.enums.Season;
 public class ItemRequestDTO {
 
     /** 아이템 목록 조회 조건 */
-    public record SearchCondition(
+    public record ItemSearchCondition(
             @Schema(description = "카테고리 ID (2레벨)")
             Long categoryId,
 
@@ -56,7 +56,7 @@ public class ItemRequestDTO {
     }
 
     @Schema(description = "아이템 생성 요청")
-    public record Create(
+    public record CreateItem(
             @Schema(description = "이미지 URL", example = "https://example.com/image.png")
             @NotBlank(message = "이미지 URL은 필수입니다.")
             String imageUrl,
@@ -98,7 +98,7 @@ public class ItemRequestDTO {
     }
 
     @Schema(description = "아이템 수정 요청 (모든 필드 선택)")
-    public record Update(
+    public record UpdateItem(
             @Schema(description = "이미지 URL", example = "https://example.com/new-image.png")
             String imageUrl,
 

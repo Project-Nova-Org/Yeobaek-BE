@@ -85,7 +85,7 @@ public interface OOTDControllerDocs {
     )
     CommonResponse<CreateOOTDResponse> createOOTD(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody OOTDRequestDTO.Create requestDTO
+            @Valid @RequestBody OOTDRequestDTO.CreateOOTD requestDTO
     );
 
     /**
@@ -119,7 +119,7 @@ public interface OOTDControllerDocs {
             @ParameterObject
             @Valid
             @ModelAttribute
-            OOTDRequestDTO.SearchCondition condition
+            OOTDRequestDTO.OOTDSearchCondition condition
     );
 
     /**
@@ -190,7 +190,7 @@ public interface OOTDControllerDocs {
     CommonResponse<Void> updateOOTD(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long ootdId,
-            @Valid @RequestBody OOTDRequestDTO.Update requestDTO
+            @Valid @RequestBody OOTDRequestDTO.UpdateOOTD requestDTO
     );
 
     /**

@@ -36,7 +36,7 @@ public class ItemController implements ItemControllerDocs {
     @PostMapping
     public CommonResponse<ItemResponseDTO.CreateResponse> createItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody ItemRequestDTO.Create request
+            @Valid @RequestBody ItemRequestDTO.CreateItem request
     ) {
         ItemResponseDTO.CreateResponse response = itemService.createItem(
                 userDetails.getUser(),
@@ -50,7 +50,7 @@ public class ItemController implements ItemControllerDocs {
     @GetMapping
     public CommonResponse<ItemResponseDTO.ListResponse> getItemList(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @ModelAttribute ItemRequestDTO.SearchCondition condition
+            @Valid @ModelAttribute ItemRequestDTO.ItemSearchCondition condition
     ) {
         ItemResponseDTO.ListResponse response = itemService.getItemList(
                 userDetails.getUser(),
@@ -79,7 +79,7 @@ public class ItemController implements ItemControllerDocs {
     public CommonResponse<Void> updateItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long itemId,
-            @Valid @RequestBody ItemRequestDTO.Update request
+            @Valid @RequestBody ItemRequestDTO.UpdateItem request
     ) {
         itemService.updateItem(
                 userDetails.getUser(),

@@ -15,5 +15,6 @@ public class OOTDListResponse {
 
     private List<OOTDListItemResponse> items;
     private Long nextCursor;
+    private String nextCursorName;
     private boolean hasNext;
 }
