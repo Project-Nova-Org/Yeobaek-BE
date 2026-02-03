@@ -1,6 +1,7 @@
 package com.nova.yeobaek.domain.ootd.service;
 
 import com.nova.yeobaek.domain.item.domain.Item;
+import com.nova.yeobaek.domain.item.dto.request.ItemRequestDTO;
 import com.nova.yeobaek.domain.item.repository.ItemRepository;
 import com.nova.yeobaek.domain.ootd.converter.OOTDConverter;
 import com.nova.yeobaek.domain.ootd.domain.OOTD;
@@ -18,7 +19,6 @@ import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 
 import com.nova.yeobaek.domain.ootd.dto.response.OOTDListResponse;
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDListItemResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +35,8 @@ import com.nova.yeobaek.domain.ootd.dto.response.OOTDItemDetailResponse;
 import com.nova.yeobaek.domain.ootd.domain.enums.OOTDStatus;
 
 import com.nova.yeobaek.domain.calendar.service.CalendarService;
+import com.nova.yeobaek.global.payload.exception.GeneralException;
+import com.nova.yeobaek.global.payload.status.CommonErrorStatus;
 
 @Slf4j
 @Service
@@ -50,7 +52,7 @@ public class OOTDService {
 
     /** OOTD 등록 */
     @Transactional
-    public Long createOOTD(User user, OOTDRequestDTO.Create requestDTO) {
+    public Long createOOTD(User user, OOTDRequestDTO.CreateOOTD requestDTO) {
         Style style = findStyle(requestDTO.styleId());
         TPO tpo = findTpo(requestDTO.tpoId());
         ImageBackgroundColor backgroundColor = parseBackground(requestDTO.imageBackground());
@@ -80,7 +82,7 @@ public class OOTDService {
         }
     }
 
-    private List<Long> extractItemIds(OOTDRequestDTO.Create requestDTO) {
+    private List<Long> extractItemIds(OOTDRequestDTO.CreateOOTD requestDTO) {
         return requestDTO.items().stream()
                 .map(OOTDRequestDTO.Item::fashionItemId)
                 .toList();
@@ -101,7 +103,7 @@ public class OOTDService {
                 .collect(Collectors.toMap(Item::getId, item -> item));
     }
 
-    private OOTD createAndSaveOOTD(OOTDRequestDTO.Create requestDTO, User user, Style style, TPO tpo, ImageBackgroundColor bg) {
+    private OOTD createAndSaveOOTD(OOTDRequestDTO.CreateOOTD requestDTO, User user, Style style, TPO tpo, ImageBackgroundColor bg) {
         OOTD ootd = OOTDConverter.toOOTD(
                 requestDTO,
                 user,
@@ -113,7 +115,7 @@ public class OOTDService {
         return ootd;
     }
 
-    private void saveOOTDItems(OOTDRequestDTO.Create requestDTO, OOTD ootd, Map<Long, Item> itemMap) {
+    private void saveOOTDItems(OOTDRequestDTO.CreateOOTD requestDTO, OOTD ootd, Map<Long, Item> itemMap) {
         List<OOTDItem> ootdItems = OOTDConverter.toOOTDItems(
                 requestDTO.items(),
                 ootd,
@@ -135,7 +137,7 @@ public class OOTDService {
     public void updateOOTD(
             User user,
             Long ootdId,
-            OOTDRequestDTO.Update requestDTO
+            OOTDRequestDTO.UpdateOOTD requestDTO
     ) {
         OOTD ootd = getAuthorizedOOTD(user, ootdId);
 
@@ -154,7 +156,7 @@ public class OOTDService {
     }
 
     //OOTD 기본 필드 수정
-    private void updateBasicFields(OOTD ootd, OOTDRequestDTO.Update requestDTO) {
+    private void updateBasicFields(OOTD ootd, OOTDRequestDTO.UpdateOOTD requestDTO) {
         if (requestDTO.name() != null) {
             ootd.updateName(requestDTO.name());
         }
@@ -167,7 +169,7 @@ public class OOTDService {
     }
 
     //OOTD 연관 엔티티 수정
-    private void updateRelations(OOTD ootd, OOTDRequestDTO.Update requestDTO) {
+    private void updateRelations(OOTD ootd, OOTDRequestDTO.UpdateOOTD requestDTO) {
         if (requestDTO.tpoId() != null) {
             TPO tpo = findTpo(requestDTO.tpoId());
             ootd.updateTpo(tpo);
@@ -179,7 +181,7 @@ public class OOTDService {
     }
 
     //OOTD 이미지 배경색상 수정
-    private void updateImageBackgroundIfNeeded(OOTD ootd, OOTDRequestDTO.Update requestDTO) {
+    private void updateImageBackgroundIfNeeded(OOTD ootd, OOTDRequestDTO.UpdateOOTD requestDTO) {
         if (requestDTO.imageBackground() != null) {
             ImageBackgroundColor backgroundColor =
                     parseBackground(requestDTO.imageBackground());
@@ -188,7 +190,7 @@ public class OOTDService {
     }
 
     //OOTD 아이템 구성 수정
-    private void updateItemsIfNeeded(OOTD ootd, OOTDRequestDTO.Update requestDTO) {
+    private void updateItemsIfNeeded(OOTD ootd, OOTDRequestDTO.UpdateOOTD requestDTO) {
         if (requestDTO.items() == null) {
             return;
         }
@@ -256,71 +258,31 @@ public class OOTDService {
     /** OOTD 목록조회 */
     @Transactional(readOnly = true)
     public OOTDListResponse getOOTDList(
-            User user,
-            OOTDRequestDTO.SearchCondition condition
+            User user, OOTDRequestDTO.OOTDSearchCondition condition
     ) {
-        return getOOTDList(
-                user,
-                condition.keyword(),
-                condition.favorite(),
-                condition.resolvedTpoIds(),
-                condition.resolvedStyleIds(),
-                condition.resolvedSort(),
-                condition.cursor(),
-                condition.resolvedLimit()
-        );
-    }
 
-    /** OOTD 목록조회 */
-    @Transactional(readOnly = true)
-    public OOTDListResponse getOOTDList(
-            User user,
-            String keyword,
-            Boolean favorite,
-            List<Long> tpoIds,
-            List<Long> styleIds,
-            String sort,
-            Long cursor,
-            int limit
-    ) {
-        List<OOTD> ootds = ootdRepository.findOOTDList(
-                user,
-                keyword,
-                favorite,
-                tpoIds,
-                styleIds,
-                sort,
-                cursor,
-                limit + 1
-        );
+        if (condition.resolvedSort() == ItemRequestDTO.ItemSearchCondition.SortType.NAME_ASC) {
+            boolean hasCursor = condition.cursor() != null;
+            boolean hasCursorBrand = condition.cursorName() != null && !condition.cursorName().isBlank();
 
-        boolean hasNext = ootds.size() > limit;
-        if (hasNext) {
-            ootds = ootds.subList(0, limit);
+            if (hasCursor != hasCursorBrand) {
+                throw new GeneralException(CommonErrorStatus.INVALID_CURSOR);
+            }
         }
 
-        List<OOTDListItemResponse> items = ootds.stream()
-                .map(ootd -> OOTDListItemResponse.builder()
-                        .ootdId(ootd.getId())
-                        .name(ootd.getName())
-                        .tpoId(ootd.getTpo() != null ? ootd.getTpo().getId() : null)
-                        .styleId(ootd.getStyle() != null ? ootd.getStyle().getId() : null)
-                        .favorite(ootd.isFavorite())
-                        .imageBackground(ootd.getImageBackgroundColor().name())
-                        .coverImageUrl(ootd.getImageUrl())
-                        .itemNum(ootd.getOotdItemList().size())
-                        .createdAt(ootd.getCreatedAt())
-                        .build()
-                )
-                .toList();
+        List<OOTD> ootds = ootdRepository.findOOTDList(
+            user,
+            condition.keyword(),
+            condition.favorite(),
+            condition.resolvedTpoIds(),
+            condition.resolvedStyleIds(),
+            condition.resolvedSort().name(),
+            condition.cursor(),
+            condition.cursorName(),
+            condition.resolvedLimit()
+        );
 
-        Long nextCursor = hasNext ? items.get(items.size() - 1).getOotdId() : null;
-
-        return OOTDListResponse.builder()
-                .items(items)
-                .nextCursor(nextCursor)
-                .hasNext(hasNext)
-                .build();
+        return OOTDConverter.toListResponse(ootds, condition.resolvedLimit(), condition.resolvedSort().name());
     }
 
     /** OOTD 상세조회 */
