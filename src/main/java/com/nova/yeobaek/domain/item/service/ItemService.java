@@ -221,10 +221,10 @@ public class ItemService {
         List<Item> items = itemRepository.findItemList(
                 user,
                 condition.categoryId(),
-                condition.season(),
+                condition.season().name(),
                 condition.material(),
                 condition.keyword(),
-                condition.resolvedSort(),
+                condition.resolvedSort().name(),
                 condition.cursor(),
                 condition.resolvedLimit()
         );
