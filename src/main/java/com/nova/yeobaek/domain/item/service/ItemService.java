@@ -221,15 +221,17 @@ public class ItemService {
         List<Item> items = itemRepository.findItemList(
                 user,
                 condition.categoryId(),
-                condition.season().name(),
+                condition.season() != null ? condition.season().name() : null,
                 condition.material(),
                 condition.keyword(),
                 condition.resolvedSort().name(),
                 condition.cursor(),
+                condition.cursorBrandName(),
                 condition.resolvedLimit()
         );
 
-        return ItemConverter.toListResponse(items, condition.resolvedLimit());
+        return ItemConverter.toListResponse(
+            items, condition.resolvedLimit(), condition.resolvedSort().name());
     }
 
     @Transactional(readOnly = true)

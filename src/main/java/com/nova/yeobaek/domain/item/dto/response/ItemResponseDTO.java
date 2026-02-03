@@ -20,8 +20,11 @@ public class ItemResponseDTO {
             @Schema(description = "아이템 목록")
             List<ListItem> items,
 
-            @Schema(description = "다음 커서 (없으면 null)")
+            @Schema(description = "다음 커서 ID")
             Long nextCursor,
+
+            @Schema(description = "다음 커서 이름 (이름순 정렬일 때만 값 있음, 그 외 null)")
+            String nextCursorBrandName,
 
             @Schema(description = "다음 페이지 존재 여부")
             boolean hasNext

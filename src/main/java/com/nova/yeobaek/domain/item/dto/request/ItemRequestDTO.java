@@ -31,8 +31,11 @@ public class ItemRequestDTO {
             @Schema(description = "정렬 기준: LATEST, NAME_ASC", defaultValue = "LATEST")
             SortType sort,
 
-            @Schema(description = "커서 (무한 스크롤)")
+            @Schema(description = "커서 ID (이전 페이지 마지막 ID)")
             Long cursor,
+
+            @Schema(description = "커서 브랜드명 (이름순 정렬 시 필수)")
+            String cursorBrandName,
 
             @Schema(description = "조회 개수 (기본 20)", defaultValue = "20")
             @Min(1)

@@ -53,19 +53,28 @@ public class ItemConverter {
 
     public static ItemResponseDTO.ListResponse toListResponse(
             List<Item> items,
-            int limit
+            int limit,
+            String sort
     ) {
         boolean hasNext = items.size() > limit;
         List<Item> pageItems = hasNext ? items.subList(0, limit) : items;
-        Long nextCursor = hasNext && !pageItems.isEmpty()
-                ? pageItems.get(pageItems.size() - 1).getId()
-                : null;
+        Long nextCursor = null;
+        String nextCursorBrandname = null;
+
+        if (!pageItems.isEmpty()) {
+            Item lastItem = pageItems.get(pageItems.size() - 1);
+            nextCursor = lastItem.getId();
+
+            if ("NAME_ASC".equals(sort)) {
+                nextCursorBrandname = lastItem.getBrandName();
+            }
+        }
 
         List<ItemResponseDTO.ListItem> listItems = pageItems.stream()
                 .map(ItemConverter::toListItem)
                 .toList();
 
-        return new ItemResponseDTO.ListResponse(listItems, nextCursor, hasNext);
+        return new ItemResponseDTO.ListResponse(listItems, nextCursor, nextCursorBrandname, hasNext);
     }
 
     public static ItemResponseDTO.DetailResponse toDetailResponse(Item item, ItemUsage usage) {

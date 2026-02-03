@@ -25,6 +25,7 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
             String keyword,
             String sort,
             Long cursor,
+            String cursorBrandName,
             int limit
     ) {
         StringBuilder jpql = new StringBuilder("""
@@ -55,20 +56,21 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
         }
 
         // 커서 페이징
-        if (cursor != null && !"NAME_ASC".equals(sort)) {
-            jpql.append(" AND i.id < :cursor");
-        }
-
-        // 정렬
         if ("NAME_ASC".equals(sort)) {
+            if (cursor != null && cursorBrandName != null) {
+                jpql.append(" AND (i.brandName > :cursorBrandName OR (i.brandName = :cursorBrandName AND i.id > :cursor))");
+            }
             jpql.append(" ORDER BY i.brandName ASC, i.id ASC");
         } else {
+            if (cursor != null) {
+                jpql.append(" AND i.id < :cursor");
+            }
             jpql.append(" ORDER BY i.id DESC");
         }
 
         TypedQuery<Item> query = em.createQuery(jpql.toString(), Item.class)
                 .setParameter("user", user)
-                .setMaxResults(limit+1);
+                .setMaxResults(limit + 1);
 
         if (categoryId != null) {
             query.setParameter("categoryId", categoryId);
@@ -87,8 +89,17 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
         if (keyword != null && !keyword.isBlank()) {
             query.setParameter("keyword", "%" + keyword + "%");
         }
-        if (cursor != null && !"NAME_ASC".equals(sort)) {
-            query.setParameter("cursor", cursor);
+
+        // 커서 바인딩
+        if ("NAME_ASC".equals(sort)) {
+            if (cursor != null && cursorBrandName != null) {
+                query.setParameter("cursorBrandName", cursorBrandName);
+                query.setParameter("cursor", cursor);
+            }
+        } else {
+            if (cursor != null) {
+                query.setParameter("cursor", cursor);
+            }
         }
 
         return query.getResultList();

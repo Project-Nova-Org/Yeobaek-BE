@@ -15,6 +15,7 @@ public interface ItemRepositoryCustom {
             String keyword,
             String sort,
             Long cursor,
+            String cursorBrandName,
             int limit
     );
 }
