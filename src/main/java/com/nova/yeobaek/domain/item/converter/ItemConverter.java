@@ -55,12 +55,13 @@ public class ItemConverter {
             List<Item> items,
             int limit
     ) {
-        boolean hasNext = items.size() >= limit;
-        Long nextCursor = hasNext && !items.isEmpty()
-                ? items.get(items.size() - 1).getId()
+        boolean hasNext = items.size() > limit;
+        List<Item> pageItems = hasNext ? items.subList(0, limit) : items;
+        Long nextCursor = hasNext && !pageItems.isEmpty()
+                ? pageItems.get(pageItems.size() - 1).getId()
                 : null;
 
-        List<ItemResponseDTO.ListItem> listItems = items.stream()
+        List<ItemResponseDTO.ListItem> listItems = pageItems.stream()
                 .map(ItemConverter::toListItem)
                 .toList();
 

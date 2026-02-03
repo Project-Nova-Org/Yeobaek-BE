@@ -68,7 +68,7 @@ public class ItemRepositoryImpl implements ItemRepositoryCustom {
 
         TypedQuery<Item> query = em.createQuery(jpql.toString(), Item.class)
                 .setParameter("user", user)
-                .setMaxResults(limit);
+                .setMaxResults(limit+1);
 
         if (categoryId != null) {
             query.setParameter("categoryId", categoryId);
