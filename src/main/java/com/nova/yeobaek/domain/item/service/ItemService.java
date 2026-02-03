@@ -8,6 +8,7 @@ import com.nova.yeobaek.domain.item.domain.Material;
 import com.nova.yeobaek.domain.item.domain.enums.Season;
 import com.nova.yeobaek.domain.item.domain.mapping.ItemsColor;
 import com.nova.yeobaek.domain.item.dto.request.ItemRequestDTO;
+import com.nova.yeobaek.domain.item.dto.request.ItemRequestDTO.ItemSearchCondition;
 import com.nova.yeobaek.domain.item.dto.response.ItemResponseDTO;
 import com.nova.yeobaek.domain.item.exception.ItemException;
 import com.nova.yeobaek.domain.item.repository.ItemRepository;
@@ -15,10 +16,16 @@ import com.nova.yeobaek.domain.item.repository.category.CategoryRepository;
 import com.nova.yeobaek.domain.item.repository.color.ColorRepository;
 import com.nova.yeobaek.domain.item.repository.material.MaterialRepository;
 import com.nova.yeobaek.domain.item.status.ItemErrorStatus;
+import com.nova.yeobaek.domain.ootd.domain.OOTD;
 import com.nova.yeobaek.domain.ootd.domain.enums.OOTDStatus;
 import com.nova.yeobaek.domain.ootd.repository.OOTDRepository;
 import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
+import com.nova.yeobaek.domain.user.domain.mapping.ItemUsage;
+import com.nova.yeobaek.domain.user.repository.itemUsage.ItemUsageRepository;
+import com.nova.yeobaek.global.payload.exception.GeneralException;
+import com.nova.yeobaek.global.payload.status.CommonErrorStatus;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -39,8 +46,9 @@ public class ItemService {
     private final ColorRepository colorRepository;
     private final MaterialRepository materialRepository;
     private final OOTDRepository ootdRepository;
+    private final ItemUsageRepository itemUsageRepository;
 
-    public ItemResponseDTO.CreateResponse createItem(User user, ItemRequestDTO.Create request) {
+    public ItemResponseDTO.CreateResponse createItem(User user, ItemRequestDTO.CreateItem request) {
         // 1. 이미지 배경 색상 검증
         ImageBackgroundColor imageBackgroundColor = parseImageBackground(request.imageBackground());
 
@@ -119,7 +127,7 @@ public class ItemService {
         return seasons;
     }
 
-    public void updateItem(User user, Long itemId, ItemRequestDTO.Update request) {
+    public void updateItem(User user, Long itemId, ItemRequestDTO.UpdateItem request) {
         // 1. 본인 아이템 조회
         Item item = itemRepository.findByIdAndUser(itemId, user)
                 .orElseThrow(() -> new ItemException(ItemErrorStatus.ITEM_NOT_FOUND));
@@ -210,5 +218,56 @@ public class ItemService {
 
         // 4. 아이템 벌크 삭제
         itemRepository.bulkDeleteById(itemId);
+    }
+
+    @Transactional(readOnly = true)
+    public ItemResponseDTO.ListResponse getItemList(User user, ItemSearchCondition condition) {
+
+        if (condition.resolvedSort() == ItemSearchCondition.SortType.NAME_ASC) {
+            boolean hasCursor = condition.cursor() != null;
+            boolean hasCursorBrand = condition.cursorBrandName() != null && !condition.cursorBrandName().isBlank();
+
+            if (hasCursor != hasCursorBrand) {
+                throw new GeneralException(CommonErrorStatus.INVALID_CURSOR);
+            }
+        }
+
+        List<Item> items = itemRepository.findItemList(
+                user,
+                condition.categoryId(),
+                condition.season() != null ? condition.season().name() : null,
+                condition.material(),
+                condition.keyword(),
+                condition.resolvedSort().name(),
+                condition.cursor(),
+                condition.cursorBrandName(),
+                condition.resolvedLimit()
+        );
+
+        return ItemConverter.toListResponse(
+            items, condition.resolvedLimit(), condition.resolvedSort().name());
+    }
+
+    @Transactional(readOnly = true)
+    public ItemResponseDTO.DetailResponse getItemDetail(User user, Long itemId) {
+        Item item = itemRepository.findByIdAndUser(itemId, user)
+                .orElseThrow(() -> new ItemException(ItemErrorStatus.ITEM_NOT_FOUND));
+
+        ItemUsage usage = itemUsageRepository.findByUser_IdAndItem_Id(user.getId(), itemId)
+                .orElse(null);
+
+        return ItemConverter.toDetailResponse(item, usage);
+    }
+
+    @Transactional(readOnly = true)
+    public ItemResponseDTO.ItemOOTDsResponse getItemOOTDs(User user, Long itemId) {
+        // 본인 아이템인지 확인
+        itemRepository.findByIdAndUser(itemId, user)
+                .orElseThrow(() -> new ItemException(ItemErrorStatus.ITEM_NOT_FOUND));
+
+        // 해당 아이템이 포함된 OOTD 목록 조회
+        List<OOTD> ootds = ootdRepository.findAllByItemIdAndUserId(itemId, user.getId());
+
+        return ItemConverter.toItemOOTDsResponse(ootds);
     }
 }

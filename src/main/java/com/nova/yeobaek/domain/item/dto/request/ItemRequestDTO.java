@@ -1,6 +1,8 @@
 package com.nova.yeobaek.domain.item.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -8,10 +10,53 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+import com.nova.yeobaek.domain.item.domain.enums.Season;
+
 public class ItemRequestDTO {
 
+    /** 아이템 목록 조회 조건 */
+    public record ItemSearchCondition(
+            @Schema(description = "카테고리 ID (2레벨)")
+            Long categoryId,
+
+            @Schema(description = "계절 (SPRING, SUMMER, AUTUMN, WINTER)")
+            Season season,
+
+            @Schema(description = "소재")
+            String material,
+
+            @Schema(description = "검색 키워드 (브랜드명, 메모)")
+            String keyword,
+
+            @Schema(description = "정렬 기준: LATEST, NAME_ASC", defaultValue = "LATEST")
+            SortType sort,
+
+            @Schema(description = "커서 ID (이전 페이지 마지막 ID)")
+            Long cursor,
+
+            @Schema(description = "커서 브랜드명 (이름순 정렬 시 필수)")
+            String cursorBrandName,
+
+            @Schema(description = "조회 개수 (기본 20)", defaultValue = "20")
+            @Min(1)
+            @Max(100)
+            Integer limit
+    ) {
+        public enum SortType {
+            LATEST, NAME_ASC
+        }
+
+        public SortType resolvedSort() {
+            return sort != null ? sort : SortType.LATEST;
+        }
+
+        public int resolvedLimit() {
+            return limit != null ? limit : 20;
+        }
+    }
+
     @Schema(description = "아이템 생성 요청")
-    public record Create(
+    public record CreateItem(
             @Schema(description = "이미지 URL", example = "https://example.com/image.png")
             @NotBlank(message = "이미지 URL은 필수입니다.")
             String imageUrl,
@@ -53,7 +98,7 @@ public class ItemRequestDTO {
     }
 
     @Schema(description = "아이템 수정 요청 (모든 필드 선택)")
-    public record Update(
+    public record UpdateItem(
             @Schema(description = "이미지 URL", example = "https://example.com/new-image.png")
             String imageUrl,
 

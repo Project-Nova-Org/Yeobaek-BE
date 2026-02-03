@@ -6,6 +6,7 @@ import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,7 +14,9 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @Tag(name = "Item", description = "아이템 API")
@@ -113,7 +116,7 @@ public interface ItemControllerDocs {
                     description = "아이템 생성 요청",
                     required = true,
                     content = @Content(
-                            schema = @Schema(implementation = ItemRequestDTO.Create.class),
+                            schema = @Schema(implementation = ItemRequestDTO.CreateItem.class),
                             examples = @ExampleObject(
                                     name = "아이템 생성 예시",
                                     value = """
@@ -133,7 +136,87 @@ public interface ItemControllerDocs {
                             )
                     )
             )
-            @Valid ItemRequestDTO.Create request
+            @Valid ItemRequestDTO.CreateItem request
+    );
+
+    @Operation(
+            summary = "아이템 목록 조회",
+            description = """
+            로그인 사용자의 아이템 목록을 조회합니다.
+            cursor 기반 무한 스크롤을 지원합니다.
+
+            **필터:**
+            - categoryId: 카테고리 ID로 필터링
+            - season: 계절로 필터링 (SPRING, SUMMER, AUTUMN, WINTER)
+            - material: 소재명으로 필터링
+
+            **검색:**
+            - keyword: 브랜드명, 메모에서 검색
+
+            **정렬:**
+            - sort: LATEST (최신순, 기본값), NAME_ASC (가나다순)
+
+            **페이징:**
+            - cursor: 이전 페이지의 마지막 아이템 ID
+            - limit: 조회 개수 (기본 20, 최대 100)
+            """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "아이템 목록 조회 성공",
+            content = @Content(schema = @Schema(implementation = ItemResponseDTO.ListResponse.class))
+    )
+    CommonResponse<ItemResponseDTO.ListResponse> getItemList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(
+                    description = "아이템 목록 조회 조건 (기본값: sort=LATEST, limit=20)",
+                    schema = @Schema(
+                            defaultValue = "{\"sort\":\"LATEST\",\"limit\":20}"
+                    )
+            )
+            @ParameterObject
+            @Valid
+            @ModelAttribute
+            ItemRequestDTO.ItemSearchCondition condition
+    );
+
+    @Operation(
+            summary = "아이템 상세 조회",
+            description = """
+            아이템의 상세 정보를 조회합니다.
+            본인 아이템만 조회할 수 있습니다.
+
+            **응답에 포함되는 착용 정보:**
+            - useCount: 착용 횟수 (착용 기록이 없으면 0)
+            - lastUsedDate: 최근 착용 날짜 (착용 기록이 없으면 null)
+            """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "아이템 상세 조회 성공",
+            content = @Content(schema = @Schema(implementation = ItemResponseDTO.DetailResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "아이템을 찾을 수 없음",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "ITEM_NOT_FOUND",
+                            value = """
+                            {
+                              "success": false,
+                              "code": "ITEM4042",
+                              "message": "존재하지 않거나 접근할 수 없는 아이템입니다.",
+                              "timestamp": "2026-01-24T15:00:00"
+                            }
+                            """
+                    )
+            )
+    )
+    CommonResponse<ItemResponseDTO.DetailResponse> getItemDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long itemId
     );
 
     @Operation(
@@ -185,7 +268,7 @@ public interface ItemControllerDocs {
                     description = "아이템 수정 요청 (모든 필드 선택)",
                     required = true,
                     content = @Content(
-                            schema = @Schema(implementation = ItemRequestDTO.Update.class),
+                            schema = @Schema(implementation = ItemRequestDTO.UpdateItem.class),
                             examples = @ExampleObject(
                                     name = "아이템 수정 예시",
                                     value = """
@@ -205,7 +288,7 @@ public interface ItemControllerDocs {
                             )
                     )
             )
-            @Valid ItemRequestDTO.Update request
+            @Valid ItemRequestDTO.UpdateItem request
     );
 
     @Operation(
@@ -243,6 +326,42 @@ public interface ItemControllerDocs {
             )
     )
     CommonResponse<Void> deleteItem(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long itemId
+    );
+
+    @Operation(
+            summary = "아이템이 포함된 OOTD 목록 조회",
+            description = """
+            특정 아이템이 포함된 OOTD 목록을 조회합니다.
+            본인 아이템만 조회할 수 있습니다.
+            status = NORMAL인 OOTD만 반환합니다.
+            """
+    )
+    @ApiResponse(
+            responseCode = "200",
+            description = "OOTD 목록 조회 성공",
+            content = @Content(schema = @Schema(implementation = ItemResponseDTO.ItemOOTDsResponse.class))
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "아이템을 찾을 수 없음",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = @ExampleObject(
+                            name = "ITEM_NOT_FOUND",
+                            value = """
+                            {
+                              "success": false,
+                              "code": "ITEM4042",
+                              "message": "존재하지 않거나 접근할 수 없는 아이템입니다.",
+                              "timestamp": "2026-01-24T15:00:00"
+                            }
+                            """
+                    )
+            )
+    )
+    CommonResponse<ItemResponseDTO.ItemOOTDsResponse> getItemOOTDs(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long itemId
     );

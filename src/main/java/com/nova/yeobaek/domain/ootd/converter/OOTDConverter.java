@@ -6,6 +6,7 @@ import com.nova.yeobaek.domain.ootd.domain.Style;
 import com.nova.yeobaek.domain.ootd.domain.TPO;
 import com.nova.yeobaek.domain.ootd.domain.mapping.OOTDItem;
 import com.nova.yeobaek.domain.ootd.dto.request.OOTDRequestDTO;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDResponseDTO;
 import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 
@@ -21,7 +22,7 @@ public class OOTDConverter {
 
     /** OOTD 엔티티 생성 */
     public static OOTD toOOTD(
-            OOTDRequestDTO.Create request,
+            OOTDRequestDTO.CreateOOTD request,
             User user,
             Style style,
             TPO tpo,
@@ -60,5 +61,49 @@ public class OOTDConverter {
                             .build();
                 })
                 .collect(Collectors.toList());
+    }
+
+    public static OOTDResponseDTO.OOTDListItemResponse toListItem(OOTD ootd) {
+        return OOTDResponseDTO.OOTDListItemResponse.builder()
+            .ootdId(ootd.getId())
+            .name(ootd.getName())
+            .tpoId(ootd.getTpo() != null ? ootd.getTpo().getId() : null)
+            .styleId(ootd.getStyle() != null ? ootd.getStyle().getId() : null)
+            .favorite(ootd.isFavorite())
+            .imageBackground(ootd.getImageBackgroundColor().name())
+            .coverImageUrl(ootd.getImageUrl())
+            .itemNum(ootd.getOotdItemList().size())
+            .createdAt(ootd.getCreatedAt())
+            .build();
+    }
+
+    public static OOTDResponseDTO.OOTDListResponse toListResponse(
+        List<OOTD> ootds, int limit, String sort
+    ) {
+        boolean hasNext = ootds.size() > limit;
+        List<OOTD> content = hasNext ? ootds.subList(0, limit) : ootds;
+
+        Long nextCursor = null;
+        String nextCursorName = null;
+
+        if (hasNext && !content.isEmpty()) {
+            OOTD lastOotd = content.get(content.size() - 1);
+            nextCursor = lastOotd.getId();
+
+            if ("NAME_ASC".equals(sort)) {
+                nextCursorName = lastOotd.getName();
+            }
+        }
+
+        List<OOTDResponseDTO.OOTDListItemResponse> listItems = content.stream()
+            .map(OOTDConverter::toListItem)
+            .toList();
+
+        return OOTDResponseDTO.OOTDListResponse.builder()
+            .items(listItems)
+            .nextCursor(nextCursor)
+            .nextCursorName(nextCursorName)
+            .hasNext(hasNext)
+            .build();
     }
 }

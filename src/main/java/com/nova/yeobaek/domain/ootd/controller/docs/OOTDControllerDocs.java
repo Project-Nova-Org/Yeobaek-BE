@@ -1,9 +1,9 @@
 package com.nova.yeobaek.domain.ootd.controller.docs;
 
 import com.nova.yeobaek.domain.ootd.dto.request.OOTDRequestDTO;
-import com.nova.yeobaek.domain.ootd.dto.response.CreateOOTDResponse;
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDListResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDResponseDTO.CreateOOTDResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDResponseDTO.OOTDDetailResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDResponseDTO.OOTDListResponse;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
@@ -85,7 +85,7 @@ public interface OOTDControllerDocs {
     )
     CommonResponse<CreateOOTDResponse> createOOTD(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody OOTDRequestDTO.Create requestDTO
+            @Valid @RequestBody OOTDRequestDTO.CreateOOTD requestDTO
     );
 
     /**
@@ -119,7 +119,7 @@ public interface OOTDControllerDocs {
             @ParameterObject
             @Valid
             @ModelAttribute
-            OOTDRequestDTO.SearchCondition condition
+            OOTDRequestDTO.OOTDSearchCondition condition
     );
 
     /**
@@ -190,7 +190,7 @@ public interface OOTDControllerDocs {
     CommonResponse<Void> updateOOTD(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long ootdId,
-            @Valid @RequestBody OOTDRequestDTO.Update requestDTO
+            @Valid @RequestBody OOTDRequestDTO.UpdateOOTD requestDTO
     );
 
     /**

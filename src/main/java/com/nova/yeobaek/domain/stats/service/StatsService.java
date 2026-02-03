@@ -95,7 +95,7 @@ public class StatsService {
         Item item = usage.getItem();
         return new StatsResponseDTO.ItemUsageCard(
                 item.getId(),
-                item.getBrand() != null ? item.getBrand().getName() : null,
+                item.getBrandName(),
                 item.getImageUrl(),
                 usage.getUseCount(),
                 usage.getLastUsedDate()
@@ -105,7 +105,7 @@ public class StatsService {
     private StatsResponseDTO.ItemUsageCard toCard(Item item, ItemUsage usage) {
         return new StatsResponseDTO.ItemUsageCard(
                 item.getId(),
-                item.getBrand() != null ? item.getBrand().getName() : null,
+                item.getBrandName(),
                 item.getImageUrl(),
                 usage == null ? 0 : usage.getUseCount(),
                 usage == null ? null : usage.getLastUsedDate()

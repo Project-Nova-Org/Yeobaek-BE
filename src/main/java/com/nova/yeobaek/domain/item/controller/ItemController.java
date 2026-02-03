@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +36,7 @@ public class ItemController implements ItemControllerDocs {
     @PostMapping
     public CommonResponse<ItemResponseDTO.CreateResponse> createItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody ItemRequestDTO.Create request
+            @Valid @RequestBody ItemRequestDTO.CreateItem request
     ) {
         ItemResponseDTO.CreateResponse response = itemService.createItem(
                 userDetails.getUser(),
@@ -45,11 +47,39 @@ public class ItemController implements ItemControllerDocs {
     }
 
     @Override
+    @GetMapping
+    public CommonResponse<ItemResponseDTO.ListResponse> getItemList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Valid @ModelAttribute ItemRequestDTO.ItemSearchCondition condition
+    ) {
+        ItemResponseDTO.ListResponse response = itemService.getItemList(
+                userDetails.getUser(),
+                condition
+        );
+
+        return CommonResponse.onSuccess(response);
+    }
+
+    @Override
+    @GetMapping("/{itemId}")
+    public CommonResponse<ItemResponseDTO.DetailResponse> getItemDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long itemId
+    ) {
+        ItemResponseDTO.DetailResponse response = itemService.getItemDetail(
+                userDetails.getUser(),
+                itemId
+        );
+
+        return CommonResponse.onSuccess(response);
+    }
+
+    @Override
     @PatchMapping("/{itemId}")
     public CommonResponse<Void> updateItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long itemId,
-            @Valid @RequestBody ItemRequestDTO.Update request
+            @Valid @RequestBody ItemRequestDTO.UpdateItem request
     ) {
         itemService.updateItem(
                 userDetails.getUser(),
@@ -72,5 +102,19 @@ public class ItemController implements ItemControllerDocs {
         );
 
         return CommonResponse.onSuccess(null);
+    }
+
+    @Override
+    @GetMapping("/{itemId}/ootds")
+    public CommonResponse<ItemResponseDTO.ItemOOTDsResponse> getItemOOTDs(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long itemId
+    ) {
+        ItemResponseDTO.ItemOOTDsResponse response = itemService.getItemOOTDs(
+                userDetails.getUser(),
+                itemId
+        );
+
+        return CommonResponse.onSuccess(response);
     }
 }

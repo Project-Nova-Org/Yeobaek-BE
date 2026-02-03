@@ -1,6 +1,9 @@
 package com.nova.yeobaek.domain.ootd.dto.request;
 
+import static com.nova.yeobaek.domain.item.dto.request.ItemRequestDTO.ItemSearchCondition.*;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -14,7 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class OOTDRequestDTO {
 
     /** OOTD 생성 요청 */
-    public record Create(
+    public record CreateOOTD(
             @NotBlank(message = "OOTD 이름은 필수입니다.")
             String name,
 
@@ -57,7 +60,7 @@ public class OOTDRequestDTO {
     ) {    }
 
     /** OOTD 목록 조회 조건 */
-    public record SearchCondition(
+    public record OOTDSearchCondition(
             @Schema(description = "검색 키워드")
             String keyword,
 
@@ -74,10 +77,13 @@ public class OOTDRequestDTO {
                     description = "정렬 기준: LATEST, NAME_ASC",
                     defaultValue = "LATEST"
             )
-            String sort,
+            SortType sort,
 
-            @Schema(description = "커서 (무한 스크롤)")
+            @Schema(description = "커서 ID (이전 페이지 마지막 ID)")
             Long cursor,
+
+            @Schema(description = "커서 이름 (이름순 정렬 시 필수)")
+            String cursorName,
 
             @Schema(
                     description = "조회 개수 (기본 20)",
@@ -87,8 +93,9 @@ public class OOTDRequestDTO {
             @Max(100)
             Integer limit
     ) {
-        public String resolvedSort() {
-            return sort != null ? sort : "LATEST";
+
+        public SortType resolvedSort() {
+            return sort != null ? sort : SortType.LATEST;
         }
 
         public int resolvedLimit() {
@@ -105,7 +112,7 @@ public class OOTDRequestDTO {
     }
 
     /** OOTD 수정 요청 */
-    public record Update(
+    public record UpdateOOTD(
 
             @Schema(description = "OOTD 이름")
             String name,

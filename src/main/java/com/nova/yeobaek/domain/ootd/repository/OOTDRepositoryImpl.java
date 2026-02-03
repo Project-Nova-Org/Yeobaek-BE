@@ -27,6 +27,7 @@ public class OOTDRepositoryImpl implements OOTDRepositoryCustom {
             List<Long> styleIds,
             String sort,
             Long cursor,
+            String cursorName,
             int limit
     ) {
         StringBuilder jpql = new StringBuilder("""
@@ -51,15 +52,22 @@ public class OOTDRepositoryImpl implements OOTDRepositoryCustom {
             jpql.append(" AND o.id < :cursor");
         }
 
+        // 커서 페이징
         if ("NAME_ASC".equals(sort)) {
+            if (cursor != null && cursorName != null) {
+                jpql.append(" AND (o.name > :cursorName OR (o.name = :cursorName AND o.id > :cursor))");
+            }
             jpql.append(" ORDER BY o.name ASC, o.id ASC");
         } else {
+            if (cursor != null) {
+                jpql.append(" AND o.id < :cursor");
+            }
             jpql.append(" ORDER BY o.id DESC");
         }
 
         TypedQuery<OOTD> query = em.createQuery(jpql.toString(), OOTD.class)
                 .setParameter("user", user)
-                .setMaxResults(limit);
+                .setMaxResults(limit + 1);
 
         if (keyword != null && !keyword.isBlank()) {
             query.setParameter("keyword", "%" + keyword + "%");
@@ -73,8 +81,17 @@ public class OOTDRepositoryImpl implements OOTDRepositoryCustom {
         if (styleIds != null && !styleIds.isEmpty()) {
             query.setParameter("styleIds", styleIds);
         }
-        if (cursor != null && !"NAME_ASC".equals(sort)) {
-            query.setParameter("cursor", cursor);
+
+        // 커서 바인딩
+        if ("NAME_ASC".equals(sort)) {
+            if (cursor != null && cursorName != null) {
+                query.setParameter("cursorName", cursorName);
+                query.setParameter("cursor", cursor);
+            }
+        } else {
+            if (cursor != null) {
+                query.setParameter("cursor", cursor);
+            }
         }
 
         return query.getResultList();

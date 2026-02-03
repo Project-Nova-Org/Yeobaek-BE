@@ -1,5 +1,6 @@
 package com.nova.yeobaek.global.payload.handler;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,8 +122,15 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 			List<JsonMappingException.Reference> path = ife.getPath();
 			if (!path.isEmpty()) {
 				String fieldName = path.getFirst().getFieldName();
-				String targetType = ife.getTargetType().getSimpleName();
-				details = String.format("'%s' 필드는 '%s' 타입이어야 합니다.", fieldName, targetType);
+				Class<?> targetType = ife.getTargetType();
+				if (targetType == null) {
+					details = String.format("'%s' 필드의 값을 확인해주세요.", fieldName);
+				} else if (targetType.isEnum()) {
+					String allowedValues = Arrays.toString(targetType.getEnumConstants());
+					details = String.format("'%s' 필드는 다음 값 중 하나여야 합니다: %s", fieldName, allowedValues);
+				} else {
+					details = String.format("'%s' 필드는 '%s' 타입이어야 합니다.", fieldName, targetType.getSimpleName());
+				}
 			} else {
 				details = "형식 변환 중 에러가 발생했습니다.";
 			}
