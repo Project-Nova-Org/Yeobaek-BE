@@ -9,6 +9,7 @@ import com.nova.yeobaek.domain.ootd.domain.Style;
 import com.nova.yeobaek.domain.ootd.domain.TPO;
 import com.nova.yeobaek.domain.ootd.domain.mapping.OOTDItem;
 import com.nova.yeobaek.domain.ootd.dto.request.OOTDRequestDTO;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDResponseDTO;
 import com.nova.yeobaek.domain.ootd.repository.OOTDRepository;
 import com.nova.yeobaek.domain.ootd.repository.ootdItem.OOTDItemRepository;
 import com.nova.yeobaek.domain.ootd.repository.style.StyleRepository;
@@ -17,8 +18,6 @@ import com.nova.yeobaek.domain.ootd.status.OOTDErrorStatus;
 import com.nova.yeobaek.domain.ootd.status.OOTDException;
 import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
-
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDListResponse;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDItemDetailResponse;
 import com.nova.yeobaek.domain.ootd.domain.enums.OOTDStatus;
 
 import com.nova.yeobaek.domain.calendar.service.CalendarService;
@@ -257,7 +254,7 @@ public class OOTDService {
 
     /** OOTD 목록조회 */
     @Transactional(readOnly = true)
-    public OOTDListResponse getOOTDList(
+    public OOTDResponseDTO.OOTDListResponse getOOTDList(
             User user, OOTDRequestDTO.OOTDSearchCondition condition
     ) {
 
@@ -287,14 +284,14 @@ public class OOTDService {
 
     /** OOTD 상세조회 */
     @Transactional(readOnly = true)
-    public OOTDDetailResponse getOOTDDetail(User user, Long ootdId) {
+    public OOTDResponseDTO.OOTDDetailResponse getOOTDDetail(User user, Long ootdId) {
 
         OOTD ootd = ootdRepository.findById(ootdId)
                 .filter(o -> o.getStatus() == OOTDStatus.NORMAL)
                 .filter(o -> o.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new OOTDException(OOTDErrorStatus.OOTD_NOT_FOUND));
 
-        return OOTDDetailResponse.builder()
+        return OOTDResponseDTO.OOTDDetailResponse.builder()
                 .ootdId(ootd.getId())
                 .name(ootd.getName())
                 .memo(ootd.getMemo())
@@ -306,7 +303,7 @@ public class OOTDService {
                 .createdAt(ootd.getCreatedAt())
                 .items(
                         ootd.getOotdItemList().stream()
-                                .map(oi -> OOTDItemDetailResponse.builder()
+                                .map(oi -> OOTDResponseDTO.OOTDItemDetailResponse.builder()
                                         .fashionItemId(oi.getItem().getId())
                                         .posX(oi.getPosX())
                                         .posY(oi.getPosY())

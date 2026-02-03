@@ -1,9 +1,9 @@
 package com.nova.yeobaek.domain.ootd.controller.docs;
 
 import com.nova.yeobaek.domain.ootd.dto.request.OOTDRequestDTO;
-import com.nova.yeobaek.domain.ootd.dto.response.CreateOOTDResponse;
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDDetailResponse;
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDListResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDResponseDTO.CreateOOTDResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDResponseDTO.OOTDDetailResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDResponseDTO.OOTDListResponse;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 

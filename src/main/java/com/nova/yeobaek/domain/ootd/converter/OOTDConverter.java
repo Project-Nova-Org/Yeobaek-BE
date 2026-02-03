@@ -6,8 +6,7 @@ import com.nova.yeobaek.domain.ootd.domain.Style;
 import com.nova.yeobaek.domain.ootd.domain.TPO;
 import com.nova.yeobaek.domain.ootd.domain.mapping.OOTDItem;
 import com.nova.yeobaek.domain.ootd.dto.request.OOTDRequestDTO;
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDListItemResponse;
-import com.nova.yeobaek.domain.ootd.dto.response.OOTDListResponse;
+import com.nova.yeobaek.domain.ootd.dto.response.OOTDResponseDTO;
 import com.nova.yeobaek.domain.shared.ImageBackgroundColor;
 import com.nova.yeobaek.domain.user.domain.User;
 
@@ -64,8 +63,8 @@ public class OOTDConverter {
                 .collect(Collectors.toList());
     }
 
-    public static OOTDListItemResponse toListItem(OOTD ootd) {
-        return OOTDListItemResponse.builder()
+    public static OOTDResponseDTO.OOTDListItemResponse toListItem(OOTD ootd) {
+        return OOTDResponseDTO.OOTDListItemResponse.builder()
             .ootdId(ootd.getId())
             .name(ootd.getName())
             .tpoId(ootd.getTpo() != null ? ootd.getTpo().getId() : null)
@@ -78,7 +77,7 @@ public class OOTDConverter {
             .build();
     }
 
-    public static OOTDListResponse toListResponse(
+    public static OOTDResponseDTO.OOTDListResponse toListResponse(
         List<OOTD> ootds, int limit, String sort
     ) {
         boolean hasNext = ootds.size() > limit;
@@ -96,11 +95,11 @@ public class OOTDConverter {
             }
         }
 
-        List<OOTDListItemResponse> listItems = content.stream()
+        List<OOTDResponseDTO.OOTDListItemResponse> listItems = content.stream()
             .map(OOTDConverter::toListItem)
             .toList();
 
-        return OOTDListResponse.builder()
+        return OOTDResponseDTO.OOTDListResponse.builder()
             .items(listItems)
             .nextCursor(nextCursor)
             .nextCursorName(nextCursorName)
