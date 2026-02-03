@@ -10,6 +10,8 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
+import com.nova.yeobaek.domain.item.domain.enums.Season;
+
 public class ItemRequestDTO {
 
     /** 아이템 목록 조회 조건 */
@@ -18,7 +20,7 @@ public class ItemRequestDTO {
             Long categoryId,
 
             @Schema(description = "계절 (SPRING, SUMMER, AUTUMN, WINTER)")
-            String season,
+            Season season,
 
             @Schema(description = "소재")
             String material,
@@ -27,7 +29,7 @@ public class ItemRequestDTO {
             String keyword,
 
             @Schema(description = "정렬 기준: LATEST, NAME_ASC", defaultValue = "LATEST")
-            String sort,
+            SortType sort,
 
             @Schema(description = "커서 (무한 스크롤)")
             Long cursor,
@@ -37,8 +39,12 @@ public class ItemRequestDTO {
             @Max(100)
             Integer limit
     ) {
-        public String resolvedSort() {
-            return sort != null ? sort : "LATEST";
+        public enum SortType {
+            LATEST, NAME_ASC
+        }
+
+        public SortType resolvedSort() {
+            return sort != null ? sort : SortType.LATEST;
         }
 
         public int resolvedLimit() {
