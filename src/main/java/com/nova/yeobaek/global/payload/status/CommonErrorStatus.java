@@ -31,6 +31,7 @@ public enum CommonErrorStatus implements ErrorReason {
 	DUPLICATED_DEVICE_TOKEN(HttpStatus.CONFLICT, "CONFLICT4005", "해당 디바이스 토큰은 이미 존재합니다."),
 	DUPLICATED_CALENDAR_CREATE(HttpStatus.CONFLICT, "CONFLICT4006", "해당 날짜에 캘린더가 이미 등록됐습니다."),
 	DUPLICATED_OAUTH_PROVIDER_ID(HttpStatus.CONFLICT, "CONFLICT4007", "이미 존재하는 소셜 아이디와 타입 조합입니다."),
+	DUPLICATED_CLOSET_USER_NAME(HttpStatus.CONFLICT, "CONFLICT4008", "이미 존재하는 옷장 이름입니다.")
 	;
 
 	private final HttpStatus httpStatus;
