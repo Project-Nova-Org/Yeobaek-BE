@@ -86,7 +86,7 @@ public class OOTDConverter {
         Long nextCursor = null;
         String nextCursorName = null;
 
-        if (!content.isEmpty()) {
+        if (hasNext && !content.isEmpty()) {
             OOTD lastOotd = content.get(content.size() - 1);
             nextCursor = lastOotd.getId();
 

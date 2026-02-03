@@ -61,7 +61,7 @@ public class ItemConverter {
         Long nextCursor = null;
         String nextCursorBrandname = null;
 
-        if (!pageItems.isEmpty()) {
+        if (hasNext && !pageItems.isEmpty()) {
             Item lastItem = pageItems.get(pageItems.size() - 1);
             nextCursor = lastItem.getId();
 
