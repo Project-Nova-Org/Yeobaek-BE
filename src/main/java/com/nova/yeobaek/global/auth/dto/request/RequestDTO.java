@@ -13,7 +13,7 @@ public class RequestDTO {
                 regexp = "^[a-zA-Z0-9가-힣]+$",
                 message = "닉네임에는 한글, 영문, 숫자만 사용할 수 있습니다."
         )
-        String nickname
+        String newNickname
     ){}
 
     public record SocialLoginRequest(

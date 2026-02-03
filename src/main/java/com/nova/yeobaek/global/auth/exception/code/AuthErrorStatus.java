@@ -17,7 +17,8 @@ public enum AuthErrorStatus implements ErrorReason {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_4012", "토큰이 만료되었습니다."),
     BLACKLISTED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH_4013", "이미 로그아웃된 토큰입니다."),
     INVALID_PROVIDER(HttpStatus.BAD_REQUEST,"AUTH_4005","유효하지 않은 소셜 로그인 타입입니다."),
-    INVALID_OAUTH_TOKEN(HttpStatus.BAD_REQUEST,"AUTH_4006","유효하지 않은 소셜 로그인 토큰입니다.");
+    INVALID_OAUTH_TOKEN(HttpStatus.BAD_REQUEST,"AUTH_4006","유효하지 않은 소셜 로그인 토큰입니다."),
+    WITHDRAWN_USER(HttpStatus.BAD_REQUEST,"AUTH_4007","탈퇴한 유저입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

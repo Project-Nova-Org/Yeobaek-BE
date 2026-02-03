@@ -61,6 +61,9 @@ public class Item extends BaseEntity {
 
 	private String memo;
 
+	@Column(name = "brand_name")
+	private String brandName;
+
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private ImageBackgroundColor imageBackgroundColor;
@@ -76,14 +79,6 @@ public class Item extends BaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "material_id")
 	private Material material;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "pattern_id")
-	private Pattern pattern;
-
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "brand_id")
-	private Brand brand;
 
     @Builder.Default
 	@ElementCollection(targetClass = Season.class)
@@ -108,4 +103,47 @@ public class Item extends BaseEntity {
 	@OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
 	@Builder.Default
 	private List<ClosetItem> closetItemList = new ArrayList<>();
+
+	// === Update Methods ===
+
+	public void updateImageUrl(String imageUrl) {
+		this.imageUrl = imageUrl;
+	}
+
+	public void updateImageBackgroundColor(ImageBackgroundColor imageBackgroundColor) {
+		this.imageBackgroundColor = imageBackgroundColor;
+	}
+
+	public void updateCategory(Category category) {
+		this.category = category;
+	}
+
+	public void updateMaterial(Material material) {
+		this.material = material;
+	}
+
+	public void updateBrandName(String brandName) {
+		this.brandName = brandName;
+	}
+
+	public void updateSize(String size) {
+		this.size = size;
+	}
+
+	public void updatePrice(Long price) {
+		this.price = price;
+	}
+
+	public void updateMemo(String memo) {
+		this.memo = memo;
+	}
+
+	public void updateSeasons(Set<Season> seasons) {
+		this.seasonSet.clear();
+		this.seasonSet.addAll(seasons);
+	}
+
+	public void clearColors() {
+		this.itemsColors.clear();
+	}
 }
