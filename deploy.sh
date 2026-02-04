@@ -1,5 +1,5 @@
 #!/bin/bash
-sleep 15
+sleep 5
 
 APP_DIR="/home/ubuntu/app"
 LOG_PATH="$APP_DIR/app.log"
@@ -22,7 +22,7 @@ if [ -f "$APP_DIR/.env" ]; then
   set +a
 fi
 
-CURRENT_PID=$(pgrep -f "$APP_DIR/.*\.jar" || true)
+CURRENT_PID=$(pgrep -f "$(basename "$JAR_NAME")" || true)
 
 if [ -z "$CURRENT_PID" ]; then
   echo "> 현재 구동 중인 애플리케이션이 없으므로 종료하지 않습니다."
@@ -32,7 +32,7 @@ else
 
   for i in {1..15}; do
     sleep 1
-    PROCESS_CHECK=$(pgrep -f "$APP_DIR/.*\.jar" || true)
+    PROCESS_CHECK=$(pgrep -f "$(basename "$JAR_NAME")" || true)
     if [ -z "$PROCESS_CHECK" ]; then
       echo "> 애플리케이션이 정상적으로 종료되었습니다."
       break
@@ -40,7 +40,7 @@ else
   done
 fi
 
-REMAIN_PID=$(pgrep -f "$APP_DIR/.*\.jar" || true)
+REMAIN_PID=$(pgrep -f "$(basename "$JAR_NAME")" || true)
 
 if [ -n "$REMAIN_PID" ]; then
   echo "> 프로세스가 종료되지 않아 강제 종료합니다. (kill -9 $REMAIN_PID)"
@@ -51,31 +51,47 @@ fi
 echo "> 구버전 JAR 파일 정리"
 ls -d "$APP_DIR"/*.jar | grep -v "$JAR_NAME" | xargs rm -f
 
-echo "> 새 애플리케이션 배포: $JAR_NAME"
+echo "> DB 상태 확인"
+DB_STATUS=$(docker inspect -f '{{.State.Status}}' postgres-dev 2>/dev/null || echo "not_found")
+if [ "$DB_STATUS" != "running" ]; then
+    echo "> [ERROR] DB가 실행 중이 아닙니다. (상태: $DB_STATUS)"
+    docker logs postgres-dev --tail 20
+    exit 1
+fi
 
-echo "> DB 초기화를 위해 15초 대기"
-sleep 15
+echo "> 새 애플리케이션 배포: $JAR_NAME"
 
 chmod +x "$JAR_NAME"
 nohup java -Xmx1024m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 &
 
 echo "> 배포 상태 확인"
-sleep 5
+sleep 10
 
-for i in {1..10}; do
-  RESPONSE_CODE=$(pgrep -f "$APP_DIR/.*\.jar" || true)
+for i in {1..20}; do
+  RESPONSE_CODE=$(pgrep -f "$(basename "$JAR_NAME")" || true)
 
   if [ -n "$RESPONSE_CODE" ]; then
-    echo "> 배포 성공! (PID: $RESPONSE_CODE)"
-    break
+    if grep -q "Started .* in .* seconds" "$LOG_PATH"; then
+      echo "> 배포 성공! (PID: $RESPONSE_CODE)"
+      exit 0
+    fi
+
+    if grep -iq "Error" "$LOG_PATH" || grep -iq "Exception" "$LOG_PATH"; then
+      echo "> [ERROR] 로그에서 실행 에러가 발견되었습니다."
+      tail -n 20 "$LOG_PATH"
+      exit 1
+    fi
+
+    echo "> 아직 실행 중... ($i/20)"
+    sleep 3
   else
-    echo "> 아직 실행 중 ($i/10)"
-    sleep 2
+    echo "> 오류: 프로세스가 중간에 사라졌습니다."
+    tail -n 30 "$LOG_PATH"
+    exit 1
   fi
 
-  if [ $i -eq 10 ]; then
-    echo "> 오류: 애플리케이션이 20초 내에 실행되지 않았습니다. 로그를 확인하세요."
-    echo "> 로그 경로: $LOG_PATH"
+  if [ $i -eq 20 ]; then
+    echo "> 오류: 애플리케이션이 60초 내에 실행되지 않았습니다. 로그를 확인하세요."
     exit 1
   fi
 done
