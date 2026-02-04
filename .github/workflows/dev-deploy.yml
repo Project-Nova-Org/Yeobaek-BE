@@ -1,0 +1,57 @@
+name: Deploy to Dev
+
+on:
+  push:
+    branches: [ "develop" ]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'gradle'
+
+      - name: Build with Gradle
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test
+          rm -f build/libs/*-plain.jar
+          mv build/libs/*SNAPSHOT.jar ./project-${{ github.sha }}.jar
+
+      - name: Copy Files to EC2 (JAR, Config, Script)
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.DEV_EC2_HOST }}
+          username: ${{ secrets.DEV_EC2_USERNAME }}
+          key: ${{ secrets.DEV_EC2_SSH_KEY }}
+          source: "project-*.jar, docker-compose.yml, deploy.sh"
+          target: "/home/ubuntu/app"
+
+      - name: Create .env and Deploy on EC2
+        uses: appleboy/ssh-action@v1
+        env:
+          DB_USER: ${{ secrets.DEV_DB_USERNAME }}
+          DB_PASS: ${{ secrets.DEV_DB_PASSWORD }}
+        with:
+          host: ${{ secrets.DEV_EC2_HOST }}
+          username: ${{ secrets.DEV_EC2_USERNAME }}
+          key: ${{ secrets.DEV_EC2_SSH_KEY }}
+          envs: DB_USER,DB_PASS
+          script: |
+            cd /home/ubuntu/app
+            rm -f .env
+            echo "DEV_DB_USERNAME=$DB_USER" >> .env
+            echo "DEV_DB_PASSWORD=$DB_PASS" >> .env
+            docker compose up -d || { echo "Docker Compose 실패"; exit 1; }
+            chmod +x deploy.sh
+            ./deploy.sh

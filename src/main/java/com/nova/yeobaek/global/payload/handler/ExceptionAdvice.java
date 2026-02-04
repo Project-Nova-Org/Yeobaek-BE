@@ -43,7 +43,8 @@ public class ExceptionAdvice extends ResponseEntityExceptionHandler {
 		"uk_user_item", CommonErrorStatus.DUPLICATED_ITEM_USAGE,
 		"uk_device_token", CommonErrorStatus.DUPLICATED_DEVICE_TOKEN,
 		"uk_user_date", CommonErrorStatus.DUPLICATED_CALENDAR_CREATE,
-		"uk_oauth_provider_id", CommonErrorStatus.DUPLICATED_OAUTH_PROVIDER_ID
+		"uk_oauth_provider_id", CommonErrorStatus.DUPLICATED_OAUTH_PROVIDER_ID,
+		"uk_closet_user_name", CommonErrorStatus.DUPLICATED_CLOSET_USER_NAME
 	);
 
 	// 응답 통일 - String

@@ -291,29 +291,6 @@ public class OOTDService {
                 .filter(o -> o.getUser().getId().equals(user.getId()))
                 .orElseThrow(() -> new OOTDException(OOTDErrorStatus.OOTD_NOT_FOUND));
 
-        return OOTDResponseDTO.OOTDDetailResponse.builder()
-                .ootdId(ootd.getId())
-                .name(ootd.getName())
-                .memo(ootd.getMemo())
-                .favorite(ootd.isFavorite())
-                .imageBackground(ootd.getImageBackgroundColor().name())
-                .imageUrl(ootd.getImageUrl())
-                .tpoId(ootd.getTpo() != null ? ootd.getTpo().getId() : null)
-                .styleId(ootd.getStyle() != null ? ootd.getStyle().getId() : null)
-                .createdAt(ootd.getCreatedAt())
-                .items(
-                        ootd.getOotdItemList().stream()
-                                .map(oi -> OOTDResponseDTO.OOTDItemDetailResponse.builder()
-                                        .fashionItemId(oi.getItem().getId())
-                                        .posX(oi.getPosX())
-                                        .posY(oi.getPosY())
-                                        .scale(oi.getScale())
-                                        .rotation(oi.getRotation())
-                                        .zIndex(oi.getZIndex())
-                                        .build()
-                                )
-                                .toList()
-                )
-                .build();
+        return OOTDConverter.toOOTDDetailResponse(ootd);
     }
 }

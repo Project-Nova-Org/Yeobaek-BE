@@ -1,0 +1,27 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:postgresql://${DEV_DB_ENDPOINT:localhost}:5432/yeobaek
+    username: ${DEV_DB_USERNAME}
+    password: ${DEV_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  data:
+    redis:
+      host: ${DEV_REDIS_HOST:localhost}
+      port: ${DEV_REDIS_PORT:6379}
+logging:
+  level:
+    com.nova.yeobaek: info
+    org.hibernate.SQL: info
+jwt:
+  token:
+    secretKey: ${JWT_SECRET_KEY}
+    expiration:
+      access: ${JWT_ACCESS_EXPIRATION:1800000}   # 30분
+      refresh: ${JWT_REFRESH_EXPIRATION:604800000} # 7일
