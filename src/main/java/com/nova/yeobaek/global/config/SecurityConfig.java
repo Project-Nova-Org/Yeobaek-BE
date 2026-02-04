@@ -35,7 +35,8 @@ public class SecurityConfig {
             "/swagger-ui/**",
             "/v3/api-docs/**",
             "/api/auth/social/login",
-            "/api/auth/reissue"
+            "/api/auth/reissue",
+            "/docs"
     };
 
     @Profile({"local", "dev"})

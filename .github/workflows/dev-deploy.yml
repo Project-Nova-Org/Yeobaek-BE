@@ -42,16 +42,22 @@ jobs:
         env:
           DB_USER: ${{ secrets.DEV_DB_USERNAME }}
           DB_PASS: ${{ secrets.DEV_DB_PASSWORD }}
+          JWT_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_ACCESS_EXP: ${{ secrets.JWT_ACCESS_EXP }}
+          JWT_REFRESH_EXP: ${{ secrets.JWT_REFRESH_EXP }}
         with:
           host: ${{ secrets.DEV_EC2_HOST }}
           username: ${{ secrets.DEV_EC2_USERNAME }}
           key: ${{ secrets.DEV_EC2_SSH_KEY }}
-          envs: DB_USER,DB_PASS
+          envs: DB_USER,DB_PASS,JWT_KEY,JWT_ACCESS_EXP,JWT_REFRESH_EXP
           script: |
             cd /home/ubuntu/app
             rm -f .env
             echo "DEV_DB_USERNAME=$DB_USER" >> .env
             echo "DEV_DB_PASSWORD=$DB_PASS" >> .env
+            echo "JWT_SECRET_KEY=$JWT_KEY" >> .env
+            echo "JWT_ACCESS_EXP=$JWT_ACCESS_EXP" >> .env
+            echo "JWT_REFRESH_EXP=$JWT_REFRESH_EXP" >> .env
             docker compose up -d || { echo "Docker Compose 실패"; exit 1; }
             chmod +x deploy.sh
             ./deploy.sh
