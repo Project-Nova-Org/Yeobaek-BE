@@ -32,7 +32,7 @@ else
 
   for i in {1..15}; do
     sleep 1
-    PROCESS_CHECK=$(pgrep -f "$(basename "$JAR_NAME")" || true)
+    PROCESS_CHECK=$(pgrep -f "$JAR_NAME" || true)
     if [ -z "$PROCESS_CHECK" ]; then
       echo "> 애플리케이션이 정상적으로 종료되었습니다."
       break
@@ -40,7 +40,7 @@ else
   done
 fi
 
-REMAIN_PID=$(pgrep -f "$(basename "$JAR_NAME")" || true)
+REMAIN_PID=$(pgrep -f "$JAR_NAME" || true)
 
 if [ -n "$REMAIN_PID" ]; then
   echo "> 프로세스가 종료되지 않아 강제 종료합니다. (kill -9 $REMAIN_PID)"
@@ -68,7 +68,7 @@ echo "> 배포 상태 확인"
 sleep 10
 
 for i in {1..20}; do
-  RESPONSE_CODE=$(pgrep -f "$(basename "$JAR_NAME")" || true)
+  RESPONSE_CODE=$(pgrep -f "$JAR_NAME" || true)
 
   if [ -n "$RESPONSE_CODE" ]; then
     if grep -q "Started .* in .* seconds" "$LOG_PATH"; then
