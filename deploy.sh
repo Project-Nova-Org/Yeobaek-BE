@@ -51,6 +51,10 @@ echo "> 구버전 JAR 파일 정리"
 ls -d "$APP_DIR"/*.jar | grep -v "$JAR_NAME" | xargs rm -f
 
 echo "> 새 애플리케이션 배포: $JAR_NAME"
+
+echo "> DB 초기화를 위해 15초 대기"
+sleep 15
+
 chmod +x "$JAR_NAME"
 nohup java -Xmx1024m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 &
 
