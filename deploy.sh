@@ -5,7 +5,7 @@ LOG_PATH="$APP_DIR/app.log"
 
 echo "> 현재 시간: $(date)"
 
-JAR_NAME=$(ls -tr $APP_DIR/*.jar | tail -n 1)
+JAR_NAME=$(ls -tr "$APP_DIR"/*.jar | tail -n 1)
 
 if [ -z "$JAR_NAME" ]; then
   echo "> 오류: 배포할 JAR 파일을 찾을 수 없습니다."
@@ -48,11 +48,11 @@ if [ -n "$REMAIN_PID" ]; then
 fi
 
 echo "> 구버전 JAR 파일 정리"
-ls -d $APP_DIR/*.jar | grep -v "$JAR_NAME" | xargs rm -f
+ls -d "$APP_DIR"/*.jar | grep -v "$JAR_NAME" | xargs rm -f
 
 echo "> 새 애플리케이션 배포: $JAR_NAME"
-chmod +x $JAR_NAME
-nohup java -Xmx1024m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar $JAR_NAME > $LOG_PATH 2>&1 &
+chmod +x "$JAR_NAME"
+nohup java -Xmx1024m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 &
 
 echo "> 배포 상태 확인"
 sleep 5
