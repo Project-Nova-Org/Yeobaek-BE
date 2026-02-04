@@ -1,4 +1,5 @@
 #!/bin/bash
+sleep 15
 
 APP_DIR="/home/ubuntu/app"
 LOG_PATH="$APP_DIR/app.log"
