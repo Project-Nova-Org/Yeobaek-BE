@@ -9,10 +9,11 @@ services:
       POSTGRES_USER: ${DEV_DB_USERNAME}
       POSTGRES_PASSWORD: ${DEV_DB_PASSWORD}
       TZ: Asia/Seoul
+      PGDATA: /var/lib/postgresql
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
   redis:
     image: redis:alpine
     container_name: redis-dev
