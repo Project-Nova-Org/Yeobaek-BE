@@ -9,6 +9,7 @@ services:
       POSTGRES_USER: ${DEV_DB_USERNAME}
       POSTGRES_PASSWORD: ${DEV_DB_PASSWORD}
       TZ: Asia/Seoul
+      PGDATA: /var/lib/postgresql
     ports:
       - "5432:5432"
     volumes:
