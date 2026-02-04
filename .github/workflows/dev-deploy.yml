@@ -52,6 +52,6 @@ jobs:
             rm -f .env
             echo "DEV_DB_USERNAME=$DB_USER" >> .env
             echo "DEV_DB_PASSWORD=$DB_PASS" >> .env
-            docker compose up -d
+            docker compose up -d || { echo "Docker Compose 실패"; exit 1; }
             chmod +x deploy.sh
             ./deploy.sh
