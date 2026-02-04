@@ -36,7 +36,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         return uri.startsWith("/swagger")
                 || uri.startsWith("/v3/api-docs")
                 || uri.equals("/api/auth/social/login")
-                || uri.equals("/api/auth/reissue");
+                || uri.equals("/api/auth/reissue")
+                || uri.equals("/docs");
     }
 
     @Override
