@@ -14,7 +14,7 @@ spring:
   data:
     redis:
       host: ${PROD_REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+      port: ${PROD_REDIS_PORT:6379}
 logging:
   level:
     com.nova.yeobaek: info
