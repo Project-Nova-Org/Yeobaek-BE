@@ -76,7 +76,7 @@ for i in {1..20}; do
       exit 0
     fi
 
-    if grep -iq "Error" "$LOG_PATH" || grep -iq "Exception" "$LOG_PATH"; then
+    if grep -iq "Application run failed" "$LOG_PATH" || grep -iq "Failed to start" "$LOG_PATH"; then
       echo "> [ERROR] 로그에서 실행 에러가 발견되었습니다."
       tail -n 20 "$LOG_PATH"
       exit 1
