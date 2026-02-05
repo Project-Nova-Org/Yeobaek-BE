@@ -2,22 +2,25 @@ package com.nova.yeobaek.domain.closet.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.nova.yeobaek.domain.closet.controller.docs.ClosetControllerDocs;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
-import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
+import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.service.ClosetService;
-import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
+import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/closets")
@@ -43,11 +46,13 @@ public class ClosetController implements ClosetControllerDocs {
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@RequestParam(required = false) Long cursorId,
 			@RequestParam(required = false) Boolean cursorFavorite,
-			@RequestParam(defaultValue = "20") Integer size,
+			@Min(1) @RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(defaultValue = "LATEST") ClosetSortType sort
 	) {
 		User user = userDetails.getUser();
-		return CommonResponse.onSuccess(closetService.listByCursor(user, cursorId, cursorFavorite, size, sort));
+		return CommonResponse.onSuccess(
+				closetService.listByCursor(user, cursorId, cursorFavorite, size, sort)
+		);
 	}
 
 	@Override
@@ -68,7 +73,9 @@ public class ClosetController implements ClosetControllerDocs {
 			@Valid @RequestBody ClosetRequestDTO.FavoriteUpdate request
 	) {
 		User user = userDetails.getUser();
-		return CommonResponse.onSuccess(closetService.updateFavorite(user, closetId, request.favorite()));
+		return CommonResponse.onSuccess(
+				closetService.updateFavorite(user, closetId, request.favorite())
+		);
 	}
 
 	@Override
@@ -77,7 +84,7 @@ public class ClosetController implements ClosetControllerDocs {
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
 			@RequestParam(required = false) Long cursorId,
-			@RequestParam(defaultValue = "20") Integer size,
+			@Min(1) @RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(required = false) Long level1CategoryId,
 			@RequestParam(required = false) Long level2CategoryId
 	) {
