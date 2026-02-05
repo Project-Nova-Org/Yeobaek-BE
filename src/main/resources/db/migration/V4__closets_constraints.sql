@@ -11,7 +11,10 @@ ALTER TABLE closets
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'uk_closet_user_name'
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'uk_closet_user_name'
+          AND conrelid = 'closets'::regclass
     ) THEN
 ALTER TABLE closets
     ADD CONSTRAINT uk_closet_user_name UNIQUE (user_id, name);
