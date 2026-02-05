@@ -15,6 +15,7 @@ import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +47,7 @@ public class ClosetController implements ClosetControllerDocs {
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@RequestParam(required = false) Long cursorId,
 			@RequestParam(required = false) Boolean cursorFavorite,
-			@Min(1) @RequestParam(defaultValue = "20") Integer size,
+			@Min(1) @Max(100) @RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(defaultValue = "LATEST") ClosetSortType sort
 	) {
 		User user = userDetails.getUser();
@@ -84,7 +85,7 @@ public class ClosetController implements ClosetControllerDocs {
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
 			@RequestParam(required = false) Long cursorId,
-			@Min(1) @RequestParam(defaultValue = "20") Integer size,
+			@Min(1) @Max(100) @RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(required = false) Long level1CategoryId,
 			@RequestParam(required = false) Long level2CategoryId
 	) {
