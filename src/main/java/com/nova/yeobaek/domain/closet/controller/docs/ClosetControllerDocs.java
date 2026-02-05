@@ -1,11 +1,13 @@
 package com.nova.yeobaek.domain.closet.controller.docs;
 
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.nova.yeobaek.domain.closet.dto.request.ClosetItemQuery;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
-import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
+import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
@@ -15,6 +17,8 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import jakarta.validation.Valid;
 
 @Tag(name = "Closet", description = "옷장 API")
 public interface ClosetControllerDocs {
@@ -76,7 +80,10 @@ public interface ClosetControllerDocs {
                     )
             }
     )
-    CommonResponse<ClosetResponseDTO.Create> createCloset(CustomUserDetails userDetails, ClosetRequestDTO.Create request);
+    CommonResponse<ClosetResponseDTO.Create> createCloset(
+            CustomUserDetails userDetails,
+            ClosetRequestDTO.Create request
+    );
 
     @Operation(
             summary = "옷장 리스트 조회 API",
@@ -89,13 +96,14 @@ public interface ClosetControllerDocs {
     )
     CommonResponse<ClosetResponseDTO.CursorListResponse> getClosets(
             CustomUserDetails userDetails,
+
             @Parameter(description = "이전 페이지 마지막 closetId(없으면 첫 페이지)")
             @RequestParam(required = false) Long cursorId,
 
             @Parameter(description = "이전 페이지 마지막 favorite(복합정렬 시 필요)")
             @RequestParam(required = false) Boolean cursorFavorite,
 
-            @Parameter(description = "페이지 크기")
+            @Parameter(description = "페이지 크기 (1~100)")
             @RequestParam(defaultValue = "20") Integer size,
 
             @Parameter(description = "정렬 방식")
@@ -173,16 +181,8 @@ public interface ClosetControllerDocs {
             @Parameter(description = "옷장 ID")
             @PathVariable Long closetId,
 
-            @Parameter(description = "이전 페이지 마지막 closetItemId(없으면 첫 페이지)")
-            @RequestParam(required = false) Long cursorId,
-
-            @Parameter(description = "페이지 크기")
-            @RequestParam(defaultValue = "20") Integer size,
-
-            @Parameter(description = "카테고리 종류(대분류) ID")
-            @RequestParam(required = false) Long level1CategoryId,
-
-            @Parameter(description = "카테고리 세부분류(소분류) ID")
-            @RequestParam(required = false) Long level2CategoryId
+            @Valid
+            @Parameter(description = "커서/페이지/카테고리 필터 파라미터 묶음 (size: 1~100, 미전달 시 20)")
+            @ModelAttribute ClosetItemQuery query
     );
 }

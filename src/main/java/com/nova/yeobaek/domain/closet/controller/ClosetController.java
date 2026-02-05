@@ -6,12 +6,13 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.nova.yeobaek.domain.closet.controller.docs.ClosetControllerDocs;
+import com.nova.yeobaek.domain.closet.dto.request.ClosetItemQuery;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.service.ClosetService;
-import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.domain.user.domain.User;
+import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
@@ -84,20 +85,17 @@ public class ClosetController implements ClosetControllerDocs {
 	public CommonResponse<ClosetResponseDTO.ClosetItemCursorListResponse> getClosetItems(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
-			@RequestParam(required = false) Long cursorId,
-			@Min(1) @Max(100) @RequestParam(defaultValue = "20") Integer size,
-			@RequestParam(required = false) Long level1CategoryId,
-			@RequestParam(required = false) Long level2CategoryId
+			@Valid @ModelAttribute ClosetItemQuery query
 	) {
 		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
 				closetService.getClosetItemsByCursor(
 						user,
 						closetId,
-						cursorId,
-						size,
-						level1CategoryId,
-						level2CategoryId
+						query.cursorId(),
+						query.sizeOrDefault(),
+						query.level1CategoryId(),
+						query.level2CategoryId()
 				)
 		);
 	}
