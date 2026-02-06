@@ -34,7 +34,7 @@ jobs:
           host: ${{ secrets.DEV_EC2_HOST }}
           username: ${{ secrets.DEV_EC2_USERNAME }}
           key: ${{ secrets.DEV_EC2_SSH_KEY }}
-          source: "project-*.jar, docker-compose.yml, deploy.sh"
+          source: "project-*.jar, docker-compose-dev.yml, dev-deploy.sh"
           target: "/home/ubuntu/app"
 
       - name: Create .env and Deploy on EC2
@@ -58,6 +58,6 @@ jobs:
             echo "JWT_SECRET_KEY=$JWT_KEY" >> .env
             echo "JWT_ACCESS_EXP=$JWT_ACCESS_EXP" >> .env
             echo "JWT_REFRESH_EXP=$JWT_REFRESH_EXP" >> .env
-            docker compose up -d || { echo "Docker Compose 실패"; exit 1; }
-            chmod +x deploy.sh
-            ./deploy.sh
+            docker compose -f docker-compose-dev.yml up -d || { echo "Docker Compose 실패"; exit 1; }
+            chmod +x dev-deploy.sh
+            ./dev-deploy.sh

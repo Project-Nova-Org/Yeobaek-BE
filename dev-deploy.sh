@@ -1,5 +1,4 @@
 #!/bin/bash
-sleep 5
 
 APP_DIR="/home/ubuntu/app"
 LOG_PATH="$APP_DIR/app.log"
@@ -22,7 +21,8 @@ if [ -f "$APP_DIR/.env" ]; then
   set +a
 fi
 
-CURRENT_PID=$(pgrep -f "$(basename "$JAR_NAME")" || true)
+echo "> PID로 실행 중인 프로세스 확인"
+CURRENT_PID=$(pgrep -f "java -jar")
 
 if [ -z "$CURRENT_PID" ]; then
   echo "> 현재 구동 중인 애플리케이션이 없으므로 종료하지 않습니다."
@@ -32,7 +32,7 @@ else
 
   for i in {1..15}; do
     sleep 1
-    PROCESS_CHECK=$(pgrep -f "$JAR_NAME" || true)
+    PROCESS_CHECK=$(pgrep -f "java -jar")
     if [ -z "$PROCESS_CHECK" ]; then
       echo "> 애플리케이션이 정상적으로 종료되었습니다."
       break
@@ -40,13 +40,9 @@ else
   done
 fi
 
-REMAIN_PID=$(pgrep -f "$JAR_NAME" || true)
-
-if [ -n "$REMAIN_PID" ]; then
-  echo "> 프로세스가 종료되지 않아 강제 종료합니다. (kill -9 $REMAIN_PID)"
-  kill -9 $REMAIN_PID
-  sleep 1
-fi
+echo "> 포트(8080) 점유 프로세스 확인 및 강제 종료"
+fuser -k -n tcp 8080 || true
+sleep 1
 
 echo "> 구버전 JAR 파일 정리"
 ls -d "$APP_DIR"/*.jar | grep -v "$JAR_NAME" | xargs rm -f
@@ -65,10 +61,10 @@ chmod +x "$JAR_NAME"
 nohup java -Xmx1024m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 &
 
 echo "> 배포 상태 확인"
-sleep 10
+sleep 5
 
 for i in {1..20}; do
-  RESPONSE_CODE=$(pgrep -f "$JAR_NAME" || true)
+  RESPONSE_CODE=$(pgrep -f "java -jar")
 
   if [ -n "$RESPONSE_CODE" ]; then
     if grep -q "Started .* in .* seconds" "$LOG_PATH"; then
