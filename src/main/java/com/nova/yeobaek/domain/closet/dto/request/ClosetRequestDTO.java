@@ -2,6 +2,7 @@ package com.nova.yeobaek.domain.closet.dto.request;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -10,6 +11,7 @@ import jakarta.validation.constraints.Pattern;
 
 public class ClosetRequestDTO {
 
+    @Schema(name = "ClosetCreateRequest")
     public record Create(
             @NotBlank(message = "name은 필수입니다.")
             @Pattern(
@@ -22,26 +24,17 @@ public class ClosetRequestDTO {
 
             @Valid
             @NotEmpty(message = "items는 1개 이상 필수입니다.")
-            List<ItemPlacement> items
+            List<ItemIdOnly> items
     ) {}
 
-    public record ItemPlacement(
+    @Schema(name = "ClosetCreateItem")
+    public record ItemIdOnly(
             @NotNull(message = "itemId는 필수입니다.")
-            Long itemId,
+            Long itemId
+    ) {}
 
-            @NotNull(message = "posX는 필수입니다.")
-            Double posX,
-
-            @NotNull(message = "posY는 필수입니다.")
-            Double posY,
-
-            @NotNull(message = "scale은 필수입니다.")
-            Double scale,
-
-            @NotNull(message = "rotation은 필수입니다.")
-            Double rotation,
-
-            @NotNull(message = "zIndex는 필수입니다.")
-            Integer zIndex
+    public record FavoriteUpdate(
+            @NotNull(message = "favorite는 필수입니다.")
+            Boolean favorite
     ) {}
 }
