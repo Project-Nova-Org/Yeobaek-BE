@@ -54,6 +54,7 @@ if [ "$DB_STATUS" != "running" ]; then
     docker logs postgres-dev --tail 20
     exit 1
 fi
+sleep 10
 
 echo "> 새 애플리케이션 배포: $JAR_NAME"
 
@@ -61,7 +62,7 @@ chmod +x "$JAR_NAME"
 nohup java -Xmx512m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 &
 
 echo "> 배포 상태 확인"
-sleep 5
+sleep 10
 
 for i in {1..20}; do
   RESPONSE_CODE=$(pgrep -f "java -jar")
