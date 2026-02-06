@@ -59,12 +59,12 @@ sleep 10
 echo "> 새 애플리케이션 배포: $JAR_NAME"
 
 chmod +x "$JAR_NAME"
-nohup java -Xmx512m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 &
+nohup java -Xms256m -Xmx512m -XX:+UseSerialGC -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 & disown
 
 echo "> 배포 상태 확인"
-sleep 10
+sleep 5
 
-for i in {1..20}; do
+for i in {1..30}; do
   RESPONSE_CODE=$(pgrep -f "java -jar")
 
   if [ -n "$RESPONSE_CODE" ]; then
@@ -72,23 +72,20 @@ for i in {1..20}; do
       echo "> 배포 성공! (PID: $RESPONSE_CODE)"
       exit 0
     fi
+  fi
 
-    if grep -iq "Application run failed" "$LOG_PATH" || grep -iq "Failed to start" "$LOG_PATH"; then
-      echo "> [ERROR] 로그에서 실행 에러가 발견되었습니다."
-      tail -n 20 "$LOG_PATH"
-      exit 1
-    fi
-
-    echo "> 아직 실행 중... ($i/20)"
-    sleep 3
-  else
-    echo "> 오류: 프로세스가 중간에 사라졌습니다."
-    tail -n 30 "$LOG_PATH"
+  if grep -iq "Application run failed" "$LOG_PATH" || grep -iq "Failed to start" "$LOG_PATH"; then
+    echo "> [ERROR] 로그에서 실행 에러가 발견되었습니다."
+    tail -n 20 "$LOG_PATH"
     exit 1
   fi
 
-  if [ $i -eq 20 ]; then
-    echo "> 오류: 애플리케이션이 약 70초 내에 실행되지 않았습니다. 로그를 확인하세요."
+  echo "> 아직 실행 중... ($i/30)"
+  sleep 3
+
+  if [ $i -eq 30 ]; then
+    echo "> 오류: 애플리케이션이 지정된 시간 내에 실행되지 않았습니다. 로그를 확인하세요."
+    tail -n 30 "$LOG_PATH"
     exit 1
   fi
 done
