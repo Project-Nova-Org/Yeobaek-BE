@@ -45,6 +45,11 @@ public enum ClosetErrorStatus implements ErrorReason {
 			"CLOSET_4006",
 			"존재하지 않는 아이템이 포함되어 있습니다."
 	),
+	CLOSET_NOT_FOUND(
+			HttpStatus.NOT_FOUND,
+			"CLOSET_4041",
+			"옷장을 찾을 수 없습니다."
+	),
 
 	SERVER_ERROR(
 			HttpStatus.INTERNAL_SERVER_ERROR,

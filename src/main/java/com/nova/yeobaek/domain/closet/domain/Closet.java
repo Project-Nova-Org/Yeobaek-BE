@@ -68,5 +68,9 @@ public class Closet extends BaseEntity {
 	public void toggleFavorite() {
 		this.favorite = !this.favorite;
 	}
+	public void updateFavorite(boolean favorite) {
+		this.favorite = favorite;
+	}
+
 
 }
