@@ -58,7 +58,7 @@ fi
 echo "> 새 애플리케이션 배포: $JAR_NAME"
 
 chmod +x "$JAR_NAME"
-nohup java -Xmx1024m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 &
+nohup java -Xmx512m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 &
 
 echo "> 배포 상태 확인"
 sleep 5
