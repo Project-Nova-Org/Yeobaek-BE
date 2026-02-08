@@ -41,7 +41,7 @@ else
 fi
 
 echo "> 포트(8080) 점유 프로세스 확인 및 강제 종료"
-fuser -k -n tcp 8080 || true
+fuser -k -n tcp 8080 > /dev/null 2>&1 || true
 sleep 1
 
 echo "> 구버전 JAR 파일 정리"
@@ -55,41 +55,43 @@ if [ "$DB_STATUS" != "running" ]; then
     exit 1
 fi
 
-echo "> 새 애플리케이션 배포: $JAR_NAME"
-
-chmod +x "$JAR_NAME"
-nohup java -Xmx512m -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 &
-
-echo "> 배포 상태 확인"
+echo "> DB 연결 대기"
 sleep 5
 
-for i in {1..20}; do
-  RESPONSE_CODE=$(pgrep -f "java -jar")
+echo "> 새 애플리케이션 배포: $JAR_NAME"
+chmod +x "$JAR_NAME"
 
-  if [ -n "$RESPONSE_CODE" ]; then
+nohup java -Xms256m -Xmx512m -XX:+UseSerialGC -Dspring.profiles.active=dev -Duser.timezone=Asia/Seoul -jar "$JAR_NAME" > "$LOG_PATH" 2>&1 & disown
+
+echo "> 배포 상태 확인"
+sleep 3
+
+for i in {1..30}; do
+  APP_PID=$(pgrep -f "java -jar")
+
+  if [ -n "$APP_PID" ]; then
     if grep -q "Started .* in .* seconds" "$LOG_PATH"; then
-      echo "> 배포 성공! (PID: $RESPONSE_CODE)"
+      echo "> 배포 성공! (PID: $APP_PID)"
       exit 0
     fi
-
-    if grep -iq "Application run failed" "$LOG_PATH" || grep -iq "Failed to start" "$LOG_PATH"; then
-      echo "> [ERROR] 로그에서 실행 에러가 발견되었습니다."
-      tail -n 20 "$LOG_PATH"
-      exit 1
-    fi
-
-    echo "> 아직 실행 중... ($i/20)"
-    sleep 3
   else
-    echo "> 오류: 프로세스가 중간에 사라졌습니다."
-    tail -n 30 "$LOG_PATH"
+    echo "> [ERROR] 애플리케이션 프로세스가 비정상 종료되었습니다."
+    tail -n 20 "$LOG_PATH"
     exit 1
   fi
 
-  if [ $i -eq 20 ]; then
-    echo "> 오류: 애플리케이션이 약 70초 내에 실행되지 않았습니다. 로그를 확인하세요."
+  if grep -iq "Application run failed" "$LOG_PATH" || grep -iq "Failed to start" "$LOG_PATH"; then
+    echo "> [ERROR] 로그에서 실행 에러가 발견되었습니다."
+    tail -n 20 "$LOG_PATH"
     exit 1
   fi
+
+  echo "> 아직 실행 중... ($i/30)"
+  sleep 3
 done
+
+echo "> [ERROR] 애플리케이션이 지정된 시간 내에 실행되지 않았습니다."
+tail -n 30 "$LOG_PATH"
+exit 1
 
 echo "> 로그를 확인하려면: tail -f $LOG_PATH"
