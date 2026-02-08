@@ -3,7 +3,10 @@ package com.nova.yeobaek.domain.closet.controller.docs;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 
+import com.nova.yeobaek.domain.closet.dto.request.ClosetEditRequestDTO;
+import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetItemQuery;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
@@ -150,7 +153,7 @@ public interface ClosetControllerDocs {
     CommonResponse<ClosetResponseDTO.FavoriteUpdate> updateFavorite(
             CustomUserDetails userDetails,
             @PathVariable Long closetId,
-            ClosetRequestDTO.FavoriteUpdate request
+            @Valid @RequestBody ClosetRequestDTO.FavoriteUpdate request
     );
 
     @Operation(
@@ -184,5 +187,53 @@ public interface ClosetControllerDocs {
             @Valid
             @Parameter(description = "커서/페이지/카테고리 필터 파라미터 묶음 (size: 1~100, 미전달 시 20)")
             @ModelAttribute ClosetItemQuery query
+    );
+
+    @Operation(
+            summary = "옷장 수정 진입 정보 조회 API",
+            description = "옷장 수정(이름/썸네일 설정 화면) 진입에 필요한 옷장 정보와 선택된 아이템 ID 목록을 조회합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "조회 성공"),
+                    @ApiResponse(responseCode = "401", description = "인증 필요"),
+                    @ApiResponse(responseCode = "404", description = "옷장 없음(또는 접근 불가)"),
+                    @ApiResponse(responseCode = "500", description = "서버 오류")
+            }
+    )
+    CommonResponse<ClosetEditResponseDTO.EditInfo> getClosetEditInfo(
+            CustomUserDetails userDetails,
+            @PathVariable Long closetId
+    );
+
+    @Operation(
+            summary = "옷장 수정용 아이템 선택 목록 조회 API",
+            description = "아이템 선택 화면에서 사용할 전체 아이템 목록을 커서 기반으로 조회합니다. 옷장에 포함된 아이템은 selectedStatus=true 입니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "조회 성공"),
+                    @ApiResponse(responseCode = "401", description = "인증 필요"),
+                    @ApiResponse(responseCode = "404", description = "옷장 없음(또는 접근 불가)"),
+                    @ApiResponse(responseCode = "500", description = "서버 오류")
+            }
+    )
+    CommonResponse<ClosetEditResponseDTO.EditableItemCursorList> getEditableItems(
+            CustomUserDetails userDetails,
+            @PathVariable Long closetId,
+            @Valid @ModelAttribute ClosetItemQuery query
+    );
+
+    @Operation(
+            summary = "옷장 수정 저장 API",
+            description = "옷장 이름/썸네일을 수정하고, 요청 itemIds 기준으로 옷장 아이템을 동기화(추가/제거)합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "수정 성공"),
+                    @ApiResponse(responseCode = "400", description = "요청 값 오류(중복 아이템/존재하지 않는 아이템 등)"),
+                    @ApiResponse(responseCode = "401", description = "인증 필요"),
+                    @ApiResponse(responseCode = "404", description = "옷장 없음(또는 접근 불가)"),
+                    @ApiResponse(responseCode = "500", description = "서버 오류")
+            }
+    )
+    CommonResponse<ClosetEditResponseDTO.UpdateResult> updateCloset(
+            CustomUserDetails userDetails,
+            @PathVariable Long closetId,
+            @Valid @RequestBody ClosetEditRequestDTO.Update request
     );
 }

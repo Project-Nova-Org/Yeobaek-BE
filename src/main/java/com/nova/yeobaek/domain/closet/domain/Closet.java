@@ -72,5 +72,11 @@ public class Closet extends BaseEntity {
 		this.favorite = favorite;
 	}
 
+	public void updateInfo(String name, String imageUrl) {
+		this.name = name;
+		this.imageUrl = imageUrl;
+	}
+
+
 
 }

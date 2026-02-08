@@ -22,6 +22,14 @@ import com.nova.yeobaek.domain.closet.status.ClosetErrorStatus;
 import com.nova.yeobaek.domain.item.repository.ItemRepository;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.global.payload.exception.GeneralException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import com.nova.yeobaek.domain.closet.dto.request.ClosetEditRequestDTO;
+import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
+import com.nova.yeobaek.domain.item.domain.Item;
 
 import lombok.RequiredArgsConstructor;
 
@@ -193,6 +201,136 @@ public class ClosetService {
         );
     }
 
+    @Transactional(readOnly = true)
+    public ClosetEditResponseDTO.EditInfo getClosetEditInfo(User user, Long closetId) {
+        Closet closet = closetRepository.findByIdAndUser(closetId, user)
+                .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
+
+        List<Long> selectedItemIds = closetItemRepository.findItemIdsByClosetId(closetId);
+
+        return new ClosetEditResponseDTO.EditInfo(
+                closet.getId(),
+                closet.getName(),
+                closet.getImageUrl(),
+                selectedItemIds
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ClosetEditResponseDTO.EditableItemCursorList getEditableItemsByCursor(
+            User user,
+            Long closetId,
+            Long cursorId,
+            int size,
+            Long level1CategoryId,
+            Long level2CategoryId
+    ) {
+        Closet closet = closetRepository.findByIdAndUser(closetId, user)
+                .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
+
+        List<Long> selectedItemIds = closetItemRepository.findItemIdsByClosetId(closet.getId());
+        Set<Long> selectedSet = new HashSet<>(selectedItemIds);
+
+        List<Item> all = itemRepository.findAllByUser_Id(user.getId());
+        Stream<Item> stream = all.stream();
+
+        if (cursorId != null) {
+            stream = stream.filter(i -> i.getId() != null && i.getId() < cursorId);
+        }
+
+        if (level2CategoryId != null) {
+            stream = stream.filter(i ->
+                    i.getCategory() != null && Objects.equals(i.getCategory().getId(), level2CategoryId)
+            );
+        } else if (level1CategoryId != null) {
+            stream = stream.filter(i ->
+                    i.getCategory() != null
+                            && i.getCategory().getParent() != null
+                            && Objects.equals(i.getCategory().getParent().getId(), level1CategoryId)
+            );
+        }
+
+        List<Item> sorted = stream
+                .sorted(Comparator.comparing(Item::getId).reversed())
+                .toList();
+
+        int limit = size + 1;
+        boolean hasNext = sorted.size() > size;
+
+        List<Item> sliced = sorted.stream()
+                .limit(limit)
+                .toList();
+
+        if (hasNext) {
+            sliced = sliced.subList(0, size);
+        }
+
+        List<ClosetEditResponseDTO.EditableItem> items = sliced.stream()
+                .map(i -> new ClosetEditResponseDTO.EditableItem(
+                        i.getId(),
+                        i.getImageUrl(),
+                        i.getCategory() == null ? null : i.getCategory().getId(),
+                        selectedSet.contains(i.getId())
+                ))
+                .toList();
+
+        Long nextCursorId = sliced.isEmpty() ? null : sliced.get(sliced.size() - 1).getId();
+
+        return new ClosetEditResponseDTO.EditableItemCursorList(items, nextCursorId, hasNext);
+    }
+
+    public Long updateCloset(User user, Long closetId, ClosetEditRequestDTO.Update request) {
+        Closet closet = closetRepository.findByIdAndUser(closetId, user)
+                .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
+
+        validateUpdateName(user, closet, request.name());
+        validateUpdateItems(user, request.itemIds());
+
+        closet.updateInfo(request.name(), request.imageUrl());
+
+        List<Long> existingItemIds = closetItemRepository.findItemIdsByClosetId(closetId);
+        Set<Long> existingSet = new HashSet<>(existingItemIds);
+
+        Set<Long> requestedSet = new HashSet<>(request.itemIds());
+
+        List<Long> removeItemIds = existingSet.stream()
+                .filter(id -> !requestedSet.contains(id))
+                .toList();
+
+        List<Long> addItemIds = requestedSet.stream()
+                .filter(id -> !existingSet.contains(id))
+                .toList();
+
+        if (!removeItemIds.isEmpty()) {
+            closetItemRepository.deleteByCloset_IdAndItem_IdIn(closetId, removeItemIds);
+        }
+
+        if (!addItemIds.isEmpty()) {
+            List<ClosetItem> toAdd = new ArrayList<>();
+
+            addItemIds.forEach(itemId -> toAdd.add(
+                    ClosetItem.builder()
+                            .closet(closet)
+                            .item(itemRepository.getReferenceById(itemId))
+                            .build()
+            ));
+
+            try {
+                closetItemRepository.saveAll(toAdd);
+            } catch (DataIntegrityViolationException e) {
+                throw new GeneralException(ClosetErrorStatus.DUPLICATED_ITEM_ID);
+            }
+        }
+
+        try {
+            closetRepository.save(closet);
+        } catch (DataIntegrityViolationException e) {
+            throw new GeneralException(ClosetErrorStatus.DUPLICATED_NAME);
+        }
+
+        return closet.getId();
+    }
+
     private void validateCreateRequest(User user, ClosetRequestDTO.Create request) {
         validateDuplicatedName(user, request.name());
         validateItemsExistAndNoDuplication(request);
@@ -215,6 +353,26 @@ public class ClosetService {
             }
 
             if (!itemRepository.existsById(itemId)) {
+                throw new GeneralException(ClosetErrorStatus.ITEM_NOT_FOUND);
+            }
+        });
+    }
+
+    private void validateUpdateName(User user, Closet closet, String name) {
+        if (!closet.getName().equals(name) && closetRepository.existsByUserAndName(user, name)) {
+            throw new GeneralException(ClosetErrorStatus.DUPLICATED_NAME);
+        }
+    }
+
+    private void validateUpdateItems(User user, List<Long> itemIds) {
+        Set<Long> set = new HashSet<>();
+
+        itemIds.forEach(id -> {
+            if (!set.add(id)) {
+                throw new GeneralException(ClosetErrorStatus.DUPLICATED_ITEM_ID);
+            }
+
+            if (itemRepository.findByIdAndUser(id, user).isEmpty()) {
                 throw new GeneralException(ClosetErrorStatus.ITEM_NOT_FOUND);
             }
         });

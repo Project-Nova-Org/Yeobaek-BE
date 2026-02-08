@@ -64,4 +64,13 @@ public interface ClosetItemRepository extends JpaRepository<ClosetItem, Long>, C
             Pageable pageable
     );
 
+    @Query("select ci.item.id from ClosetItem ci where ci.closet.id = :closetId")
+    List<Long> findItemIdsByClosetId(@Param("closetId") Long closetId);
+
+    void deleteByCloset_IdAndItem_IdIn(Long closetId, List<Long> itemIds);
+
+
+
+
+
 }
