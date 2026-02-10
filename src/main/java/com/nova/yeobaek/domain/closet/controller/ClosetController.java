@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.validation.annotation.Validated;
+
 import com.nova.yeobaek.domain.closet.dto.request.ClosetEditRequestDTO;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
 
@@ -22,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/closets")

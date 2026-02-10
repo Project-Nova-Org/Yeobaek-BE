@@ -55,7 +55,14 @@ public enum ClosetErrorStatus implements ErrorReason {
 			HttpStatus.INTERNAL_SERVER_ERROR,
 			"CLOSET_5001",
 			"서버 오류 발생."
+	),
+
+	INVALID_SIZE(
+			HttpStatus.BAD_REQUEST,
+        "CLOSET_4007",
+				"size는 1~100 범위여야 합니다."
 	);
+
 
 
 

@@ -22,6 +22,9 @@ import com.nova.yeobaek.domain.closet.status.ClosetErrorStatus;
 import com.nova.yeobaek.domain.item.repository.ItemRepository;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.global.payload.exception.GeneralException;
+import com.nova.yeobaek.domain.closet.repository.ClosetEditItemQueryRepository;
+import com.nova.yeobaek.domain.closet.repository.ClosetEditItemView;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
@@ -67,9 +70,12 @@ public class ClosetService {
             User user,
             Long cursorId,
             Boolean cursorFavorite,
-            int size,
+            Integer size,
             ClosetSortType sort
     ) {
+        if (size == null) size = 20;
+        if (size < 1 || size > 100) throw new GeneralException(ClosetErrorStatus.INVALID_SIZE);
+        int s = normalizeSize(size);
         int limit = size + 1;
         Pageable pageable = PageRequest.of(0, limit);
 
@@ -157,10 +163,11 @@ public class ClosetService {
             Long level1CategoryId,
             Long level2CategoryId
     ) {
-        // ✅ 여기서 closet 엔티티를 가져와서, 응답에 옷장 정보 포함
+
         Closet closet = closetRepository.findByIdAndUser(closetId, user)
                 .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
 
+        int s = normalizeSize(size);
         int limit = size + 1;
         Pageable pageable = PageRequest.of(0, limit);
 
@@ -228,57 +235,38 @@ public class ClosetService {
         Closet closet = closetRepository.findByIdAndUser(closetId, user)
                 .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
 
-        List<Long> selectedItemIds = closetItemRepository.findItemIdsByClosetId(closet.getId());
-        Set<Long> selectedSet = new HashSet<>(selectedItemIds);
-
-        List<Item> all = itemRepository.findAllByUser_Id(user.getId());
-        Stream<Item> stream = all.stream();
-
-        if (cursorId != null) {
-            stream = stream.filter(i -> i.getId() != null && i.getId() < cursorId);
-        }
-
-        if (level2CategoryId != null) {
-            stream = stream.filter(i ->
-                    i.getCategory() != null && Objects.equals(i.getCategory().getId(), level2CategoryId)
-            );
-        } else if (level1CategoryId != null) {
-            stream = stream.filter(i ->
-                    i.getCategory() != null
-                            && i.getCategory().getParent() != null
-                            && Objects.equals(i.getCategory().getParent().getId(), level1CategoryId)
-            );
-        }
-
-        List<Item> sorted = stream
-                .sorted(Comparator.comparing(Item::getId).reversed())
-                .toList();
-
+        int s = normalizeSize(size);
         int limit = size + 1;
-        boolean hasNext = sorted.size() > size;
 
-        List<Item> sliced = sorted.stream()
-                .limit(limit)
-                .toList();
+        List<ClosetEditItemView> rows = closetEditItemQueryRepository.findEditableItemsForClosetEdit(
+                user.getId(),
+                closet.getId(),
+                cursorId,
+                level1CategoryId,
+                level2CategoryId,
+                limit
+        );
 
+        boolean hasNext = rows.size() > size;
         if (hasNext) {
-            sliced = sliced.subList(0, size);
+            rows = rows.subList(0, size);
         }
 
-        List<ClosetEditResponseDTO.EditableItem> items = sliced.stream()
-                .map(i -> new ClosetEditResponseDTO.EditableItem(
-                        i.getId(),
-                        i.getImageUrl(),
-                        i.getCategory() == null ? null : i.getCategory().getId(),
-                        selectedSet.contains(i.getId())
+        List<ClosetEditResponseDTO.EditableItem> items = rows.stream()
+                .map(r -> new ClosetEditResponseDTO.EditableItem(
+                        r.getId(),
+                        r.getImageUrl(),
+                        r.getCategoryId(),
+                        Boolean.TRUE.equals(r.getSelectedStatus())
                 ))
                 .toList();
 
-        Long nextCursorId = sliced.isEmpty() ? null : sliced.get(sliced.size() - 1).getId();
+        Long nextCursorId = rows.isEmpty() ? null : rows.get(rows.size() - 1).getId();
 
         return new ClosetEditResponseDTO.EditableItemCursorList(items, nextCursorId, hasNext);
     }
 
+    @Transactional
     public Long updateCloset(User user, Long closetId, ClosetEditRequestDTO.Update request) {
         Closet closet = closetRepository.findByIdAndUser(closetId, user)
                 .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
@@ -323,12 +311,21 @@ public class ClosetService {
         }
 
         try {
-            closetRepository.save(closet);
+            closetRepository.flush(); // dirty checking 반영 + 제약 위반 즉시 감지
         } catch (DataIntegrityViolationException e) {
             throw new GeneralException(ClosetErrorStatus.DUPLICATED_NAME);
         }
 
         return closet.getId();
+    }
+    private int normalizeSize(Integer size) {
+        int s = (size == null) ? 20 : size;
+        if (s < 1 || s > 100) {
+            // 프로젝트에 맞는 에러로 바꿔줘
+            throw new GeneralException(ClosetErrorStatus.INVALID_SIZE);
+            // INVALID_SIZE가 없으면, 보유 중인 공용 INVALID_REQUEST/INVALID_PARAMETER 같은 걸로 매핑
+        }
+        return s;
     }
 
     private void validateCreateRequest(User user, ClosetRequestDTO.Create request) {
@@ -388,6 +385,7 @@ public class ClosetService {
         }
     }
 
+
     private void saveClosetItems(Closet saved, ClosetRequestDTO.Create request) {
         List<ClosetItem> closetItems = request.items().stream()
                 .map(p -> ClosetItem.builder()
@@ -399,6 +397,9 @@ public class ClosetService {
 
         closetItemRepository.saveAll(closetItems);
     }
+
+    private final ClosetEditItemQueryRepository closetEditItemQueryRepository;
+
 
     private boolean resolveCursorFavorite(User user, Long cursorId) {
         Closet cursorCloset = closetRepository.findByIdAndUser(cursorId, user)

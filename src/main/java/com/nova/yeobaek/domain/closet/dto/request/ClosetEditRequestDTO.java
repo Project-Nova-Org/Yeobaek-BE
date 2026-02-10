@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Size;
+
 
 public class ClosetEditRequestDTO {
 
@@ -22,6 +24,7 @@ public class ClosetEditRequestDTO {
             String imageUrl,
 
             @NotNull(message = "itemIds는 필수입니다.")
+            @Size(min = 1, message = "itemIds는 1개 이상 필수입니다.")
             List<Long> itemIds
     ) {
     }
