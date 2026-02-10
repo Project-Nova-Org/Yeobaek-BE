@@ -22,6 +22,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 @Tag(name = "Closet", description = "옷장 API")
 public interface ClosetControllerDocs {
@@ -107,7 +109,7 @@ public interface ClosetControllerDocs {
             @RequestParam(required = false) Boolean cursorFavorite,
 
             @Parameter(description = "페이지 크기 (1~100)")
-            @RequestParam(defaultValue = "20") Integer size,
+            @Min(1) @Max(100) @RequestParam(defaultValue = "20") Integer size,
 
             @Parameter(description = "정렬 방식")
             @RequestParam(defaultValue = "LATEST") ClosetSortType sort
