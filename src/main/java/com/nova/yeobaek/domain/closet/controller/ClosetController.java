@@ -19,9 +19,6 @@ import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +36,7 @@ public class ClosetController implements ClosetControllerDocs {
 	@ResponseStatus(HttpStatus.CREATED)
 	public CommonResponse<ClosetResponseDTO.Create> createCloset(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
-			@Valid @RequestBody ClosetRequestDTO.Create request
+			@RequestBody ClosetRequestDTO.Create request
 	) {
 		User user = userDetails.getUser();
 		Long closetId = closetService.create(user, request);
@@ -52,7 +49,7 @@ public class ClosetController implements ClosetControllerDocs {
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@RequestParam(required = false) Long cursorId,
 			@RequestParam(required = false) Boolean cursorFavorite,
-			@Min(1) @Max(100) @RequestParam(defaultValue = "20") Integer size,
+			@RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(defaultValue = "LATEST") ClosetSortType sort
 	) {
 		User user = userDetails.getUser();
@@ -76,7 +73,7 @@ public class ClosetController implements ClosetControllerDocs {
 	public CommonResponse<ClosetResponseDTO.FavoriteUpdate> updateFavorite(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
-			@Valid @RequestBody ClosetRequestDTO.FavoriteUpdate request
+			@RequestBody ClosetRequestDTO.FavoriteUpdate request
 	) {
 		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
@@ -89,7 +86,7 @@ public class ClosetController implements ClosetControllerDocs {
 	public CommonResponse<ClosetResponseDTO.ClosetItemCursorListResponse> getClosetItems(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
-			@Valid @ModelAttribute ClosetItemQuery query
+			@ModelAttribute ClosetItemQuery query
 	) {
 		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
@@ -119,7 +116,7 @@ public class ClosetController implements ClosetControllerDocs {
 	public CommonResponse<ClosetEditResponseDTO.EditableItemCursorList> getEditableItems(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
-			@Valid @ModelAttribute ClosetItemQuery query
+			@ModelAttribute ClosetItemQuery query
 	) {
 		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
@@ -139,7 +136,7 @@ public class ClosetController implements ClosetControllerDocs {
 	public CommonResponse<ClosetEditResponseDTO.UpdateResult> updateCloset(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
-			@Valid @RequestBody ClosetEditRequestDTO.Update request
+			@RequestBody ClosetEditRequestDTO.Update request
 	) {
 		User user = userDetails.getUser();
 		Long updatedClosetId = closetService.updateCloset(user, closetId, request);

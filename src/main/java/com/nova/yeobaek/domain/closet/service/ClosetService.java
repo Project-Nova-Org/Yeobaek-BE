@@ -300,6 +300,7 @@ public class ClosetService {
 
             try {
                 closetItemRepository.saveAll(toAdd);
+                closetItemRepository.flush();
             } catch (DataIntegrityViolationException e) {
                 throw new GeneralException(ClosetErrorStatus.DUPLICATED_ITEM_ID);
             }
@@ -310,6 +311,7 @@ public class ClosetService {
         } catch (DataIntegrityViolationException e) {
             throw new GeneralException(ClosetErrorStatus.DUPLICATED_NAME);
         }
+
 
         return closet.getId();
     }

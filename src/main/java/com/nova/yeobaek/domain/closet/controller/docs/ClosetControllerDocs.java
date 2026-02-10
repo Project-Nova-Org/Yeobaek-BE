@@ -87,7 +87,7 @@ public interface ClosetControllerDocs {
     )
     CommonResponse<ClosetResponseDTO.Create> createCloset(
             CustomUserDetails userDetails,
-            ClosetRequestDTO.Create request
+            @Valid @RequestBody ClosetRequestDTO.Create request
     );
 
     @Operation(
