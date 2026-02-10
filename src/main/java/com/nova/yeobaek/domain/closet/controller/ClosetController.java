@@ -4,14 +4,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.validation.annotation.Validated;
-
-import com.nova.yeobaek.domain.closet.dto.request.ClosetEditRequestDTO;
-import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
-
 import com.nova.yeobaek.domain.closet.controller.docs.ClosetControllerDocs;
+import com.nova.yeobaek.domain.closet.dto.request.ClosetEditRequestDTO;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetItemQuery;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
+import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.service.ClosetService;
@@ -19,11 +16,11 @@ import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/closets")
@@ -36,7 +33,7 @@ public class ClosetController implements ClosetControllerDocs {
 	@ResponseStatus(HttpStatus.CREATED)
 	public CommonResponse<ClosetResponseDTO.Create> createCloset(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
-			@RequestBody ClosetRequestDTO.Create request
+			@Valid @RequestBody ClosetRequestDTO.Create request
 	) {
 		User user = userDetails.getUser();
 		Long closetId = closetService.create(user, request);
@@ -52,6 +49,10 @@ public class ClosetController implements ClosetControllerDocs {
 			@RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(defaultValue = "LATEST") ClosetSortType sort
 	) {
+		if (size == null || size < 1 || size > 100) {
+			throw new IllegalArgumentException("size must be between 1 and 100");
+		}
+
 		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
 				closetService.listByCursor(user, cursorId, cursorFavorite, size, sort)
@@ -73,7 +74,7 @@ public class ClosetController implements ClosetControllerDocs {
 	public CommonResponse<ClosetResponseDTO.FavoriteUpdate> updateFavorite(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
-			@RequestBody ClosetRequestDTO.FavoriteUpdate request
+			@Valid @RequestBody ClosetRequestDTO.FavoriteUpdate request
 	) {
 		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
@@ -86,7 +87,7 @@ public class ClosetController implements ClosetControllerDocs {
 	public CommonResponse<ClosetResponseDTO.ClosetItemCursorListResponse> getClosetItems(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
-			@ModelAttribute ClosetItemQuery query
+			@Valid @ModelAttribute ClosetItemQuery query
 	) {
 		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
@@ -116,7 +117,7 @@ public class ClosetController implements ClosetControllerDocs {
 	public CommonResponse<ClosetEditResponseDTO.EditableItemCursorList> getEditableItems(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
-			@ModelAttribute ClosetItemQuery query
+			@Valid @ModelAttribute ClosetItemQuery query
 	) {
 		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
@@ -136,7 +137,7 @@ public class ClosetController implements ClosetControllerDocs {
 	public CommonResponse<ClosetEditResponseDTO.UpdateResult> updateCloset(
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@PathVariable Long closetId,
-			@RequestBody ClosetEditRequestDTO.Update request
+			@Valid @RequestBody ClosetEditRequestDTO.Update request
 	) {
 		User user = userDetails.getUser();
 		Long updatedClosetId = closetService.updateCloset(user, closetId, request);

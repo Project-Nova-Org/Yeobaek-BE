@@ -2,13 +2,13 @@ package com.nova.yeobaek.domain.closet.controller.docs;
 
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.nova.yeobaek.domain.closet.dto.request.ClosetEditRequestDTO;
-import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetItemQuery;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
+import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.global.auth.security.CustomUserDetails;
@@ -20,10 +20,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 
 @Tag(name = "Closet", description = "옷장 API")
 public interface ClosetControllerDocs {
@@ -87,7 +83,7 @@ public interface ClosetControllerDocs {
     )
     CommonResponse<ClosetResponseDTO.Create> createCloset(
             CustomUserDetails userDetails,
-            @Valid @RequestBody ClosetRequestDTO.Create request
+            @RequestBody ClosetRequestDTO.Create request
     );
 
     @Operation(
@@ -109,7 +105,7 @@ public interface ClosetControllerDocs {
             @RequestParam(required = false) Boolean cursorFavorite,
 
             @Parameter(description = "페이지 크기 (1~100)")
-            @Min(1) @Max(100) @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(defaultValue = "20") Integer size,
 
             @Parameter(description = "정렬 방식")
             @RequestParam(defaultValue = "LATEST") ClosetSortType sort
@@ -155,7 +151,7 @@ public interface ClosetControllerDocs {
     CommonResponse<ClosetResponseDTO.FavoriteUpdate> updateFavorite(
             CustomUserDetails userDetails,
             @PathVariable Long closetId,
-            @Valid @RequestBody ClosetRequestDTO.FavoriteUpdate request
+            @RequestBody ClosetRequestDTO.FavoriteUpdate request
     );
 
     @Operation(
@@ -182,11 +178,7 @@ public interface ClosetControllerDocs {
     )
     CommonResponse<ClosetResponseDTO.ClosetItemCursorListResponse> getClosetItems(
             CustomUserDetails userDetails,
-
-            @Parameter(description = "옷장 ID")
-            @PathVariable Long closetId,
-
-            @Valid
+            @Parameter(description = "옷장 ID") @PathVariable Long closetId,
             @Parameter(description = "커서/페이지/카테고리 필터 파라미터 묶음 (size: 1~100, 미전달 시 20)")
             @ModelAttribute ClosetItemQuery query
     );
@@ -219,7 +211,7 @@ public interface ClosetControllerDocs {
     CommonResponse<ClosetEditResponseDTO.EditableItemCursorList> getEditableItems(
             CustomUserDetails userDetails,
             @PathVariable Long closetId,
-            @Valid @ModelAttribute ClosetItemQuery query
+            @ModelAttribute ClosetItemQuery query
     );
 
     @Operation(
@@ -236,6 +228,6 @@ public interface ClosetControllerDocs {
     CommonResponse<ClosetEditResponseDTO.UpdateResult> updateCloset(
             CustomUserDetails userDetails,
             @PathVariable Long closetId,
-            @Valid @RequestBody ClosetEditRequestDTO.Update request
+            @RequestBody ClosetEditRequestDTO.Update request
     );
 }
