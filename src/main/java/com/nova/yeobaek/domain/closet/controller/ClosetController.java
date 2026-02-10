@@ -1,5 +1,7 @@
 package com.nova.yeobaek.domain.closet.controller;
 
+import com.nova.yeobaek.domain.closet.status.ClosetErrorStatus;
+import com.nova.yeobaek.global.payload.exception.GeneralException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -49,8 +51,8 @@ public class ClosetController implements ClosetControllerDocs {
 			@RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(defaultValue = "LATEST") ClosetSortType sort
 	) {
-		if (size == null || size < 1 || size > 100) {
-			throw new IllegalArgumentException("size must be between 1 and 100");
+		if (size < 1 || size > 100) {
+			throw new GeneralException(ClosetErrorStatus.INVALID_SIZE);
 		}
 
 		User user = userDetails.getUser();
