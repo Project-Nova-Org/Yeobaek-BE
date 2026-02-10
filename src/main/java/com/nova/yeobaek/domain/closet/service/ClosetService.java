@@ -29,6 +29,7 @@ import java.util.ArrayList;
 
 import com.nova.yeobaek.domain.closet.dto.request.ClosetEditRequestDTO;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
+import com.nova.yeobaek.domain.item.domain.Item;
 
 import lombok.RequiredArgsConstructor;
 
@@ -231,7 +232,6 @@ public class ClosetService {
 
         int s = normalizeSize(size);
         int limit = s + 1;
-        PageRequest pageable = PageRequest.of(0, limit);
 
         List<ClosetEditItemView> rows = closetEditItemQueryRepository.findEditableItemsForClosetEdit(
                 user.getId(),
@@ -362,11 +362,20 @@ public class ClosetService {
             if (!set.add(id)) {
                 throw new GeneralException(ClosetErrorStatus.DUPLICATED_ITEM_ID);
             }
-
-            if (itemRepository.findByIdAndUser(id, user).isEmpty()) {
-                throw new GeneralException(ClosetErrorStatus.ITEM_NOT_FOUND);
-            }
         });
+
+        List<Item> items = itemRepository.findAllById(itemIds);
+
+        if (items.size() != itemIds.size()) {
+            throw new GeneralException(ClosetErrorStatus.ITEM_NOT_FOUND);
+        }
+
+        boolean allOwnedByUser = items.stream()
+                .allMatch(i -> i.getUser() != null && i.getUser().getId().equals(user.getId()));
+
+        if (!allOwnedByUser) {
+            throw new GeneralException(ClosetErrorStatus.ITEM_NOT_FOUND);
+        }
     }
 
     private Closet saveCloset(User user, ClosetRequestDTO.Create request) {

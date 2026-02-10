@@ -20,11 +20,13 @@ import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/closets")
@@ -50,7 +52,7 @@ public class ClosetController implements ClosetControllerDocs {
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@RequestParam(required = false) Long cursorId,
 			@RequestParam(required = false) Boolean cursorFavorite,
-			@RequestParam(defaultValue = "20") Integer size,
+			@Min(1) @Max(100) @RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(defaultValue = "LATEST") ClosetSortType sort
 	) {
 		User user = userDetails.getUser();
