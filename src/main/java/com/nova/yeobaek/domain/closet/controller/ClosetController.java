@@ -105,6 +105,18 @@ public class ClosetController implements ClosetControllerDocs {
 	}
 
 	@Override
+	@DeleteMapping("/{closetId}")
+	public CommonResponse<ClosetResponseDTO.DeleteResult> deleteCloset(
+			@AuthenticationPrincipal CustomUserDetails userDetails,
+			@PathVariable Long closetId
+	) {
+		User user = userDetails.getUser();
+		Long deletedClosetId = closetService.deleteCloset(user, closetId);
+		return CommonResponse.onSuccess(new ClosetResponseDTO.DeleteResult(deletedClosetId));
+	}
+
+
+	@Override
 	@GetMapping("/{closetId}/edit")
 	public CommonResponse<ClosetEditResponseDTO.EditInfo> getClosetEditInfo(
 			@AuthenticationPrincipal CustomUserDetails userDetails,

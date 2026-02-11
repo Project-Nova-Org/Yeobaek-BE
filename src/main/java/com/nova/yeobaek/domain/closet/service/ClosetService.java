@@ -262,6 +262,20 @@ public class ClosetService {
     }
 
     @Transactional
+    public Long deleteCloset(User user, Long closetId) {
+        Closet closet = closetRepository.findByIdAndUser(closetId, user)
+                .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
+
+        closetItemRepository.deleteByCloset_Id(closetId);
+        closetRepository.delete(closet);
+        closetRepository.flush();
+
+        return closetId;
+    }
+
+
+
+    @Transactional
     public Long updateCloset(User user, Long closetId, ClosetEditRequestDTO.Update request) {
         Closet closet = closetRepository.findByIdAndUser(closetId, user)
                 .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));

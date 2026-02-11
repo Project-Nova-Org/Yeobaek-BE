@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.nova.yeobaek.domain.closet.domain.mapping.ClosetItem;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
@@ -67,7 +68,8 @@ public interface ClosetItemRepository extends JpaRepository<ClosetItem, Long>, C
     @Query("select ci.item.id from ClosetItem ci where ci.closet.id = :closetId")
     List<Long> findItemIdsByClosetId(@Param("closetId") Long closetId);
 
-    void deleteByCloset_IdAndItem_IdIn(Long closetId, List<Long> itemIds);
+    void deleteByCloset_Id(Long closetId);
+    void deleteByCloset_IdAndItem_IdIn(Long closetId, Collection<Long> itemIds);
 
 
 

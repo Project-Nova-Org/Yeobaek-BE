@@ -184,6 +184,22 @@ public interface ClosetControllerDocs {
     );
 
     @Operation(
+            summary = "옷장 삭제 API",
+            description = "로그인한 사용자의 옷장을 삭제합니다.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "삭제 성공"),
+                    @ApiResponse(responseCode = "401", description = "인증 필요"),
+                    @ApiResponse(responseCode = "404", description = "옷장 없음(또는 접근 불가)"),
+                    @ApiResponse(responseCode = "500", description = "서버 오류")
+            }
+    )
+    CommonResponse<ClosetResponseDTO.DeleteResult> deleteCloset(
+            CustomUserDetails userDetails,
+            @PathVariable Long closetId
+    );
+
+
+    @Operation(
             summary = "옷장 수정 진입 정보 조회 API",
             description = "옷장 수정(이름/썸네일 설정 화면) 진입에 필요한 옷장 정보와 선택된 아이템 ID 목록을 조회합니다.",
             responses = {
