@@ -61,4 +61,6 @@ public class ClosetResponseDTO {
             Long nextCursorId,
             boolean hasNext
     ) {}
+
+    public record DeleteResult(Long closetId) {}
 }

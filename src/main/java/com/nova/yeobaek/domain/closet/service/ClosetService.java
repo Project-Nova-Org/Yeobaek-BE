@@ -22,6 +22,14 @@ import com.nova.yeobaek.domain.closet.status.ClosetErrorStatus;
 import com.nova.yeobaek.domain.item.repository.ItemRepository;
 import com.nova.yeobaek.domain.user.domain.User;
 import com.nova.yeobaek.global.payload.exception.GeneralException;
+import com.nova.yeobaek.domain.closet.repository.ClosetEditItemQueryRepository;
+import com.nova.yeobaek.domain.closet.repository.ClosetEditItemView;
+
+import java.util.ArrayList;
+
+import com.nova.yeobaek.domain.closet.dto.request.ClosetEditRequestDTO;
+import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
+import com.nova.yeobaek.domain.item.domain.Item;
 
 import lombok.RequiredArgsConstructor;
 
@@ -35,6 +43,7 @@ public class ClosetService {
 
     private final ItemRepository itemRepository;
     private final ClosetItemRepository closetItemRepository;
+    private final ClosetEditItemQueryRepository closetEditItemQueryRepository;
 
     public Long create(User user, ClosetRequestDTO.Create request) {
         validateCreateRequest(user, request);
@@ -59,10 +68,11 @@ public class ClosetService {
             User user,
             Long cursorId,
             Boolean cursorFavorite,
-            int size,
+            Integer size,
             ClosetSortType sort
     ) {
-        int limit = size + 1;
+        int s = normalizeSize(size);
+        int limit = s + 1;
         Pageable pageable = PageRequest.of(0, limit);
 
         if (sort == null) sort = ClosetSortType.LATEST;
@@ -98,14 +108,14 @@ public class ClosetService {
                     ? closetRepository.findByUserOrderByIdAsc(user, pageable)
                     : closetRepository.findByUserAndIdGreaterThanOrderByIdAsc(user, cursorId, pageable);
 
-        } else { // LATEST default
+        } else {
             page = (cursorId == null)
                     ? closetRepository.findByUserOrderByIdDesc(user, pageable)
                     : closetRepository.findByUserAndIdLessThanOrderByIdDesc(user, cursorId, pageable);
         }
 
-        boolean hasNext = page.size() > size;
-        List<Closet> sliced = hasNext ? page.subList(0, size) : page;
+        boolean hasNext = page.size() > s;
+        List<Closet> sliced = hasNext ? page.subList(0, s) : page;
 
         List<ClosetResponseDTO.Summary> summaries = sliced.stream()
                 .map(closetConverter::toSummary)
@@ -145,15 +155,16 @@ public class ClosetService {
             User user,
             Long closetId,
             Long cursorId,
-            int size,
+            Integer size,
             Long level1CategoryId,
             Long level2CategoryId
     ) {
-        // ✅ 여기서 closet 엔티티를 가져와서, 응답에 옷장 정보 포함
+
         Closet closet = closetRepository.findByIdAndUser(closetId, user)
                 .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
 
-        int limit = size + 1;
+        int s = normalizeSize(size);
+        int limit = s + 1;
         Pageable pageable = PageRequest.of(0, limit);
 
         List<ClosetItem> page;
@@ -172,15 +183,14 @@ public class ClosetService {
             );
         }
 
-        boolean hasNext = page.size() > size;
-        List<ClosetItem> sliced = hasNext ? page.subList(0, size) : page;
+        boolean hasNext = page.size() > s;
+        List<ClosetItem> sliced = hasNext ? page.subList(0, s) : page;
 
         List<ClosetResponseDTO.ClosetItemCursor> items = sliced.stream()
                 .map(ci -> new ClosetResponseDTO.ClosetItemCursor(ci.getId(), ci.getItem().getId()))
                 .toList();
 
         Long nextCursorId = sliced.isEmpty() ? null : sliced.get(sliced.size() - 1).getId();
-
 
         return new ClosetResponseDTO.ClosetItemCursorListResponse(
                 closet.getId(),
@@ -191,6 +201,141 @@ public class ClosetService {
                 nextCursorId,
                 hasNext
         );
+    }
+
+    @Transactional(readOnly = true)
+    public ClosetEditResponseDTO.EditInfo getClosetEditInfo(User user, Long closetId) {
+        Closet closet = closetRepository.findByIdAndUser(closetId, user)
+                .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
+
+        List<Long> selectedItemIds = closetItemRepository.findItemIdsByClosetId(closetId);
+
+        return new ClosetEditResponseDTO.EditInfo(
+                closet.getId(),
+                closet.getName(),
+                closet.getImageUrl(),
+                selectedItemIds
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public ClosetEditResponseDTO.EditableItemCursorList getEditableItemsByCursor(
+            User user,
+            Long closetId,
+            Long cursorId,
+            Integer size,
+            Long level1CategoryId,
+            Long level2CategoryId
+    ) {
+        Closet closet = closetRepository.findByIdAndUser(closetId, user)
+                .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
+
+        int s = normalizeSize(size);
+        int limit = s + 1;
+
+        List<ClosetEditItemView> rows = closetEditItemQueryRepository.findEditableItemsForClosetEdit(
+                user.getId(),
+                closet.getId(),
+                cursorId,
+                level1CategoryId,
+                level2CategoryId,
+                limit
+        );
+
+        boolean hasNext = rows.size() > s;
+        if (hasNext) {
+            rows = rows.subList(0, s);
+        }
+
+        List<ClosetEditResponseDTO.EditableItem> items = rows.stream()
+                .map(r -> new ClosetEditResponseDTO.EditableItem(
+                        r.getId(),
+                        r.getImageUrl(),
+                        r.getCategoryId(),
+                        Boolean.TRUE.equals(r.getSelectedStatus())
+                ))
+                .toList();
+
+        Long nextCursorId = rows.isEmpty() ? null : rows.get(rows.size() - 1).getId();
+
+        return new ClosetEditResponseDTO.EditableItemCursorList(items, nextCursorId, hasNext);
+    }
+
+    @Transactional
+    public Long deleteCloset(User user, Long closetId) {
+        Closet closet = closetRepository.findByIdAndUser(closetId, user)
+                .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
+
+        closetItemRepository.deleteByCloset_Id(closetId);
+        closetRepository.delete(closet);
+        closetRepository.flush();
+
+        return closetId;
+    }
+
+
+
+    @Transactional
+    public Long updateCloset(User user, Long closetId, ClosetEditRequestDTO.Update request) {
+        Closet closet = closetRepository.findByIdAndUser(closetId, user)
+                .orElseThrow(() -> new GeneralException(ClosetErrorStatus.CLOSET_NOT_FOUND));
+
+        validateUpdateName(user, closet, request.name());
+        validateUpdateItems(user, request.itemIds());
+
+        closet.updateInfo(request.name(), request.imageUrl());
+
+        List<Long> existingItemIds = closetItemRepository.findItemIdsByClosetId(closetId);
+        Set<Long> existingSet = new HashSet<>(existingItemIds);
+
+        Set<Long> requestedSet = new HashSet<>(request.itemIds());
+
+        List<Long> removeItemIds = existingSet.stream()
+                .filter(id -> !requestedSet.contains(id))
+                .toList();
+
+        List<Long> addItemIds = requestedSet.stream()
+                .filter(id -> !existingSet.contains(id))
+                .toList();
+
+        if (!removeItemIds.isEmpty()) {
+            closetItemRepository.deleteByCloset_IdAndItem_IdIn(closetId, removeItemIds);
+        }
+
+        if (!addItemIds.isEmpty()) {
+            List<ClosetItem> toAdd = new ArrayList<>();
+
+            addItemIds.forEach(itemId -> toAdd.add(
+                    ClosetItem.builder()
+                            .closet(closet)
+                            .item(itemRepository.getReferenceById(itemId))
+                            .build()
+            ));
+
+            try {
+                closetItemRepository.saveAll(toAdd);
+                closetItemRepository.flush();
+            } catch (DataIntegrityViolationException e) {
+                throw new GeneralException(ClosetErrorStatus.DUPLICATED_ITEM_ID);
+            }
+        }
+
+        try {
+            closetRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            throw new GeneralException(ClosetErrorStatus.DUPLICATED_NAME);
+        }
+
+
+        return closet.getId();
+    }
+
+    private int normalizeSize(Integer size) {
+        int s = (size == null) ? 20 : size;
+        if (s < 1 || s > 100) {
+            throw new GeneralException(ClosetErrorStatus.INVALID_SIZE);
+        }
+        return s;
     }
 
     private void validateCreateRequest(User user, ClosetRequestDTO.Create request) {
@@ -218,6 +363,35 @@ public class ClosetService {
                 throw new GeneralException(ClosetErrorStatus.ITEM_NOT_FOUND);
             }
         });
+    }
+
+    private void validateUpdateName(User user, Closet closet, String name) {
+        if (!closet.getName().equals(name) && closetRepository.existsByUserAndName(user, name)) {
+            throw new GeneralException(ClosetErrorStatus.DUPLICATED_NAME);
+        }
+    }
+
+    private void validateUpdateItems(User user, List<Long> itemIds) {
+        Set<Long> set = new HashSet<>();
+
+        itemIds.forEach(id -> {
+            if (!set.add(id)) {
+                throw new GeneralException(ClosetErrorStatus.DUPLICATED_ITEM_ID);
+            }
+        });
+
+        List<Item> items = itemRepository.findAllById(itemIds);
+
+        if (items.size() != itemIds.size()) {
+            throw new GeneralException(ClosetErrorStatus.ITEM_NOT_FOUND);
+        }
+
+        boolean allOwnedByUser = items.stream()
+                .allMatch(i -> i.getUser() != null && i.getUser().getId().equals(user.getId()));
+
+        if (!allOwnedByUser) {
+            throw new GeneralException(ClosetErrorStatus.ITEM_NOT_FOUND);
+        }
     }
 
     private Closet saveCloset(User user, ClosetRequestDTO.Create request) {

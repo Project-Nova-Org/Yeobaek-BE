@@ -1,13 +1,16 @@
 package com.nova.yeobaek.domain.closet.controller;
 
+import com.nova.yeobaek.domain.closet.status.ClosetErrorStatus;
+import com.nova.yeobaek.global.payload.exception.GeneralException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.nova.yeobaek.domain.closet.controller.docs.ClosetControllerDocs;
+import com.nova.yeobaek.domain.closet.dto.request.ClosetEditRequestDTO;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetItemQuery;
 import com.nova.yeobaek.domain.closet.dto.request.ClosetRequestDTO;
+import com.nova.yeobaek.domain.closet.dto.response.ClosetEditResponseDTO;
 import com.nova.yeobaek.domain.closet.dto.response.ClosetResponseDTO;
 import com.nova.yeobaek.domain.closet.dto.type.ClosetSortType;
 import com.nova.yeobaek.domain.closet.service.ClosetService;
@@ -16,13 +19,10 @@ import com.nova.yeobaek.global.auth.security.CustomUserDetails;
 import com.nova.yeobaek.global.payload.response.CommonResponse;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/closets")
@@ -48,9 +48,13 @@ public class ClosetController implements ClosetControllerDocs {
 			@AuthenticationPrincipal CustomUserDetails userDetails,
 			@RequestParam(required = false) Long cursorId,
 			@RequestParam(required = false) Boolean cursorFavorite,
-			@Min(1) @Max(100) @RequestParam(defaultValue = "20") Integer size,
+			@RequestParam(defaultValue = "20") Integer size,
 			@RequestParam(defaultValue = "LATEST") ClosetSortType sort
 	) {
+		if (size < 1 || size > 100) {
+			throw new GeneralException(ClosetErrorStatus.INVALID_SIZE);
+		}
+
 		User user = userDetails.getUser();
 		return CommonResponse.onSuccess(
 				closetService.listByCursor(user, cursorId, cursorFavorite, size, sort)
@@ -98,5 +102,59 @@ public class ClosetController implements ClosetControllerDocs {
 						query.level2CategoryId()
 				)
 		);
+	}
+
+	@Override
+	@DeleteMapping("/{closetId}")
+	public CommonResponse<ClosetResponseDTO.DeleteResult> deleteCloset(
+			@AuthenticationPrincipal CustomUserDetails userDetails,
+			@PathVariable Long closetId
+	) {
+		User user = userDetails.getUser();
+		Long deletedClosetId = closetService.deleteCloset(user, closetId);
+		return CommonResponse.onSuccess(new ClosetResponseDTO.DeleteResult(deletedClosetId));
+	}
+
+
+	@Override
+	@GetMapping("/{closetId}/edit")
+	public CommonResponse<ClosetEditResponseDTO.EditInfo> getClosetEditInfo(
+			@AuthenticationPrincipal CustomUserDetails userDetails,
+			@PathVariable Long closetId
+	) {
+		User user = userDetails.getUser();
+		return CommonResponse.onSuccess(closetService.getClosetEditInfo(user, closetId));
+	}
+
+	@Override
+	@GetMapping("/{closetId}/edit/items")
+	public CommonResponse<ClosetEditResponseDTO.EditableItemCursorList> getEditableItems(
+			@AuthenticationPrincipal CustomUserDetails userDetails,
+			@PathVariable Long closetId,
+			@Valid @ModelAttribute ClosetItemQuery query
+	) {
+		User user = userDetails.getUser();
+		return CommonResponse.onSuccess(
+				closetService.getEditableItemsByCursor(
+						user,
+						closetId,
+						query.cursorId(),
+						query.sizeOrDefault(),
+						query.level1CategoryId(),
+						query.level2CategoryId()
+				)
+		);
+	}
+
+	@Override
+	@PatchMapping("/{closetId}")
+	public CommonResponse<ClosetEditResponseDTO.UpdateResult> updateCloset(
+			@AuthenticationPrincipal CustomUserDetails userDetails,
+			@PathVariable Long closetId,
+			@Valid @RequestBody ClosetEditRequestDTO.Update request
+	) {
+		User user = userDetails.getUser();
+		Long updatedClosetId = closetService.updateCloset(user, closetId, request);
+		return CommonResponse.onSuccess(new ClosetEditResponseDTO.UpdateResult(updatedClosetId));
 	}
 }
